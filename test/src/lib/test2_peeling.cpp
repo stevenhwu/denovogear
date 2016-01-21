@@ -68,6 +68,7 @@ struct Fx {
             else {
                 trans_matrix[k] = TransitionMatrix::Random(100, 10);
             }
+
         }
     }
 
@@ -174,7 +175,7 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
                                      lower_array, upper_array,
                                      trans_matrix);
 
-            PairedGenotypeArray result = dng::peel::sum_over_child(workspace, family, full_matrix);
+            PairedGenotypeArray result = dng::peel::sum_over_children(workspace, family, full_matrix);
 
             boost_check_matrix(expected, result, 100, 1);
         }
