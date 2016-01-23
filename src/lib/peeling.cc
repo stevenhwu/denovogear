@@ -19,121 +19,70 @@
 
 #include <dng/peeling.h>
 #include <iostream>
+#include <gdbm.h>
 
-dng::GenotypeArray dng::peel::multiply_upper_lower(workspace_t &work, int index){
+bool DEBUG = false;
+#define DEBUG_PEELING true;
+//#ifdef DEBUG_PEELING
+//    std::cout << "==" << __FUNCTION__ << "==" << std::endl;
+//#endif
+
+dng::GenotypeArray dng::peel::multiply_upper_lower(workspace_t &work, std::size_t index){
 
     return (work.upper[index] * work.lower[index]);
 }
 
 //TODO: Duplicated, which one to keep
-dng::GenotypeArray dng::peel::multiply_lower_upper(workspace_t &work, int index){
-
+dng::GenotypeArray dng::peel::multiply_lower_upper(workspace_t &work, std::size_t index){
     return multiply_upper_lower(work, index);
 }
+
+
+dng::PairedGenotypeArray dng::peel::kroneckerProductDadMom(workspace_t &work, std::size_t dad, std::size_t mom){
+
+    dng::PairedGenotypeArray result = kroneckerProduct(
+            multiply_upper_lower(work, dad).matrix(),
+            multiply_upper_lower(work, mom).matrix());
+    return result;
+
+}
+
 
 // Family Order: Father, Mother, Child1, Child2, ...
 dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
                                                       const TransitionVector &mat) {
-    assert(family.size() >= 3);
-    auto first_child = family[2];
-
-    PairedGenotypeArray buffer = sum_over_children(work, family, mat, first_child);
+    PairedGenotypeArray buffer = sum_over_children(work, family, mat, 2);
     return buffer;
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
 dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
-                                                      const TransitionVector &mat, int first_child) {
+                                                      const TransitionVector &mat, int first_child_index) {
     assert(family.size() >= 3);
-    assert(family.size() >= first_child);
+    assert(family.size() >= first_child_index);
     PairedGenotypeArray buffer = PairedGenotypeArray::Ones(100,1);
-    for(std::size_t i = first_child; i < family.size(); ++i) {
+    for(std::size_t i = first_child_index; i < family.size(); ++i) {
         buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
     }
     return buffer;
 }
 
 
-
-// Family Order: Parent, Child
-void dng::peel::down(workspace_t &work, const family_members_t &family,
-                     const TransitionVector &mat) {
-    std::cout << " down " << std::endl;
-    assert(family.size() == 2);
-    auto parent = family[0];
-    auto child = family[1];
-    work.upper[child] = (mat[child].transpose() * (work.upper[parent] *
-                                                   work.lower[parent]).matrix()).array();
-}
-
-// Family Order: Parent, Child
-void dng::peel::down_fast(workspace_t &work, const family_members_t &family,
-                          const TransitionVector &mat) {
-    std::cout << " down fast" << std::endl;
-    assert(family.size() == 2);
-    auto parent = family[0];
-    auto child = family[1];
-    work.upper[child] = (mat[child].transpose() *
-                         work.upper[parent].matrix()).array();
-}
-
 // Family Order: Parent, Child
 dng::GenotypeArray dng::peel::up_core(workspace_t &work, const family_members_t &family,
-    const TransitionVector &mat) {
+                                      const TransitionVector &mat) {
 
     assert(family.size() == 2);
     auto child = family[1];
-
     dng::GenotypeArray geno_array = (mat[child] * work.lower[child].matrix()).array();
     return geno_array;
 }
 
-// Family Order: Parent, Child
-void dng::peel::up(workspace_t &work, const family_members_t &family,
-                   const TransitionVector &mat) {
-    std::cout << " up " << std::endl;
-    assert(family.size() == 2);
-    auto parent = family[0];
-    auto child = family[1];
-
-    work.lower[parent] *= up_core(work, family, mat); 
-
-}
-
-// Family Order: Parent, Child
-void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
-                        const TransitionVector &mat) {
-    std::cout << " up fast " << std::endl;
-    assert(family.size() == 2);
-    auto parent = family[0];
-
-    work.lower[parent] = up_core(work, family, mat); 
-}
-
-
-// Family Order: Father, Mother, Child1, Child2, ...
-[[deprecated]]
-dng::GenotypeArray dng::peel::to_father_core(workspace_t &work, const family_members_t &family,
-                                        const TransitionVector &mat) {
-    std::cout << " to father core: " << family[0] << "\t" << family[1] << "\t" << family[2] << std::endl;
-    assert(family.size() >= 3);
-    auto dad = family[0];
-    auto mom = family[1];
-
-//    work.paired_buffer = sum_over_children(work, family, mat);
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-//    PairedGenotypeArray other_parent = multiply_upper_lower(work, mom); 
-//    GenotypeArray dad_array = (work.paired_buffer.matrix() * other_parent.matrix() ).array();
-    GenotypeArray dad_array = to_parent_core(work, family, mat, Parents::Father);
-
-    return dad_array;
-}
 
 // Family Order: Father, Mother, Child1, Child2, ...
 dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work, const family_members_t &family,
                                              const TransitionVector &mat, const Parents to_parent) {
-    std::cout << " to parent core: " << family[0] << "\t" << family[1] << "\t" << family[2] << std::endl;
+
     assert(family.size() >= 3);
     auto dad = family[0];
     auto mom = family[1];
@@ -151,7 +100,7 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work, const family_mem
         parent_array = (work.paired_buffer.matrix().transpose() * other_parent.matrix() ).array();
     }
     else{
-        //TODO: ERROR. Not possible until we add more enum!!
+        //ERROR: Not possible until we add more enum!!
     }
 
 
@@ -159,160 +108,118 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work, const family_mem
 }
 
 
-// Family Order: Father, Mother, Child1, Child2, ...
-[[deprecated]]
-dng::GenotypeArray dng::peel::to_mother_core(workspace_t &work, const family_members_t &family,
-                                             const TransitionVector &mat) {
-    std::cout << " to mother core: " << family[0] << "\t" << family[1] << "\t" << family[2] << std::endl;
-    assert(family.size() >= 3);
-    auto dad = family[0];
-    auto mom = family[1];
+// Family Order: Parent, Child
+void dng::peel::down(workspace_t &work, const family_members_t &family,
+                     const TransitionVector &mat) {
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
 
-//    work.paired_buffer = sum_over_children(work, family, mat);
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-//    PairedGenotypeArray other_parent = multiply_upper_lower(work, dad); 
-//    GenotypeArray mom_array = (work.paired_buffer.matrix().transpose() * other_parent.matrix() ).array();
-    GenotypeArray  mom_array = to_parent_core(work, family, mat, Parents::Mother);
-    return mom_array;
+    assert(family.size() == 2);
+    auto parent = family[0];
+    auto child = family[1];
+    auto parent_upper_lower = multiply_upper_lower(work, parent);
+    work.upper[child] = (mat[child].transpose() * parent_upper_lower.matrix()).array();
 }
+
+// Family Order: Parent, Child
+void dng::peel::down_fast(workspace_t &work, const family_members_t &family,
+                          const TransitionVector &mat) {
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
+
+    assert(family.size() == 2);
+    auto parent = family[0];
+    auto child = family[1];
+    work.upper[child] = (mat[child].transpose() * work.upper[parent].matrix()).array();
+
+}
+
+// Family Order: Parent, Child
+void dng::peel::up(workspace_t &work, const family_members_t &family,
+                   const TransitionVector &mat) {
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
+
+    auto parent = family[0];
+    work.lower[parent] *= up_core(work, family, mat);
+}
+
+// Family Order: Parent, Child
+void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
+                        const TransitionVector &mat) {
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
+    auto parent = family[0];
+    work.lower[parent] = up_core(work, family, mat);
+}
+
+
 
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_father(workspace_t &work, const family_members_t &family,
                           const TransitionVector &mat) {
-    std::cout << " to father: " << family[0] << "\t" << family[1] << "\t" << family[2] << std::endl;
-    assert(family.size() >= 3);
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     auto dad = family[0];
-//    auto mom = family[1];
-    // Sum over children
-//    work.paired_buffer = (mat[family[2]] * work.lower[family[2]].matrix()).array();
-//    for(std::size_t i = 3; i < family.size(); ++i) {
-//        work.paired_buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
-//    }
-//
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-//
-//    work.lower[dad] *= (work.paired_buffer.matrix() * (work.upper[mom] *
-//                        work.lower[mom]).matrix()).array();
-
-//    work.paired_buffer.resize(100, 1); //Might not need this, from the website: Assignment is the action of copying a matrix into another, using operator=. Eigen resizes the matrix on the left-hand side automatically so that it matches the size of the matrix on the right-hand size. For example:
-
-      work.lower[dad] *= to_parent_core(work, family, mat, Parents::Father);
+    work.lower[dad] *= to_parent_core(work, family, mat, Parents::Father);
 }
 
-
 // Family Order: Father, Mother, Child1, Child2, ...
-void dng::peel::to_father_fast(workspace_t &work,
-                               const family_members_t &family, const TransitionVector &mat) {
-    std::cout << " to father fast: " << family[0] << "\t" << family[1] << "\t" << family[2] << std::endl;
-    assert(family.size() >= 3);
+void dng::peel::to_father_fast(workspace_t &work, const family_members_t &family,
+                               const TransitionVector &mat) {
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     auto dad = family[0];
-//    auto mom = family[1];
-    // Sum over children
-//    work.paired_buffer = (mat[family[2]] * work.lower[family[2]].matrix()).array();
-//    for(std::size_t i = 3; i < family.size(); ++i) {
-//        work.paired_buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
-//    }
-//
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-////    work.lower[dad] = (work.paired_buffer.matrix() * (work.upper[mom] *
-//                       work.lower[mom]).matrix()).array();
-
-    work.lower[dad] = to_parent_core(work, family, mat, Parents::Father);
+    work.lower[dad] =  to_parent_core(work, family, mat, Parents::Father);
 
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_mother(workspace_t &work, const family_members_t &family,
                           const TransitionVector &mat) {
-    std::cout << " to mother " << std::endl;
-    assert(family.size() >= 3);
-//    auto dad = family[0];
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     auto mom = family[1];
-//    // Sum over children
-//    work.paired_buffer = (mat[family[2]] * work.lower[family[2]].matrix()).array();
-//    for(size_t i = 3; i < family.size() - 1; ++i) { //DEBUG: Why -1 here??
-//        work.paired_buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
-//    }
-//        work.paired_buffer = sum_over_children(work, family, mat);
-//
-//    // Include Dad
-//    work.paired_buffer.resize(10, 10);
-////    work.lower[mom] *= (work.paired_buffer.matrix().transpose() * (work.upper[dad] *
-//                        work.lower[dad]).matrix()).array();
-
-
-//    work.paired_buffer.resize(100, 1);
     work.lower[mom] *= to_parent_core(work, family, mat, Parents::Mother);
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_mother_fast(workspace_t &work,
                                const family_members_t &family, const TransitionVector &mat) {
-    std::cout << " to mother fast " << std::endl;
-    assert(family.size() >= 3);
-    auto dad = family[0];
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     auto mom = family[1];
-    // Sum over children
-//    work.paired_buffer = (mat[family[2]] * work.lower[family[2]].matrix()).array();
-//    for(std::size_t i = 3; i < family.size(); ++i) {
-//        work.paired_buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
-//    }
-
-//
-//    // Include Dad
-//    work.paired_buffer.resize(10, 10);
-//    work.lower[mom] = (work.paired_buffer.matrix().transpose() * (work.upper[dad] *
-//                       work.lower[dad]).matrix()).array();
-//    work.paired_buffer.resize(100, 1);
-
-
     work.lower[mom] = to_parent_core(work, family, mat, Parents::Mother);
 }
+
+
 
 
 // Family Order: Father, Mother, Child, Child2, ....
 void dng::peel::to_child(workspace_t &work, const family_members_t &family,
                          const TransitionVector &mat) {
-    std::cout << " to child " << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() >= 4);
     auto dad = family[0];
     auto mom = family[1];
     auto child = family[2];
     // Parents
-    work.paired_buffer = kroneckerProduct((work.lower[dad] * work.upper[dad]).matrix(),
-                                          (work.lower[mom] * work.upper[mom]).matrix()).array();
-
-    // Sum over fullsibs
-//    for(std::size_t i = 3; i < family.size(); ++i) {
-//        work.paired_buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
-//    }
+    work.paired_buffer = kroneckerProductDadMom(work, dad, mom).array();
     work.paired_buffer *= sum_over_children(work, family, mat, 3);
-
-    work.upper[child] = (mat[child].transpose() *
-                         work.paired_buffer.matrix()).array();
+    work.upper[child] = (mat[child].transpose() * work.paired_buffer.matrix()).array();
 
 }
 
 // Family Order: Father, Mother, CHild
 void dng::peel::to_child_fast(workspace_t &work, const family_members_t &family,
                               const TransitionVector &mat) {
-    std::cout << " to child fast " << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() == 3);
     auto dad = family[0];
     auto mom = family[1];
     auto child = family[2];
-    work.upper[child] = (mat[child].transpose() * kroneckerProduct(
-                             (work.lower[dad] * work.upper[dad]).matrix(),
-                             (work.lower[mom] * work.upper[mom]).matrix())).array();
+    // Parents
+    work.paired_buffer = kroneckerProductDadMom(work, dad, mom).array();
+
+    work.upper[child] = (mat[child].transpose() * work.paired_buffer.matrix()).array();
 }
 
 // Family Order: Parent, Child
 void dng::peel::down_reverse(workspace_t &work, const family_members_t &family,
                              const TransitionVector &mat) {
-    std::cout << " down_reverse " << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() == 2);
     auto parent = family[0];
     auto child = family[1];
@@ -325,7 +232,7 @@ void dng::peel::down_reverse(workspace_t &work, const family_members_t &family,
 // prevent divide by zero errors by adding a minor offset to one of the calculations
 void dng::peel::up_reverse(workspace_t &work, const family_members_t &family,
                            const TransitionVector &mat) {
-    std::cout << " up reverse" << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() == 2);
     auto parent = family[0];
     auto child = family[1];
@@ -340,7 +247,7 @@ void dng::peel::up_reverse(workspace_t &work, const family_members_t &family,
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_father_reverse(workspace_t &work,
                                   const family_members_t &family, const TransitionVector &mat) {
-    std::cout << "to father  reverse" << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() >= 3);
     auto dad = family[0];
     auto mom = family[1];
@@ -359,7 +266,15 @@ void dng::peel::to_father_reverse(workspace_t &work,
     IndividualVector::value_type dad_v = work.upper[dad] * (work.lower[dad] /
                                          ((work.paired_buffer.matrix() * mom_v.matrix()).array() +
                                           DNG_INDIVIDUAL_BUFFER_MIN));
+//    if(DEBUG){ std::cout << dad_v << std::endl; }
 
+//    auto dad_v2 = work.upper[dad] * (work.lower[dad] /
+//                                                            ((work.paired_buffer.matrix() * mom_v.matrix()).array() +
+//                                                             DNG_INDIVIDUAL_BUFFER_MIN));
+//    IndividualVector::value_type dad_v2;
+//  if(DEBUG){ std::cout << "\n"<< DNG_INDIVIDUAL_BUFFER_MIN << std::endl; }if(DEBUG){ std::cout << dad_v2 << std::endl; }
+
+//    if(DEBUG){ std::cout << IndividualVector::value_type << std::endl; }
     // Calculate P(dependent data | mom = g)
     work.lower[mom] *= (work.paired_buffer.matrix().transpose() *
                         dad_v.matrix()).array();
@@ -379,7 +294,7 @@ void dng::peel::to_father_reverse(workspace_t &work,
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_mother_reverse(workspace_t &work,
                                   const family_members_t &family, const TransitionVector &mat) {
-    std::cout << "to mother  reverse" << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() >= 3);
     auto dad = family[0];
     auto mom = family[1];
@@ -410,7 +325,7 @@ void dng::peel::to_mother_reverse(workspace_t &work,
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_child_reverse(workspace_t &work,
                                  const family_members_t &family, const TransitionVector &mat) {
-    std::cout << "to child  reverse" << std::endl;
+    if(DEBUG){ std::cout << "==" << __FUNCTION__ << "==" << std::endl; }
     assert(family.size() >= 3);
     auto dad = family[0];
     auto mom = family[1];
@@ -440,3 +355,45 @@ void dng::peel::to_child_reverse(workspace_t &work,
         work.upper[child] = mat[child].transpose() * work.super[child].matrix();
     }
 }
+
+
+
+
+
+// Family Order: Father, Mother, Child1, Child2, ...
+//[[deprecated]]
+dng::GenotypeArray dng::peel::to_father_core(workspace_t &work, const family_members_t &family,
+                                             const TransitionVector &mat) {
+
+    assert(family.size() >= 3);
+    auto dad = family[0];
+    auto mom = family[1];
+
+//    work.paired_buffer = sum_over_children(work, family, mat);
+//    // Include Mom
+//    work.paired_buffer.resize(10, 10);
+//    PairedGenotypeArray other_parent = multiply_upper_lower(work, mom);
+//    GenotypeArray dad_array = (work.paired_buffer.matrix() * other_parent.matrix() ).array();
+    GenotypeArray dad_array = to_parent_core(work, family, mat, Parents::Father);
+
+    return dad_array;
+}
+// Family Order: Father, Mother, Child1, Child2, ...
+[[deprecated]]
+dng::GenotypeArray dng::peel::to_mother_core(workspace_t &work, const family_members_t &family,
+                                             const TransitionVector &mat) {
+
+    assert(family.size() >= 3);
+    auto dad = family[0];
+    auto mom = family[1];
+
+//    work.paired_buffer = sum_over_children(work, family, mat);
+//    // Include Mom
+//    work.paired_buffer.resize(10, 10);
+//    PairedGenotypeArray other_parent = multiply_upper_lower(work, dad);
+//    GenotypeArray mom_array = (work.paired_buffer.matrix().transpose() * other_parent.matrix() ).array();
+    GenotypeArray  mom_array = to_parent_core(work, family, mat, Parents::Mother);
+    return mom_array;
+}
+
+

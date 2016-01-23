@@ -29,7 +29,7 @@
 #include <boost/range/algorithm/fill_n.hpp>
 
 #include <dng/matrix.h>
-
+#include <map>
 namespace dng {
 namespace peel {
 
@@ -40,12 +40,25 @@ enum {
     TOCHILDFAST,
     NUM // Total number of possible forward operations
 };
+
+std::map<decltype(peel::op::NUM), std::string> map_enum_string {
+        {peel::op::UP, "UP"},
+        {peel::op::DOWN, "DOWN"},
+        {peel::op::TOFATHER, "TOFATHER"},
+        {peel::op::TOMOTHER, "TOMOTHER"},
+        {peel::op::TOCHILD, "TOCHILD"},
+        {peel::op::UPFAST, "UPFAST"},
+        {peel::op::DOWNFAST, "DOWNFAST"},
+        {peel::op::TOFATHERFAST, "TOFATHERFAST"},
+        {peel::op::TOMOTHERFAST, "TOMOTHERFAST"},
+        {peel::op::TOCHILDFAST, "TOCHILDFAST"}
+};
 } // namespace dng::peel::op
 
 struct workspace_t {
     IndividualVector upper; // Holds P(~Descendent_Data & G=g)
     IndividualVector lower; // Holds P( Descendent_Data | G=g)
-    ParentVector super; // Holds P(~Descendent_Data & G=g) for parent nodes upper = super * tran_mat
+    ParentVector super; // Holds P(~Descendent_Data & G=g)
 
     bool dirty_lower = false;
 
@@ -105,17 +118,19 @@ enum class Parents : bool {Father=false, Mother=true};
 //TODO: HOW TO?? auto dad = family[Parents::Father];
 
 // utility
-
 dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
                                            const TransitionVector &mat);
 
 dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
-                                           const TransitionVector &mat, int first_child);
+                                           const TransitionVector &mat, int first_child_index);
 
+dng::GenotypeArray multiply_upper_lower(workspace_t &work, size_t index);
 
-dng::GenotypeArray multiply_upper_lower(workspace_t &work, int index);
+dng::PairedGenotypeArray kroneckerProductDadMom(workspace_t &work,
+                                                std::size_t dad, std::size_t mom);
 
-dng::GenotypeArray multiply_lower_upper(workspace_t &work, int index);
+[[deprecated]] dng::GenotypeArray multiply_lower_upper(workspace_t &work, size_t index);
+
 
 // Core operations
 dng::GenotypeArray up_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
@@ -123,15 +138,20 @@ dng::GenotypeArray up_core(workspace_t &work, const family_members_t &family, co
 
 void down_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
 
-dng::GenotypeArray to_father_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
-
-dng::GenotypeArray to_mother_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
 
 dng::GenotypeArray to_parent_core(workspace_t &work, const family_members_t &family,
                                   const TransitionVector &mat, const Parents to_parent);
 
+[[deprecated]]
+dng::GenotypeArray to_father_core(workspace_t &work, const family_members_t &family,
+                                  const TransitionVector &mat);
 
-// Basic peeling operations
+[[deprecated]]
+dng::GenotypeArray to_mother_core(workspace_t &work, const family_members_t &family,
+                                  const TransitionVector &mat);
+
+
+        // Basic peeling operations
 void up(workspace_t &work, const family_members_t &family,
         const TransitionVector &mat);
 void down(workspace_t &work, const family_members_t &family,

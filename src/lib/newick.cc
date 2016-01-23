@@ -134,11 +134,12 @@ int dng::newick::parse(const std::string &text, vertex_t root, Graph &graph) {
             a.label = DNG_SM_PREFIX + a.label;
         }
         vertex_t v = add_vertex(a.label, graph);
-        std::cout << v << "\t" << a.label << "\t" << a.parent
-
-                       << std::endl;
+        std::cout << "===== in newick::parse add " << v << "\t" << a.label << "\t" << a.parent
+        << "\ttext: " << text
+        << std::endl;
         add_edge((a.parent == -1) ? root : offset - a.parent,
                  v, {dng::EdgeType::Mitotic, a.length}, graph);
+
     }
 
     return 1;

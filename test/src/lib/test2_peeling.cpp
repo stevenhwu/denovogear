@@ -207,6 +207,41 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
         }
     }
 
+
+
+    BOOST_AUTO_TEST_CASE(test_down) {
+
+        for (int t = 0; t < NUM_TEST; ++t) {
+            init_family_parent_child_only();
+
+            GenotypeArray expected = GenotypeArray::Zero();
+            GenotypeArray expected_fast = GenotypeArray::Zero();
+
+            for (int i = 0; i < 10; ++i) {
+                for (int j = 0; j < 10; ++j) {
+                    expected_fast[i] += trans_matrix[1](j, i) * upper_array[0][j];
+                    expected[i] += trans_matrix[1](j, i) * upper_array[0][j] * lower_array[0][j];
+                }
+            }
+            //Done expected
+
+            dng::peel::workspace_t workspace;
+            dng::TransitionVector full_matrix;
+            copy_family_to_workspace(workspace, full_matrix, total_family_size,
+                                     lower_array, upper_array, trans_matrix);
+
+            dng::peel::down(workspace, family, full_matrix);
+            GenotypeArray result = workspace.upper[1];
+
+            dng::peel::down_fast(workspace, family, full_matrix);
+            GenotypeArray result_fast = workspace.upper[1];
+
+            boost_check_array(expected, result, 10);
+            boost_check_array(expected_fast, result_fast, 10);
+
+        }
+    }
+
     BOOST_AUTO_TEST_CASE(test_up) {
 
         for (int t = 0; t < NUM_TEST; ++t) {

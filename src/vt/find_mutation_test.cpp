@@ -299,8 +299,16 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     std::cout << arg.mu << "\t" << arg.mu_somatic << "\t" << arg.mu_library << std::endl;
 
 
+    std::vector<std::string> a;
+    a.push_back("1       1       0       0       1       NA12891");
+    a.push_back("1       2       0       0       2       NA12892");
+    a.push_back("1       3       1       2       2       NA12878");
+
+
     // Parse pedigree from file
     dng::io::Pedigree ped;
+//    ped.Parse(a);
+
     if (!arg.ped.empty()) {
         ifstream ped_file(arg.ped);
         if (!ped_file.is_open()) {
@@ -432,11 +440,11 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 //    pedigree.PrintStates(std::cout);
 
     std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
-    cout << pedigree.first_founder_ << endl;    // start of founder germline
-    cout << pedigree.first_nonfounder_ << endl; // start of non-founder germline
-    cout << pedigree.first_somatic_ << endl;    // start of somatic nodes
-    cout << pedigree.first_library_ << endl;    // start of libraries
-    cout << pedigree.num_nodes_ << endl;        // total number of nodes
+    cout << pedigree.first_founder_ << "\t" << //endl;    // start of founder germline
+    pedigree.first_nonfounder_ << "\t" <<  //endl; // start of non-founder germline
+    pedigree.first_somatic_ << "\t" <<  //endl;    // start of somatic nodes
+    pedigree.first_library_ << "\t" <<  //endl;    // start of libraries
+    pedigree.num_nodes_ << endl;        // total number of nodes
 
     cout << "Roots\t"<< pedigree.roots_.size() << endl;
 
@@ -444,26 +452,15 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     cout << "Labels: " << pedigree.labels_.size() << endl;
     cout << pedigree.transitions_.size() << endl;
 
+
     // The original, simplified peeling operations
     cout << pedigree.peeling_ops_.size() << endl;
-    for (auto a : pedigree.peeling_ops_) {
-        std::cout << "op: "<< a << std::endl;
+    for (int j = 0; j < pedigree.peeling_ops_.size(); ++j) {
+        int op_index = pedigree.peeling_ops_[j];
+        std::cout << "op: "<< pedigree.peeling_ops_[j] << "\t" <<
+                pedigree.peeling_functions_ops_[j] << "\t" <<
+                peel::op::map_enum_string[pedigree.peeling_functions_ops_[j]] << std::endl;
     }
-
-    // The modified, "faster" operations
-    cout << pedigree.peeling_functions_ops_.size() << endl;
-    for (auto a : pedigree.peeling_functions_ops_) {
-        std::cout << "func op: "<< a << std::endl;
-    }
-
-    // Array of functions that will be called to perform the peeling
-    cout << pedigree.peeling_functions_.size() << endl;
-    cout << pedigree.peeling_reverse_functions_.size() << endl;
-    for (auto a : pedigree.peeling_functions_) {
-        std::cout << "functions: "<< a << std::endl;
-    }
-
-
 
     // The arguments to a peeling operation
     cout << pedigree.family_members_.size() << endl;
@@ -475,12 +472,12 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     FindMutations::params_t test_param_1{arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
     // Pileup data
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    test_basic_parameterts(find_mutation);
-    test_prior(find_mutation);
-
-    test_full_transition(find_mutation);
-
-    test_operator(find_mutation);
+//    test_basic_parameterts(find_mutation);
+//    test_prior(find_mutation);
+//
+//    test_full_transition(find_mutation);
+//
+//    test_operator(find_mutation);
 
     std::cout << "ready to exit: " << EXIT_SUCCESS << std::endl;
     return EXIT_SUCCESS;
@@ -509,6 +506,8 @@ int main(int argc, char *argv[]) {
         argv[1] = (char*) "-p";
         argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
         argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
+        argv[2] = (char*) "testdata/sample_5_3/ceu3.ped"; //"pedFile";
+        argv[3] = (char*) "testdata/sample_5_3/test3.vcf"; //test1.bam
         dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
         a();
 
