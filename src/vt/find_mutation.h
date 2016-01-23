@@ -168,11 +168,11 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
         work_(pedigree.CreateWorkspace()) {
 
     using namespace dng;
-    std::cout << params_.theta << std::endl;
+    std::cout << "theta: " << params_.theta << std::endl;
 
     for(auto s: params_.nuc_freq)
         std::cout << s << ' ';
-    std::cout << std::endl;
+    std::cout << "<- fresq" << std::endl;
 
     // Use a parent-independent mutation model, which produces a
     // beta-binomial
@@ -193,10 +193,10 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
 
 
         auto trans = pedigree.transitions()[child];
-        std::cout << "Child:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2
-                                       << std::endl;
+        std::cout << "\nNode:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2 << "\t";
+//                                       << std::endl;
         if(trans.type == Pedigree::TransitionType::Germline) {
-            std::cout << child << "\t" << "Germline." << std::endl;
+            std::cout << "==Germline.";
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
@@ -208,7 +208,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
             mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
         } else if(trans.type == Pedigree::TransitionType::Somatic ||
                   trans.type == Pedigree::TransitionType::Library) {
-            std::cout << child << "\t" << "Somatic/Library." << std::endl;
+            std::cout << "==Somatic/Library.";
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
@@ -218,13 +218,14 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
             onemut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 1);
             mean_matrices_[child] = mitosis_diploid_mean_matrix(orig);
         } else {
-            std::cout << child << "\t" << "Other." << std::endl;
+            std::cout << "==Other.";
             full_transition_matrices_[child] = {};
             nomut_transition_matrices_[child] = {};
             posmut_transition_matrices_[child] = {};
             onemut_transition_matrices_[child] = {};
             mean_matrices_[child] = {};
         }
+
     }
 
     //Calculate max_entropy based on having no data
@@ -245,6 +246,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
         }
         // Calculate entropy of mutation location
         max_entropies_[ref_index] = (-entropy / total + log(total)) / M_LN2;
+        std::cout << "Ref: " << ref_index << "\t" << max_entropies_[ref_index] << std::endl;
     }
     std::cout << "END FM const" << std::endl;
 }

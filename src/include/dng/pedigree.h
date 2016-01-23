@@ -57,20 +57,16 @@ public:
         }
         // Peel pedigree one family at a time
         for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
-            std::cout << "PeelForward: index: "<<  i << "\tfunction: " ;
-//            std::cout << "\t" << *(peeling_functions_[i]) ;
-//            std::cout << "\t" << (peeling_functions_[i]) ;
-//
-//            std::cout << "\t" << (peeling_ops_[i]) ;
+            std::cout << "PeelForward: index: "<<  i << "\tfunction: "<<
+                    peel::op::map_enum_string[peeling_functions_ops_[i]] << "\t";
 
-//            fprintf(std::cout, )
             (*peeling_functions_[i])(work, family_members_[i], mat);
-//            std::cout << work.lower[0] << std::endl;
+            std::cout << "" << std::endl;
         }
         // Sum over roots
         double ret = 0.0;
         for(auto r : roots_) {
-//            std::cout << r << std::endl;
+
             ret += log((work.lower[r] * work.upper[r]).sum());
         }
         return ret;
@@ -89,12 +85,11 @@ public:
         }
 
         for(std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
-            std::cout << "Peel_reverse_function: index: "<<  i << "/"<< peeling_reverse_functions_.size() <<"\tfunction: " ;
-            std::cout << "\t" << *(peeling_reverse_functions_[i]) ;
-            std::cout << "\t" << (*peeling_reverse_functions_[i]) ;
-            std::cout << "\t" << (peeling_reverse_functions_[i]) ;
-            std::cout << std::endl;
+            std::cout << "Peel_reverse_function: index: " << i << "/" << peeling_reverse_functions_.size() <<
+            "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << "\t";
+
             (*peeling_reverse_functions_[i - 1])(work, family_members_[i - 1], mat);
+            std::cout << "" << std::endl;
         }
         work.dirty_lower = true;
         return ret;

@@ -1046,7 +1046,7 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     const double logdata = pedigree_.PeelForwards(work_, full_transition_matrices_);
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-    const double pmut = -std::expm1(logdata_nomut - logdata);
+    const double pmut = -std::expm1(logdata_nomut - logdata) +100;//TODO: Remove this hack
     std::cout << logdata_nomut << "\t" << logdata << "\t" << pmut << std::endl;
     // Skip this site if it does not meet lower probability threshold
     if(pmut < min_prob_) {
