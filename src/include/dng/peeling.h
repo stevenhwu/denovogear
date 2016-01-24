@@ -59,7 +59,7 @@ std::map<decltype(peel::op::NUM), std::string> map_enum_string {
 struct workspace_t {
     IndividualVector upper; // Holds P(~Descendent_Data & G=g)
     IndividualVector lower; // Holds P( Descendent_Data | G=g)
-    ParentVector super; // Holds P(~Descendent_Data & G=g)
+    ParentVector super; // Holds P(~Descendent_Data & G=g) for parent nodes
 
     bool dirty_lower = false;
 
