@@ -115,7 +115,7 @@ typedef std::vector<std::size_t> family_members_t;
 
 enum class Parents : bool {Father=false, Mother=true};
 //enum class Parents : std::size_t {Father=0, Mother=1};
-//TODO: HOW TO?? auto dad = family[Parents::Father];
+//TODO: HOW TO?? auto dad = family[Parents::Father]; Dad always 0, Mom always 1
 
 // utility
 dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
@@ -126,17 +126,16 @@ dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_membe
 
 dng::GenotypeArray multiply_upper_lower(workspace_t &work, size_t index);
 
-dng::PairedGenotypeArray kroneckerProductDadMom(workspace_t &work,
-                                                std::size_t dad, std::size_t mom);
 
 [[deprecated]] dng::GenotypeArray multiply_lower_upper(workspace_t &work, size_t index);
 
+dng::PairedGenotypeArray kroneckerProductDadMom(workspace_t &work,
+                                                std::size_t dad, std::size_t mom);
+
 
 // Core operations
-dng::GenotypeArray up_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
-
-
-void down_core(workspace_t &work, const family_members_t &family, const TransitionVector &mat);
+dng::GenotypeArray up_core(workspace_t &work, const family_members_t &family,
+                           const TransitionVector &mat);
 
 
 dng::GenotypeArray to_parent_core(workspace_t &work, const family_members_t &family,

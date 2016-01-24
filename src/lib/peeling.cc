@@ -19,7 +19,6 @@
 
 #include <dng/peeling.h>
 #include <iostream>
-#include <gdbm.h>
 
 bool DEBUG = false;
 #define DEBUG_PEELING true;
@@ -32,7 +31,7 @@ dng::GenotypeArray dng::peel::multiply_upper_lower(workspace_t &work, std::size_
     return (work.upper[index] * work.lower[index]);
 }
 
-//TODO: Duplicated, which one to keep
+[[deprecated]]
 dng::GenotypeArray dng::peel::multiply_lower_upper(workspace_t &work, std::size_t index){
     return multiply_upper_lower(work, index);
 }
@@ -266,15 +265,7 @@ void dng::peel::to_father_reverse(workspace_t &work,
     IndividualVector::value_type dad_v = work.upper[dad] * (work.lower[dad] /
                                          ((work.paired_buffer.matrix() * mom_v.matrix()).array() +
                                           DNG_INDIVIDUAL_BUFFER_MIN));
-//    if(DEBUG){ std::cout << dad_v << std::endl; }
 
-//    auto dad_v2 = work.upper[dad] * (work.lower[dad] /
-//                                                            ((work.paired_buffer.matrix() * mom_v.matrix()).array() +
-//                                                             DNG_INDIVIDUAL_BUFFER_MIN));
-//    IndividualVector::value_type dad_v2;
-//  if(DEBUG){ std::cout << "\n"<< DNG_INDIVIDUAL_BUFFER_MIN << std::endl; }if(DEBUG){ std::cout << dad_v2 << std::endl; }
-
-//    if(DEBUG){ std::cout << IndividualVector::value_type << std::endl; }
     // Calculate P(dependent data | mom = g)
     work.lower[mom] *= (work.paired_buffer.matrix().transpose() *
                         dad_v.matrix()).array();
