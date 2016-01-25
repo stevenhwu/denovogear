@@ -30,10 +30,15 @@
 #include <dng/newick.h>
 #include <dng/read_group.h>
 #include <dng/peeling.h>
-
 namespace dng {
 
+
+const bool DEBUG_PEDIGREE = false;
+
 class Pedigree {
+
+
+
 public:
 
     enum class TransitionType {
@@ -57,11 +62,14 @@ public:
         }
         // Peel pedigree one family at a time
         for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
-            std::cout << "PeelForward: index: "<<  i << "\tfunction: "<<
+            if(DEBUG_PEDIGREE) {
+                std::cout << "PeelForward: index: " << i << "\tfunction: " <<
                     peel::op::map_enum_string[peeling_functions_ops_[i]] << "\t";
-
+            }
             (*peeling_functions_[i])(work, family_members_[i], mat);
-            std::cout << "" << std::endl;
+            if(DEBUG_PEDIGREE) {
+                std::cout << "" << std::endl;
+            }
         }
         // Sum over roots
         double ret = 0.0;
@@ -85,11 +93,14 @@ public:
         }
 
         for(std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
-            std::cout << "Peel_reverse_function: index: " << i << "/" << peeling_reverse_functions_.size() <<
-            "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << "\t";
-
+            if(DEBUG_PEDIGREE) {
+                std::cout << "Peel_reverse_function: index: " << i << "/" << peeling_reverse_functions_.size() <<
+                "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << "\t";
+            }
             (*peeling_reverse_functions_[i - 1])(work, family_members_[i - 1], mat);
-            std::cout << "" << std::endl;
+            if(DEBUG_PEDIGREE) {
+                std::cout << "" << std::endl;
+            }
         }
         work.dirty_lower = true;
         return ret;

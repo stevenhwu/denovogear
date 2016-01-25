@@ -277,8 +277,8 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     work_.SetFounders(genotype_prior_[ref_index]);
 
     // Calculate log P(Data, nomut ; model)
-    const double logdata_nomut = pedigree_.PeelForwards(work_,
-                                                        nomut_transition_matrices_);
+    const double logdata_nomut = pedigree_.PeelForwards(work_, nomut_transition_matrices_);
+
     std::cout << "exp lower\n" << work_.lower[0] << std::endl;
     /**** Forward-Backwards with full-mutation ****/
 

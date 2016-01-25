@@ -155,9 +155,9 @@ public:
 
         po::store(po::command_line_parser(argc, argv)
                   .options(int_desc_).positional(pos_desc_).run(), vm_);
-    std::cout << arg.mu << std::endl;//0
+//    std::cout << arg.mu << std::endl;//0
         po::notify(vm_);
-std::cout << arg.mu << std::endl; //mu set to default;
+//std::cout << arg.mu << std::endl; //mu set to default;
         std::cout << arg.arg_file << std::endl; //mu set to default;
         if(!arg.arg_file.empty()) {
             if(arg.arg_file == "-") {
