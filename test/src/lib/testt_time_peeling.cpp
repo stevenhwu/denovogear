@@ -18,7 +18,7 @@
 #include "boost_test_helper.h"
 #include "testh_helper_peeling.h"
 
-
+//Time trail/perforamnce test. Will take longer to run than normal test.
 using namespace dng;
 namespace utf = boost::unit_test;
 
