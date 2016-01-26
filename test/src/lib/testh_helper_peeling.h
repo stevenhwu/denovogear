@@ -7,6 +7,7 @@
 
 #include <dng/peeling.h>
 
+//TODO: Fix this files!! New filename system and mixed global and local here.
 std::random_device rd;
 std::mt19937 random_gen_mt(rd());
 
