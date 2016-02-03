@@ -129,8 +129,10 @@ public:
     size_t num_nodes() const { return num_nodes_; }
     std::pair<size_t, size_t> library_nodes() const { return {first_library_, num_nodes_}; }
 
+    bool Equal(Pedigree &other_ped);
+
 protected:
-public:
+public: //XXX: REMOVE later
     // node structure:
     // founder germline, non-founder germline, somatic, library
     std::size_t num_nodes_{0};        // total number of nodes

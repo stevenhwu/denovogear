@@ -33,6 +33,7 @@
 #include <boost/range/algorithm/replace.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include "../vt/assert_utils.h"
 
 #define DNG_GL_PREFIX "GL-"
 #define DNG_SM_PREFIX "SM-" // define also in newick.cc
@@ -96,11 +97,12 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     for (size_t i = 1; i < num_members; ++i) {
         labels[i] = DNG_GL_PREFIX + pedigree.name(i);
     }
-    std::cout << "init pedigree: V E: " << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
+    std::cout << "11111111111111111111111111\ninit pedigree: V E: " << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
     // Go through rows and construct the pedigree part.
     vertex_t dummy_index = 0;
     for (auto &row : pedigree.table()) {
-        std::cout << "Loop START: V E: " << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
+        std::cout << "Loop START: V E: " << num_vertices(pedigree_graph) << "\t" <<
+                num_edges(pedigree_graph) << "\t" << std::endl;
         vertex_t child = row.child;
         vertex_t dad = row.dad;
         vertex_t mom = row.mom;
@@ -145,21 +147,23 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
 
     // Remove the dummy individual from the graph
     std::cout << "before clear_vertex: V E" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<std::endl;
-    auto pair = edges(pedigree_graph);
+
     typedef property_map<Graph, vertex_index_t>::type IndexMap;
     IndexMap index = get(vertex_index, pedigree_graph);
+
+
+    auto pair = edges(pedigree_graph);
     typedef graph_traits<Graph>::edge_iterator edge_iter;
     std::pair<edge_iter, edge_iter> ep;
     edge_iter ei2, ei_end2;
-
     for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2){
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
         << "," << index[target(*ei2, pedigree_graph)] << ") ";
     }std::cout << std::endl;
 
     clear_vertex(dummy_index, pedigree_graph);
-
     first_library_ = num_vertices(pedigree_graph);
+
     std::cout << "after clear_vertex: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
     for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2){
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
@@ -172,13 +176,15 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         labels[v] = DNG_LB_PREFIX + a;
         std::cout << "Add lib: " << labels[v] << std::endl;
     }
-
     num_nodes_ = num_vertices(pedigree_graph);
+
+
     std::cout << "After Add libs: V E: " << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<std::endl;
     for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2){
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
         << "," << index[target(*ei2, pedigree_graph)] << ") ";
     }std::cout << std::endl;
+
     // Connect somatic samples to libraries
     for(vertex_t v = first_somatic_; v < first_library_; ++v) {
         if(labels[v].empty()) {
@@ -196,11 +202,13 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
             }
         }
     }
+
     std::cout << "After connect somatic: V E: " << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<std::endl;
     for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2){
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
         << "," << index[target(*ei2, pedigree_graph)] << ") ";
     }std::cout << std::endl;
+
     // Update edge lengths
     for(tie(ei, ei_end) = edges(pedigree_graph); ei != ei_end; ++ei) {
         std::cout << *ei << "\t" << lengths[*ei] << " " ;
@@ -213,11 +221,12 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         }
         std::cout << "->newRate: " << lengths[*ei] << std::endl;
     }
-
     std::cout <<"Founder, Non_F, Lib, Somatic: " << first_founder_ << "\t" << first_nonfounder_ << "\t" << first_library_ << "\t" << first_somatic_<< std::endl;
+
     // Simplify Pedigree
     for(vertex_t w = first_library_; w > first_founder_; --w) {
         vertex_t v = w - 1;
+
         auto rng = out_edges(v, pedigree_graph);
         size_t children = 0, ancestors = 0, spouses = 0;
         auto it = rng.first;
@@ -279,7 +288,6 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
         << "," << index[target(*ei2, pedigree_graph)] << ") ";
     }std::cout << std::endl;
-
     std::cout <<"Founder, Non_F, Lib, Somatic: " << first_founder_ << "\t" << first_nonfounder_ << "\t" << first_library_ << "\t" << first_somatic_<< std::endl;
 
     vector<size_t> node_ids(num_nodes_, -1);
@@ -298,6 +306,8 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         node_ids[u] = vid++;
     }
     num_nodes_ = vid;
+
+
     std::cout << "After remove some nodes: new V labels_sizse: " << vid << "\t" << labels_.size() << std::endl;
     for (auto item : labels_) {
         std::cout << item << std::endl;
@@ -362,6 +372,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     vector<vertex_t> articulation_vertices;
     std::size_t num_families = biconnected_components(pedigree_graph, families,
                                back_inserter(articulation_vertices)).first;
+
     std::cout << "\n=======================\n" <<
             "num_goups: " << num_groups << "\tnum_fam: " << num_families << std::endl;
     for (int j = 0; j < num_vertices(pedigree_graph) ; ++j) {
@@ -370,7 +381,6 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     for(tie(ei, ei_end) = edges(pedigree_graph); ei != ei_end; ++ei) {
         std::cout << "Edge in family: " << *ei << "\t" << families[*ei] << std::endl;
     }
-
     std::cout << "articulation_vertices: ";
         for (auto a : articulation_vertices) {
         std::cout << a << " ";
@@ -383,6 +393,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     for(tie(ei, ei_end) = edges(pedigree_graph); ei != ei_end; ++ei) {
         family_labels[families[*ei]].push_back(*ei);
     }
+
     for (int l = 0; l < num_families; ++l) {
         std::cout << "Families : " << l << "\t";
         for (auto f : family_labels[l]) {
@@ -424,9 +435,10 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         graph_traits<Graph>::out_edge_iterator ei, ei_end;
         for(tie(ei, ei_end) = out_edges(a, pedigree_graph); ei != ei_end; ++ei) {
             // Just overwrite existing value so that the last one wins.
-            std::cout << "SearchPivots: " << a << "\t" << *ei << "\tin family: "<<
-                    families[*ei] << std::endl;
             pivots[families[*ei]] = a;
+
+            std::cout << "SearchPivots: " << a << "\t" << *ei << "\tin family: "<<
+                families[*ei] << std::endl;
         }
     }
 
@@ -497,6 +509,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         auto pos = boost::find_if(family_edges, [&](edge_t x) -> bool {
             return (edge_types(x) != EdgeType::Spousal); });
         size_t num_parent_edges = distance(family_edges.begin(), pos);
+
         std::cout << "family_edge.size(): " << family_edges.size() <<
                 "\tnum_parent_E: " << num_parent_edges << "\t" <<
                 "\tpos!=(EdgeType::Spousal): "<< *pos <<
@@ -588,7 +601,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         }
     }
 
-//    std::exit(99);
+
     ConstructPeelingMachine();
 
 #ifdef DNG_DEVEL
@@ -832,4 +845,105 @@ std::vector<std::string> dng::Pedigree::BCFHeaderLines() const {
         }
     }
     return ret;
+}
+
+template <class T>
+std::string
+type_name()
+{
+    typedef typename std::remove_reference<T>::type TR;
+    std::unique_ptr<char, void(*)(void*)> own
+           (
+#ifndef _MSC_VER
+                abi::__cxa_demangle(typeid(TR).name(), nullptr,
+                                           nullptr, nullptr),
+#else
+                nullptr,
+#endif
+                std::free
+           );
+    std::string r = own != nullptr ? own.get() : typeid(TR).name();
+    if (std::is_const<TR>::value)
+        r += " const";
+    if (std::is_volatile<TR>::value)
+        r += " volatile";
+    if (std::is_lvalue_reference<T>::value)
+        r += "&";
+    else if (std::is_rvalue_reference<T>::value)
+        r += "&&";
+    return r;
+}
+
+
+bool dng::Pedigree::Equal(Pedigree &other_ped) {
+
+    AssertEqual(num_nodes_, other_ped.num_nodes());
+    AssertEqual(first_founder_, other_ped.first_founder_);
+    AssertEqual(first_nonfounder_, other_ped.first_nonfounder_);
+    AssertEqual(first_somatic_, other_ped.first_somatic_);
+    AssertEqual(first_library_, other_ped.first_library_);
+
+    auto other_labels = other_ped.labels();
+    AssertVectorEqual(labels_, other_labels);
+
+    //TODO: How to iterate through struct? without create another function in struct?
+    auto other_transitions = other_ped.transitions();
+    for (int j = 0; j < transitions_.size(); ++j) {
+        assert(transitions_[j].type == other_transitions[j].type);
+        assert(transitions_[j].parent1 == other_transitions[j].parent1);
+        assert(transitions_[j].parent2 == other_transitions[j].parent2);
+        assert(transitions_[j].length1 == other_transitions[j].length1);
+        assert(transitions_[j].length2 == other_transitions[j].length2);
+    }
+
+    auto other_roots = other_ped.roots_;
+    AssertVectorEqual(roots_, other_roots);
+
+    auto other_peeling_ops = other_ped.peeling_ops_;
+    AssertVectorEqual(peeling_ops_, other_peeling_ops);
+
+    auto other_peeling_function_ops = other_ped.peeling_functions_ops_;
+    AssertVectorEqual(peeling_functions_ops_, other_peeling_function_ops);
+
+
+    auto other_peeling_functions = other_ped.peeling_functions_;
+    for (int j = 0; j < peeling_functions_.size()-1; ++j) {
+        int op_index = peeling_functions_ops_[j];
+//        std::cout<<
+////                typeid(peeling_functions_[j]).name() << "\t" <<
+////                type_name<decltype(peeling_functions_[j])>() << "\n" <<
+////                typeid(dng::peel::functions[0]).name() << "\t" <<
+////                type_name<decltype(dng::peel::functions[0])>() << "\n" <<
+////                op_index << "\t" <<
+//                (dng::peel::functions[op_index] == peeling_functions_[j]) << "\t" <<
+////                (dng::peel::functions[0] == peeling_functions_[j]) << "\t" <<
+//                (other_peeling_functions[j] == peeling_functions_[j]) << "\t" <<
+//                (other_peeling_functions[0] == peeling_functions_[j]) << "\t" <<
+////                (typeid(dng::peel::functions[0]).name() == typeid(peeling_functions_[j]).name() ) << "\t" <<
+//                "\n" << std::endl; ;
+        assert(dng::peel::functions[op_index] == other_peeling_functions[j]); //Check against expected dng::peel::functions
+        assert(peeling_functions_[j] == other_peeling_functions[j]); //Check against others
+//
+
+    }
+
+    auto other_peeling_reverse_functions = other_ped.peeling_reverse_functions_;
+    for (int j = 0; j < peeling_reverse_functions_.size()-1; ++j) {
+        int op_index = peeling_functions_ops_[j];
+        assert(dng::peel::reverse_functions[op_index] == other_peeling_reverse_functions[j]); //Check against expected dng::peel::functions
+        assert(peeling_reverse_functions_[j] == other_peeling_reverse_functions[j]); //Check against others
+
+    }
+
+
+    auto other_family_members_ = other_ped.family_members_;
+    AssertEqual(family_members_.size(), other_family_members_.size());
+    for (int k = 0; k < family_members_.size(); ++k) {
+        AssertVectorEqual(family_members_[k], other_family_members_[k]);
+    }
+
+    return true;
+
+
+
 }

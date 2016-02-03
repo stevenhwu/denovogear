@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) 2014-2015 Reed A. Cartwright
+ * Authors:  Reed A. Cartwright <reed@cartwrig.ht>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+#ifndef DNG_PEDIGREE_V2_H
+#define DNG_PEDIGREE_V2_H
+
+//#include <functional>
+//#include <cmath>
+//#include <array>
+
+//#include <dng/matrix.h>
+//#include <dng/io/ped.h>
+//#include <dng/newick.h>
+//#include <dng/read_group.h>
+//#include <dng/peeling.h>
+
+#include <dng/pedigree.h>
+namespace dng {
+
+class PedigreeV2 : public Pedigree {
+
+    typedef boost::property_map<Graph, boost::edge_type_t>::type PropEdgeType;
+    typedef boost::property_map<Graph, boost::edge_length_t>::type PropEdgeLength;
+    typedef boost::property_map<Graph, boost::vertex_label_t>::type PropVertexLabel;
+    typedef boost::property_map<Graph, boost::vertex_group_t>::type PropVertexGroup;
+    typedef boost::property_map<Graph, boost::vertex_index_t>::type PropVertexIndex;
+
+    typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
+
+
+    typedef std::vector<std::vector<boost::graph_traits<dng::Graph>::edge_descriptor>> family_labels_t;
+//    auto edge_types = get(edge_type, pedigree_graph);
+//    auto lengths = get(edge_length, pedigree_graph);
+//    auto labels = get(vertex_label, pedigree_graph);
+//    auto groups = get(vertex_group, pedigree_graph);
+//    auto families = get(edge_family, pedigree_graph);
+//    // Add the labels for the germline nodes
+//
+public:
+    bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
+                   double mu, double mu_somatic, double mu_library);
+
+private:
+
+
+    void ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io::Pedigree &pedigree);
+
+    void AddLibrariesFromReadGroups(dng::Graph &pedigree_graph, const dng::ReadGroups &rgs,
+                                                PropVertexLabel &labels);
+
+    void ConnectSomaticToLibraries(dng::Graph &pedigree_graph, const ReadGroups &rgs,
+                                   const PropVertexLabel &labels);
+
+    void UpdateEdgeLengths(dng::Graph &pedigree_graph, double mu, double mu_somatic, double mu_library);
+
+    void SimplifyPedigree(dng::Graph &pedigree_graph, const PropEdgeType &edge_types, const PropEdgeLength &lengths);
+
+    void UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng::ReadGroups rgs, std::vector<size_t> &node_ids);
+
+    void EraseRemovedLibraries(dng::ReadGroups &rgs, std::vector<size_t> &node_ids);
+
+
+    void CreateFamiliesInfo(dng::Graph &pedigree_graph, family_labels_t &family_labels, std::vector<vertex_t> &pivots);
+
+    void CreatePeelingOps(dng::Graph &pedigree_graph, const std::vector<size_t> &node_ids,
+                          family_labels_t &family_labels, std::vector<vertex_t> &pivots);
+
+    void PrintEdges(std::string prefix, const dng::Graph &pedigree_graph);
+
+
+
+    const vertex_t DUMMY_INDEX = 0;
+};
+
+}// namespace dng
+
+
+#endif // DNG_PEDIGREE_H
