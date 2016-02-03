@@ -41,25 +41,5 @@ void boost_check_matrix(M &expected, M &result, int expected_rows, int expected_
 }
 
 
-template<typename A, typename B>
-void AssertTrue(A expected, B actual){
-    assert(expected==actual);
-};
-
-template<typename A>
-void AssertNear(A expected, A actual){
-    assert(((expected - actual)/expected) < ABS_TEST_THRESHOLD);
-
-};
-
-template<typename A>
-void AssertEigenMatrixNear(A expected, A actual){
-    for (int j = 0; j < expected.rows(); ++j) {
-        for (int k = 0; k < expected.cols(); ++k) {
-            AssertNear(expected(j,k), actual(j,k));
-        }
-    }
-};
-
 
 #endif //DENOVOGEAR_BOOST_TEST_HELPER_H

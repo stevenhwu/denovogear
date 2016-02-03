@@ -41,12 +41,12 @@
 
 #include "version.h"
 
-
+#include <dng/pedigree_v2.h>
 
 #include "vcf_helper.h"
 #include "find_mutation.h"
 #include "find_mutation_getter.h"
-#include "../../test/boost_test_helper.h"
+#include "assert_utils.h"
 //#include <boost/test/unit_test.hpp>
 
 using namespace dng::task;
@@ -142,9 +142,10 @@ cat("{", paste(s, collapse="}, \n{"), "}\n" )
     auto pArray = find_mutation.getGenotype_prior_();
     for (int i = 0; i < 5; ++i) {
         auto array = pArray[i];
-        for (int k = 0; k < 10; ++k) {
-            assert(expected_prior[i][k] - array[k] < ABS_TEST_THRESHOLD);
-        }
+//        for (int k = 0; k < 10; ++k) {
+//            assert(expected_prior[i][k] - array[k] < ABS_TEST_THRESHOLD);
+//        }
+        AssertVectorNear(expected_prior[i], array);
     }
 
 
@@ -439,6 +440,12 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     }
 //    pedigree.PrintStates(std::cout);
 
+    dng::PedigreeV2 pedigree2;
+    pedigree2.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+    auto compare = pedigree.Equal(pedigree2);
+    std::cout << "PD1 == PD2: " << compare << std::endl;
+
+
     std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
     cout << pedigree.first_founder_ << "\t" << //endl;    // start of founder germline
     pedigree.first_nonfounder_ << "\t" <<  //endl; // start of non-founder germline
@@ -506,8 +513,8 @@ int main(int argc, char *argv[]) {
         argv[1] = (char*) "-p";
         argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
         argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
-        argv[2] = (char*) "testdata/sample_5_3/ceu3.ped"; //"pedFile";
-        argv[3] = (char*) "testdata/sample_5_3/test3.vcf"; //test1.bam
+        argv[2] = (char*) "testdata/stevenTest/ceu3.ped"; //"pedFile";
+        argv[3] = (char*) "testdata/stevenTest/test3.vcf"; //test1.bam
         dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
         a();
 

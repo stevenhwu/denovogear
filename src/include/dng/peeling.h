@@ -146,7 +146,8 @@ dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_membe
 dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
                                            const TransitionVector &mat, int first_child_index);
 
-[[deprecated]] dng::GenotypeArray multiply_upper_lower(workspace_t &work, size_t index);
+[[deprecated]] dng::GenotypeArray
+        multiply_upper_lower(workspace_t &work, size_t index);
 
 
 [[deprecated]] dng::GenotypeArray multiply_lower_upper(workspace_t &work, size_t index);
