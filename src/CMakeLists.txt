@@ -140,24 +140,31 @@ install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINAR
 ####### STEVEN CUSTOM CMAKE
 ADD_EXECUTABLE(dng-call_test
         dng-call_test.cc
-        vt/calculateProbs.cc
         lib/likelihood.cc lib/newick.cc lib/pedigree.cc lib/peeling.cc
         lib/mutation.cc lib/stats.cc
-#        vt/find_mutation_getter.cpp vt/find_mutation_getter.h ../test/boost_test_helper.h
-        vt/assert_utils.h)
 
-TARGET_LINK_LIBRARIES(dng-call_test HTSLIB::HTSLIB Threads::Threads)
-TARGET_LINK_LIBRARIES(dng-call_test EIGEN3::EIGEN3)
-TARGET_LINK_LIBRARIES(dng-call_test Boost::PROGRAM_OPTIONS Boost::FILESYSTEM Boost::SYSTEM)
+        vt/calculateProbs.cc
+        vt/assert_utils.h
+        vt/find_mutation.cc
+        vt/mutation_stats.cc
+        )
+
+TARGET_LINK_LIBRARIES(dng-call_test
+        HTSLIB::HTSLIB Threads::Threads
+        EIGEN3::EIGEN3
+        Boost::PROGRAM_OPTIONS Boost::FILESYSTEM Boost::SYSTEM
+        )
 
 
-ADD_EXECUTABLE(dng_vt
-        vt/find_mutation_test.cpp
-        lib/pedigree.cc lib/pedigree_v2.cc
-        lib/peeling.cc
-        lib/likelihood.cc lib/newick.cc
-        lib/mutation.cc lib/stats.cc
-        vt/vcf_helper.h vt/find_mutation.h vt/assert_utils.h)
+ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cpp
+        lib/pedigree.cc lib/peeling.cc lib/likelihood.cc lib/newick.cc lib/mutation.cc lib/stats.cc
+        lib/pedigree_v2.cc
+
+        vt/vcf_utils.h vt/find_mutation.h vt/assert_utils.h
+        vt/find_mutation.cc
+        vt/mutation_stats.cc
+
+        )
 
 TARGET_LINK_LIBRARIES(dng_vt
         Threads::Threads
@@ -165,11 +172,16 @@ TARGET_LINK_LIBRARIES(dng_vt
         Boost::FILESYSTEM
         Boost::SYSTEM
         Boost::UNIT_TEST_FRAMEWORK
-        Boost::TIMER
+
         EIGEN3::EIGEN3
         HTSLIB::HTSLIB
+
         )
 
+
+IF(DEVEL_MODE)
+  TARGET_LINK_LIBRARIES(dng_vt Boost::TIMER)
+ENDIF()
 
 #################################################################################
 ## Compile unit tests

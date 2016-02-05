@@ -53,11 +53,25 @@ class PedigreeV2 : public Pedigree {
 //    auto families = get(edge_family, pedigree_graph);
 //    // Add the labels for the germline nodes
 //
+    //XXX: struct FamilyInfo ??
+    enum class FamilyToOps : int {
+        PAIR = 2,
+        TRIO = 3
+    };
+    struct FamilyInfo {
+        int family_type;
+        family_labels_t family_labels;//(num_families);
+        std::vector<vertex_t> pivots;//(num_families, dummy_index);
+    };
+
 public:
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
                    double mu, double mu_somatic, double mu_library);
 
-private:
+    bool Equal(Pedigree &other_ped);
+
+
+protected:
 
 
     void ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io::Pedigree &pedigree);
@@ -76,14 +90,13 @@ private:
 
     void EraseRemovedLibraries(dng::ReadGroups &rgs, std::vector<size_t> &node_ids);
 
-
     void CreateFamiliesInfo(dng::Graph &pedigree_graph, family_labels_t &family_labels, std::vector<vertex_t> &pivots);
 
     void CreatePeelingOps(dng::Graph &pedigree_graph, const std::vector<size_t> &node_ids,
                           family_labels_t &family_labels, std::vector<vertex_t> &pivots);
 
-    void PrintEdges(std::string prefix, const dng::Graph &pedigree_graph);
-
+private:
+    void PrintDebugEdges(std::string prefix, const dng::Graph &pedigree_graph);
 
 
     const vertex_t DUMMY_INDEX = 0;
