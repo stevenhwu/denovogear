@@ -847,35 +847,9 @@ std::vector<std::string> dng::Pedigree::BCFHeaderLines() const {
     return ret;
 }
 
-template <class T>
-std::string
-type_name()
-{
-    typedef typename std::remove_reference<T>::type TR;
-    std::unique_ptr<char, void(*)(void*)> own
-           (
-#ifndef _MSC_VER
-                abi::__cxa_demangle(typeid(TR).name(), nullptr,
-                                           nullptr, nullptr),
-#else
-                nullptr,
-#endif
-                std::free
-           );
-    std::string r = own != nullptr ? own.get() : typeid(TR).name();
-    if (std::is_const<TR>::value)
-        r += " const";
-    if (std::is_volatile<TR>::value)
-        r += " volatile";
-    if (std::is_lvalue_reference<T>::value)
-        r += "&";
-    else if (std::is_rvalue_reference<T>::value)
-        r += "&&";
-    return r;
-}
 
 
-bool dng::Pedigree::Equal(Pedigree &other_ped) {
+bool dng::Pedigree::Equal(dng::Pedigree &other_ped) {
 
     AssertEqual(num_nodes_, other_ped.num_nodes());
     AssertEqual(first_founder_, other_ped.first_founder_);
@@ -907,7 +881,7 @@ bool dng::Pedigree::Equal(Pedigree &other_ped) {
 
 
     auto other_peeling_functions = other_ped.peeling_functions_;
-    for (int j = 0; j < peeling_functions_.size()-1; ++j) {
+    for (int j = 0; j < peeling_functions_.size() - 1; ++j) {
         int op_index = peeling_functions_ops_[j];
 //        std::cout<<
 ////                typeid(peeling_functions_[j]).name() << "\t" <<
@@ -921,16 +895,18 @@ bool dng::Pedigree::Equal(Pedigree &other_ped) {
 //                (other_peeling_functions[0] == peeling_functions_[j]) << "\t" <<
 ////                (typeid(dng::peel::functions[0]).name() == typeid(peeling_functions_[j]).name() ) << "\t" <<
 //                "\n" << std::endl; ;
-        assert(dng::peel::functions[op_index] == other_peeling_functions[j]); //Check against expected dng::peel::functions
+        assert(dng::peel::functions[op_index] ==
+               other_peeling_functions[j]); //Check against expected dng::peel::functions
         assert(peeling_functions_[j] == other_peeling_functions[j]); //Check against others
 //
 
     }
 
     auto other_peeling_reverse_functions = other_ped.peeling_reverse_functions_;
-    for (int j = 0; j < peeling_reverse_functions_.size()-1; ++j) {
+    for (int j = 0; j < peeling_reverse_functions_.size() - 1; ++j) {
         int op_index = peeling_functions_ops_[j];
-        assert(dng::peel::reverse_functions[op_index] == other_peeling_reverse_functions[j]); //Check against expected dng::peel::functions
+        assert(dng::peel::reverse_functions[op_index] ==
+               other_peeling_reverse_functions[j]); //Check against expected dng::peel::functions
         assert(peeling_reverse_functions_[j] == other_peeling_reverse_functions[j]); //Check against others
 
     }
@@ -943,7 +919,6 @@ bool dng::Pedigree::Equal(Pedigree &other_ped) {
     }
 
     return true;
-
 
 
 }

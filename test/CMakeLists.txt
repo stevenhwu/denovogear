@@ -68,6 +68,7 @@ SET_TESTS_PROPERTIES(build_gitkeep PROPERTIES
 ################################################################################
 # Compile unit tests
 include_directories(../src/include)
+include_directories(../)
 
 
 # Make a test for each unit test file located in test/ dir
@@ -103,8 +104,13 @@ foreach(test ${TESTS2})
   get_filename_component(testName ${test} NAME_WE)
   add_executable(${testName} EXCLUDE_FROM_ALL ${test}
           ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ##            ../src/lib/likelihood.cc ../src/lib/newick.cc ../src/lib/pedigree.cc
-          ##            ../src/lib/mutation.cc ../src/lib/stats.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
+
+#          ${CMAKE_SOURCE_DIR}/src/vt/find_mutation.cc
           )
   target_link_libraries(${testName}
           Threads::Threads
@@ -114,8 +120,11 @@ foreach(test ${TESTS2})
           Boost::UNIT_TEST_FRAMEWORK
           EIGEN3::EIGEN3
           HTSLIB::HTSLIB
-#          Boost::TIMER
+
           )
+  IF(DEVEL_MODE)
+    TARGET_LINK_LIBRARIES(${testName} Boost::TIMER)
+  ENDIF()
 #  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
 #  add_test(${testName}_run ${testName})
 #  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
@@ -136,8 +145,14 @@ foreach(test ${TESTS2})
   get_filename_component(testName ${test} NAME_WE)
   add_executable(${testName} EXCLUDE_FROM_ALL ${test}
           ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ##            ../src/lib/likelihood.cc ../src/lib/newick.cc ../src/lib/pedigree.cc
-          ##            ../src/lib/mutation.cc ../src/lib/stats.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
+
+          ${CMAKE_SOURCE_DIR}/src/vt/find_mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/vt/mutation_stats.cc
           )
   target_link_libraries(${testName}
           Threads::Threads

@@ -5,8 +5,12 @@
 #ifndef DENOVOGEAR_FIND_MUTATION_GETTER_H
 #define DENOVOGEAR_FIND_MUTATION_GETTER_H
 
+//HACK: I really don't like this hack
+//#define private public
+//#define protected public
 
 #include "find_mutation.h"
+
 
 //Just make testing easier, no real purpose of this class
 class FindMutationsGetter : public FindMutations {
@@ -17,7 +21,8 @@ public:
                                                                                                            pedigree,
                                                                                                            params) { }
 public:
-
+//    double min_prob_ = FindMutations::min_prob_; //HACK: 1
+    using FindMutations::min_prob_; //HACK: 2
     const Pedigree &getPedigree_() const {
         return pedigree_;
     }

@@ -59,7 +59,8 @@
 
 
 #include "find_mutation.h"
-#include "vcf_helper.h"
+#include "vcf_utils.h"
+#include "boost_utils.h"
 using namespace dng::task;
 using namespace dng;
 //
@@ -475,6 +476,7 @@ int Call::operator()(Call::argument_type &arg) {
     const size_t library_start = pedigree.library_nodes().first;
 
     FindMutations::stats_t stats;
+    MutationStats mutation_stats(min_prob);
 
     const int min_basequal = arg.min_basequal;
     auto filter_read = [min_basequal](
@@ -791,11 +793,11 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             }
 
             size_t ref_index = seq::char_index(ref_base);
-            std::cout << "START FM::calculate: ref: " << ref_base << "\t" << ref_index << std::endl;
+            std::cout << "======START FM::calculate: ref: " << ref_base << "\t" << ref_index << std::endl;
             if(!calculate(read_depths, ref_index, &stats)) {
                 return;
             }
-            std::cout << "END FM::calculate" << std::endl;
+            std::cout << "======END FM::calculate" << std::endl;
 
             // reformatted AD fields for output. The first few fields are the GL and SM fields and "AD" is missing. The
             // remaining fields are just copied from the input file

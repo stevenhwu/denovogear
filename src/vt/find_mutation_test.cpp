@@ -43,10 +43,11 @@
 
 #include <dng/pedigree_v2.h>
 
-#include "vcf_helper.h"
+#include "vcf_utils.h"
 #include "find_mutation.h"
 #include "find_mutation_getter.h"
 #include "assert_utils.h"
+#include "boost_utils.h"
 //#include <boost/test/unit_test.hpp>
 
 using namespace dng::task;
@@ -222,7 +223,7 @@ void test_operator(const FindMutationsGetter &find_mutation) {
 
     Pedigree pedigree = find_mutation.getPedigree_();
 
-    auto family = pedigree.family_members_;
+//    auto family = pedigree.family_members_;
     dng::peel::workspace_t workspace;//  = pedigree.CreateWorkspace();
     
     workspace.Resize(5);
@@ -245,9 +246,9 @@ void test_operator(const FindMutationsGetter &find_mutation) {
 
     auto numut_matrices = find_mutation.getNomut_transition_matrices_();
     workspace.CleanupFast();
-    dng::peel::up(workspace, family[0], numut_matrices);
-    dng::peel::to_father(workspace, family[1], numut_matrices);
-    dng::peel::up(workspace, family[2], numut_matrices);
+//    dng::peel::up(workspace, family[0], numut_matrices);
+//    dng::peel::to_father(workspace, family[1], numut_matrices);
+//    dng::peel::up(workspace, family[2], numut_matrices);
 
     double ret = log((workspace.lower[0] * workspace.upper[0]).sum());
     std::cout << "Expected: " << ret << std::endl;
@@ -256,9 +257,9 @@ void test_operator(const FindMutationsGetter &find_mutation) {
 
     auto full_matrices = find_mutation.getFull_transition_matrices_();
     workspace.CleanupFast();
-    dng::peel::up(workspace, family[0], full_matrices );
-    dng::peel::to_father(workspace, family[1], full_matrices );
-    dng::peel::up(workspace, family[2], full_matrices );
+//    dng::peel::up(workspace, family[0], full_matrices );
+//    dng::peel::to_father(workspace, family[1], full_matrices );
+//    dng::peel::up(workspace, family[2], full_matrices );
 
     double ret_full = log((workspace.lower[0] * workspace.upper[0]).sum());
     std::cout << "Expected full: " << ret_full << std::endl;
@@ -316,7 +317,7 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
             throw std::runtime_error(
                     "unable to open pedigree file '" + arg.ped + "'.");
         }
-        ped.Parse(istreambuf_range(ped_file));
+        ped.Parse(dng::util::istreambuf_range(ped_file));
     } else {
         throw std::runtime_error("pedigree file was not specified.");
     }
@@ -445,44 +446,44 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     auto compare = pedigree.Equal(pedigree2);
     std::cout << "PD1 == PD2: " << compare << std::endl;
 
+    /*{
+        std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
+        cout << pedigree.first_founder_ << "\t" << //endl;    // start of founder germline
+        pedigree.first_nonfounder_ << "\t" <<  //endl; // start of non-founder germline
+        pedigree.first_somatic_ << "\t" <<  //endl;    // start of somatic nodes
+        pedigree.first_library_ << "\t" <<  //endl;    // start of libraries
+        pedigree.num_nodes_ << endl;        // total number of nodes
 
-    std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
-    cout << pedigree.first_founder_ << "\t" << //endl;    // start of founder germline
-    pedigree.first_nonfounder_ << "\t" <<  //endl; // start of non-founder germline
-    pedigree.first_somatic_ << "\t" <<  //endl;    // start of somatic nodes
-    pedigree.first_library_ << "\t" <<  //endl;    // start of libraries
-    pedigree.num_nodes_ << endl;        // total number of nodes
-
-    cout << "Roots\t"<< pedigree.roots_.size() << endl;
-
-    // Pedigree Structure
-    cout << "Labels: " << pedigree.labels_.size() << endl;
-    cout << pedigree.transitions_.size() << endl;
+        cout << "Roots\t" << pedigree.roots_.size() << endl;
+        // Pedigree Structure
+        cout << "Labels: " << pedigree.labels_.size() << endl;
+        cout << pedigree.transitions_.size() << endl;
 
 
-    // The original, simplified peeling operations
-    cout << pedigree.peeling_ops_.size() << endl;
-    for (int j = 0; j < pedigree.peeling_ops_.size(); ++j) {
-        int op_index = pedigree.peeling_ops_[j];
-        std::cout << "op: "<< pedigree.peeling_ops_[j] << "\t" <<
-                pedigree.peeling_functions_ops_[j] << "\t" <<
-                peel::op::map_enum_string[pedigree.peeling_functions_ops_[j]] << std::endl;
-    }
+        // The original, simplified peeling operations
+        cout << pedigree.peeling_ops_.size() << endl;
+        for (int j = 0; j < pedigree.peeling_ops_.size(); ++j) {
+            int op_index = pedigree.peeling_ops_[j];
+            std::cout << "op: " << pedigree.peeling_ops_[j] << "\t" <<
+            pedigree.peeling_functions_ops_[j] << "\t" <<
+            peel::op::map_enum_string[pedigree.peeling_functions_ops_[j]] << std::endl;
+        }
 
-    // The arguments to a peeling operation
-    cout << pedigree.family_members_.size() << endl;
-
+        // The arguments to a peeling operation
+        cout << pedigree.family_members_.size() << endl;
+    }*/
 
 //    FindMutations calculate{min_prob, pedigree,
 //                            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]}};
 
+
     FindMutations::params_t test_param_1{arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
     // Pileup data
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-//    test_basic_parameterts(find_mutation);
-//    test_prior(find_mutation);
+    test_basic_parameterts(find_mutation);
+    test_prior(find_mutation);
 //
-//    test_full_transition(find_mutation);
+    test_full_transition(find_mutation);
 //
 //    test_operator(find_mutation);
 
@@ -513,8 +514,8 @@ int main(int argc, char *argv[]) {
         argv[1] = (char*) "-p";
         argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
         argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
-        argv[2] = (char*) "testdata/stevenTest/ceu3.ped"; //"pedFile";
-        argv[3] = (char*) "testdata/stevenTest/test3.vcf"; //test1.bam
+//        argv[2] = (char*) "testdata/stevenTest/ceu3.ped"; //"pedFile";
+//        argv[3] = (char*) "testdata/stevenTest/test3.vcf"; //test1.bam
         dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
         a();
 
