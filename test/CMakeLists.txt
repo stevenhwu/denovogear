@@ -130,6 +130,16 @@ foreach(test ${TESTS2})
   set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
 endforeach(test)
 
+#ExternalProject_Add(testTime
+#        DEPENDS dng-phaser dng-dnm dng-call
+#        PREFIX "testTime"
+#        EXCLUDE_FROM_ALL 1
+##        DOWNLOAD_DIR "${TEST_DATA_DIR}"
+##        URL "https://github.com/kaeldai/testdata/archive/${DATA_PACKAGE}"
+##        SOURCE_DIR "${TEST_DATA_DIR}"
+#        CONFIGURE_COMMAND ""
+#        BUILD_COMMAND ""
+#        INSTALL_COMMAND "")
 ################################################################################
 
 

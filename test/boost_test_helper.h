@@ -13,7 +13,8 @@
 //TODO: Where should this file go?
 //FIXME: too many global
 const double ABS_TEST_THRESHOLD = 1e-10;
-const double BOOST_CLOSE_THRESHOLD = 1e-5;//
+const double BOOST_CLOSE_THRESHOLD = 1e-4;//
+const double BOOST_SMALL_THRESHOLD = sqrt(std::numeric_limits<double>::epsilon());
 //TODO: What is a good cut? 1e-8?// sqrt(std::numeric_limits<double>::epsilon());
 
 
@@ -23,7 +24,12 @@ void boost_check_vector(V &expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {
-        BOOST_CHECK_CLOSE(expected[i], result[i], BOOST_CLOSE_THRESHOLD);
+        if(expected[i] == 0){
+            BOOST_CHECK_EQUAL(0, result[i]);
+        }
+        else {
+            BOOST_CHECK_CLOSE(expected[i], result[i], BOOST_CLOSE_THRESHOLD);
+        }
     }
 }
 
@@ -43,7 +49,12 @@ void boost_check_matrix(M &expected, M &result) {
 
     for (int i = 0; i < expected.rows(); ++i) {
         for (int j = 0; j < expected.cols(); ++j) {
-            BOOST_CHECK_CLOSE(expected(i, j), result(i, j), BOOST_CLOSE_THRESHOLD);
+            if(expected(i,j) == 0 ){
+                BOOST_CHECK_EQUAL(0, result(i,j));
+            }
+            else {
+                BOOST_CHECK_CLOSE(expected(i, j), result(i, j), BOOST_CLOSE_THRESHOLD);
+            }
         }
     }
 }
