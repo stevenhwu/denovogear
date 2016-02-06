@@ -197,14 +197,45 @@ void test_full_transition(const FindMutationsGetter &find_mutation) {
 
 }
 
-void test_operator(const FindMutationsGetter &find_mutation) {
+void test_operator(FindMutationsGetter &find_mutation) {
     FindMutations::stats_t stats;
     int ref_index = 0;
     std::vector<depth_t> read_depths(3);
     for (int j = 0; j < read_depths.size(); ++j) {
 //        read_depths[j] = {0,0,0,0};
         read_depths[j].counts[0] = 10+j;
+        read_depths[j].counts[1] = j*j;
+        read_depths[j].counts[2] = 1;
+        read_depths[j].counts[3] = 0;
+        read_depths[j].counts[j%3] += 30;
     }
+
+    find_mutation(read_depths, ref_index, &stats);
+
+    std::cout << stats.mup << "\t" << stats.llh << "\t" << stats.lld << "\t" << stats.mux << "\t" <<
+        stats.has_single_mut  << "\t" << stats.mu1p  << std::endl;
+    std::cout << stats.dnt << "\t" << stats.dnl  << "\t" << stats.dnq<< "\t" << stats.dnc << std::endl;
+    for (auto p : stats.posterior_probabilities) {
+        std::cout << p.prod() << "\t";
+    }
+    std::cout << std::endl;
+    for (auto p : stats.genotype_likelihoods) {
+        std::cout << p.prod() << "\t";
+    }
+    std::cout << std::endl;
+//    IndividualVector posterior_probabilities;
+//    IndividualVector genotype_likelihoods;
+//    std::vector<float> node_mup;
+//    std::vector<float> node_mu1p;
+
+    std::cout << "==== call calculate_mutation() ======" << std::endl;
+    MutationStats mutation_stats(find_mutation.min_prob_);
+    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+    std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
+            "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
+            mutation_stats.mu1p << std::endl;
+    std::cout << mutation_stats.dnt << "\t" << mutation_stats.dnl << "\t" <<
+            mutation_stats.dnq << "\t" << mutation_stats.dnc << std::endl;
 
 //    find_mutation(read_depths, ref_index, &stats);
 
@@ -225,7 +256,7 @@ void test_operator(const FindMutationsGetter &find_mutation) {
 
 //    auto family = pedigree.family_members_;
     dng::peel::workspace_t workspace;//  = pedigree.CreateWorkspace();
-    
+
     workspace.Resize(5);
 //    workspace.founder_nodes = std::make_pair(first_founder_, first_nonfounder_);
 //    workspace.germline_nodes = std::make_pair(first_founder_, first_somatic_);
@@ -299,7 +330,6 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     using dng::util::phred;
 
     std::cout << arg.mu << "\t" << arg.mu_somatic << "\t" << arg.mu_library << std::endl;
-
 
     std::vector<std::string> a;
     a.push_back("1       1       0       0       1       NA12891");
@@ -444,7 +474,9 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     dng::PedigreeV2 pedigree2;
     pedigree2.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
     auto compare = pedigree.Equal(pedigree2);
-    std::cout << "PD1 == PD2: " << compare << std::endl;
+    std::cout << "Pedigree == PedigreeV2? " <<  std::boolalpha << compare << std::endl;
+
+
 
     /*{
         std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
@@ -480,12 +512,12 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     FindMutations::params_t test_param_1{arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
     // Pileup data
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    test_basic_parameterts(find_mutation);
-    test_prior(find_mutation);
-//
-    test_full_transition(find_mutation);
-//
-//    test_operator(find_mutation);
+//    test_basic_parameterts(find_mutation);
+//    test_prior(find_mutation);
+////
+//    test_full_transition(find_mutation);
+////
+    test_operator(find_mutation);
 
     std::cout << "ready to exit: " << EXIT_SUCCESS << std::endl;
     return EXIT_SUCCESS;
@@ -514,8 +546,8 @@ int main(int argc, char *argv[]) {
         argv[1] = (char*) "-p";
         argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
         argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
-//        argv[2] = (char*) "testdata/stevenTest/ceu3.ped"; //"pedFile";
-//        argv[3] = (char*) "testdata/stevenTest/test3.vcf"; //test1.bam
+        argv[2] = (char*) "testDataSW/ceu_M12.ped"; //"pedFile";
+        argv[3] = (char*) "testDataSW/test_M12.vcf"; //test1.bam
         dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
         a();
 

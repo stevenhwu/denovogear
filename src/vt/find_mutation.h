@@ -59,6 +59,8 @@ public:
     bool operator()(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
 
+    bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index, MutationStats &mutation_stats);
+
 protected:
     const dng::Pedigree &pedigree_;
 
@@ -87,7 +89,10 @@ protected:
 
     std::vector<double> event_;
 
-    bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index, MutationStats &mutation_stats);
+
+    void calculate_mup(MutationStats &stats);
+
+    void calculate_posterior_probabilities(MutationStats &mutation_stats);
 };
 
 #endif //DENOVOGEAR_FIND_MUTATION_H

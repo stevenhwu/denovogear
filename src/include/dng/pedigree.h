@@ -30,14 +30,13 @@
 #include <dng/newick.h>
 #include <dng/read_group.h>
 #include <dng/peeling.h>
+
+//TODO: Control this in CMAKE as well
+//#define DEBUG_PEDIGREE ;
+
 namespace dng {
 
-
-const bool DEBUG_PEDIGREE = false;
-
 class Pedigree {
-
-
 
 public:
 
@@ -62,14 +61,12 @@ public:
         }
         // Peel pedigree one family at a time
         for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
-            if(DEBUG_PEDIGREE) {
-                std::cout << "PeelForward: index: " << i << "\tfunction: " <<
-                    peel::op::map_enum_string[peeling_functions_ops_[i]] << "\t";
-            }
+#ifdef DEBUG_PEDIGREE
+    std::cerr << "PeelForward: index: " << i << "/" << peeling_functions_.size() <<
+        "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i]]  << std::endl;
+#endif
             (*peeling_functions_[i])(work, family_members_[i], mat);
-            if(DEBUG_PEDIGREE) {
-                std::cout << "" << std::endl;
-            }
+
         }
         // Sum over roots
         double ret = 0.0;
@@ -92,15 +89,13 @@ public:
             work.upper[r] /= sum;
         }
 
-        for(std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
-            if(DEBUG_PEDIGREE) {
-                std::cout << "Peel_reverse_function: index: " << i << "/" << peeling_reverse_functions_.size() <<
-                "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << "\t";
-            }
+        for (std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
+#ifdef DEBUG_PEDIGREE
+std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse_functions_.size() <<
+    "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << std::endl;
+#endif
             (*peeling_reverse_functions_[i - 1])(work, family_members_[i - 1], mat);
-            if(DEBUG_PEDIGREE) {
-                std::cout << "" << std::endl;
-            }
+
         }
         work.dirty_lower = true;
         return ret;
