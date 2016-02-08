@@ -163,7 +163,13 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     using dng::util::phred;
 
 
+    std::cout << "FM() depth: " << "\t" << depths.size() << std::endl;
+    for (auto d : depths) {
+        auto cc = d.counts;
+        std::cout << cc[0] << " "<< cc[1] << " "<< cc[2] << " "<< cc[3] << " "<< std::endl;
+    }
     MutationStats mutation_stats(min_prob_);
+
     assert(stats != nullptr);
 
     // calculate genotype likelihoods and store in the lower library vector
@@ -174,83 +180,65 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
         scale += stemp;
     }
 
-
-    std::cout << "FM() depth: " << "\t" << depths.size() << std::endl;
-    for (auto d : depths) {
-        auto cc = d.counts;
-        std::cout << cc[0] << " "<< cc[1] << " "<< cc[2] << " "<< cc[3] << " "<< std::endl;
-    }
-
     // Set the prior probability of the founders given the reference
     work_.SetFounders(genotype_prior_[ref_index]);
 
     // Calculate log P(Data, nomut ; model)
-    const double logdata_nomut = pedigree_.PeelForwards(work_, nomut_transition_matrices_);
+    const double logdata_nomut = pedigree_.PeelForwards(work_,
+                                                        nomut_transition_matrices_);
 
-//    std::cout << "exp lower\n" << work_.lower[0] << std::endl;
     /**** Forward-Backwards with full-mutation ****/
 
     // Calculate log P(Data ; model)
     const double logdata = pedigree_.PeelForwards(work_, full_transition_matrices_);
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-    const double pmut = -std::expm1(logdata_nomut - logdata) ;//+ 10000;
-    std::cout << logdata_nomut << "\t" << logdata << "\t" << pmut << "\t" << min_prob_ << std::endl;
-    // Skip this site if it does not meet lower probability threshold
+    const double pmut = -std::expm1(logdata_nomut - logdata);
 
-    stats->mup = pmut;
-    stats->lld = (logdata + scale) / M_LN10;
-    stats->llh = logdata / M_LN10;
+
+    std::cout << logdata_nomut << "\t" << logdata << "\t" << pmut << "\t" << min_prob_ << std::endl;
     mutation_stats.store_mup(logdata_nomut, logdata);
 
-//    if(mutation_stats.check_mutation_prob_lt_threshold() ){
-//        return false;
-//    }
+    // Skip this site if it does not meet lower probability threshold
 //    if(pmut < min_prob_) {
 //        return false;
 //    }
 
-
     // Copy genotype likelihoods
-    std::cout << "Copy Genotype likelihood" << std::endl;
-    mutation_stats.store_genotype_likelihood(depths, work_);
     stats->genotype_likelihoods.resize(work_.num_nodes);
     for(std::size_t u = 0; u < depths.size(); ++u) {
         std::size_t pos = work_.library_nodes.first + u;
         stats->genotype_likelihoods[pos] = work_.lower[pos].log() / M_LN10;
     }
 
+    // Peel Backwards with full-mutation
+    std::cout << "Peel Backwards with full-mutation" << std::endl;
+    pedigree_.PeelBackwards(work_, full_transition_matrices_);
+
+//    size_t library_start = work_.library_nodes.first; //TODO: Can delete this??
+    std::cout << "Copy Genotype likelihood" << std::endl;
+    mutation_stats.store_genotype_likelihood(depths, work_);
     mutation_stats.store_scaled_log_likelihood(scale);
-    size_t library_start = work_.library_nodes.first; //XXX: Can delete?
+
     stats->mup = pmut;
     stats->lld = (logdata + scale) / M_LN10;
     stats->llh = logdata / M_LN10;
-
-    mutation_stats.store_posterior_probabilities(work_);
-    // Peel Backwards with full-mutation
-    std::cout << "Peel Backwards with full-mutation" << std::endl;
-    //TODO: After refactor, how to prevent calling something multiple times??
-    pedigree_.PeelBackwards(work_, full_transition_matrices_);
-//    pedigree_.PeelForwards(work_, nomut_transition_matrices_);
-//    pedigree_.PeelBackwards(work_, nomut_transition_matrices_);
 
     // Calculate statistics after Forward-Backwards
     stats->posterior_probabilities.resize(work_.num_nodes);
     for(std::size_t i = 0; i < work_.num_nodes; ++i) {
         stats->posterior_probabilities[i] = work_.upper[i] * work_.lower[i];
         stats->posterior_probabilities[i] /= stats->posterior_probabilities[i].sum();
-//        std::cout << stats->posterior_probabilities[i].prod() << "\t";
     }
-//    std::cout << std::endl;
 
-
-
-
+    std::cout << "Mux and node_mup[i]" << std::endl;
     double mux = 0.0;
     event_.assign(work_.num_nodes, 0.0);
     for(std::size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
-        mux += (work_.super[i] * (mean_matrices_[i] * work_.lower[i].matrix()).array()).sum();
-        event_[i] =  (work_.super[i] * (posmut_transition_matrices_[i] * work_.lower[i].matrix()).array()).sum();
+        mux += (work_.super[i] * (mean_matrices_[i] *
+                                  work_.lower[i].matrix()).array()).sum();
+        event_[i] = (work_.super[i] * (posmut_transition_matrices_[i] *
+                                       work_.lower[i].matrix()).array()).sum();
         event_[i] = event_[i] / pmut;
     }
     stats->mux = mux;
@@ -261,7 +249,7 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     }
 
     /**** Forward-Backwards with no-mutation ****/
-    std::cout << "/**** Forward-Backwards with no-mutation ****/" << std::endl;
+
     // TODO: Better to use a separate workspace???
     pedigree_.PeelForwards(work_, nomut_transition_matrices_);
     pedigree_.PeelBackwards(work_, nomut_transition_matrices_);
@@ -288,8 +276,6 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     // Calculate P(only 1 mutation)
     const double pmut1 = total * (1.0 - pmut);
     stats->mu1p = pmut1;
-
-    std::cout << pmut1 << "\t" << pmut << std::endl;
 
     // Output statistics for single mutation only if it is likely
     if(pmut1 / pmut >= min_prob_) {
@@ -331,7 +317,6 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
     using dng::util::lphred;
     using dng::util::phred;
 
-
 //    assert(stats != nullptr); //TODO: Implement similar check or reset for MutationStats
 
     // calculate genotype likelihoods and store in the lower library vector
@@ -346,59 +331,99 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
 
     calculate_mup(mutation_stats);
 
-    if(mutation_stats.check_mutation_prob_lt_threshold() ){
-        return false;
-    }
+//    if(mutation_stats.check_mutation_prob_lt_threshold() ){
+//        return false;
+//    }
 
     mutation_stats.store_scaled_log_likelihood(scale);
     mutation_stats.store_genotype_likelihood(depths, work_);
 
 
-    mutation_stats.store_posterior_probabilities(work_);
-    // Peel Backwards with full-mutation
-    std::cout << "Peel Backwards with full-mutation" << std::endl;
-    pedigree_.PeelBackwards(work_, full_transition_matrices_);
-
-    // Calculate statistics after Forward-Backwards
-
-//    stats->posterior_probabilities.resize(work_.num_nodes);
-//    for(std::size_t i = 0; i < work_.num_nodes; ++i) {
-//        stats->posterior_probabilities[i] = work_.upper[i] * work_.lower[i];
-//        stats->posterior_probabilities[i] /= stats->posterior_probabilities[i].sum();
-//    }
-
-
-
     // Peel Backwards with full-mutation
     std::cout << "Peel Backwards with full-mutation" << std::endl;
     pedigree_.PeelBackwards(work_, full_transition_matrices_);
     mutation_stats.store_posterior_probabilities(work_);
+//    calculate_posterior_probabilities(mutation_stats);
 
-    size_t library_start = work_.library_nodes.first;
+// ===== NOT DONE =====
+    stats_t *stats;
+    double pmut = mutation_stats.get_mup();
 
-//    // Calculate statistics after Forward-Backwards
-//    stats->posterior_probabilities.resize(work_.num_nodes);
-//    for(std::size_t i = 0; i < work_.num_nodes; ++i) {
-//        stats->posterior_probabilities[i] = work_.upper[i] * work_.lower[i];
-//        stats->posterior_probabilities[i] /= stats->posterior_probabilities[i].sum();
-//    }
-//    double mux = 0.0;
+    std::cout << "Mux expected number of mutation and node_mup[i]" << std::endl;
+    double mux = 0.0;
+    event_.assign(work_.num_nodes, 0.0);
+    for(std::size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
+        mux += (work_.super[i] * (mean_matrices_[i] *
+                                  work_.lower[i].matrix()).array()).sum();
+        event_[i] = (work_.super[i] * (posmut_transition_matrices_[i] *
+                                       work_.lower[i].matrix()).array()).sum();
+        event_[i] = event_[i] / mutation_stats.get_mup();
+    }
+    mutation_stats.mux = mux;
 
-    calculate_posterior_probabilities(mutation_stats);
+    mutation_stats.node_mup.resize(work_.num_nodes, hts::bcf::float_missing);
+    for(size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
+        mutation_stats.node_mup[i] = static_cast<float>(event_[i]);
+    }
 
-//    // Peel Backwards with full-mutation
-//    std::cout << "Peel Backwards with full-mutation" << std::endl;
-//    pedigree_.PeelBackwards(work_, full_transition_matrices_);
-//
-//    // Calculate statistics after Forward-Backwards
-//
-//    stats->posterior_probabilities.resize(work_.num_nodes);
-//    for(std::size_t i = 0; i < work_.num_nodes; ++i) {
-//        stats->posterior_probabilities[i] = work_.upper[i] * work_.lower[i];
-//        stats->posterior_probabilities[i] /= stats->posterior_probabilities[i].sum();
-//    }
-//
 
+    /**** Forward-Backwards with no-mutation ****/
+    // TODO: Better to use a separate workspace???
+
+    pedigree_.PeelForwards(work_, nomut_transition_matrices_);
+    pedigree_.PeelBackwards(work_, nomut_transition_matrices_);
+    event_.assign(work_.num_nodes, 0.0);
+    double total = 0.0, entropy = 0.0, max_coeff = -1.0;
+    size_t dn_loc = 0, dn_col = 0, dn_row = 0;
+    for(std::size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
+        Eigen::ArrayXXd mat = (work_.super[i].matrix() *
+                               work_.lower[i].matrix().transpose()).array() *
+                              onemut_transition_matrices_[i].array();
+        std::size_t row, col;
+        double mat_max = mat.maxCoeff(&row, &col);
+        if(mat_max > max_coeff) {
+            max_coeff = mat_max;
+            dn_row  = row;
+            dn_col = col;
+            dn_loc = i;
+        }
+        event_[i] = mat.sum();
+        entropy += (mat.array() == 0.0).select(mat.array(),
+                                               mat.array() * mat.log()).sum();
+        total += event_[i];
+    }
+    // Calculate P(only 1 mutation)
+    const double pmut1 = total * (1.0 - pmut);
+    mutation_stats.mu1p = pmut1;
+
+    // Output statistics for single mutation only if it is likely
+    if(pmut1 / pmut >= min_prob_) {
+        stats->has_single_mut = true;
+        for(std::size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
+            event_[i] = event_[i] / total;
+        }
+
+        // Calculate entropy of mutation location
+        entropy = (-entropy / total + log(total)) / M_LN2;
+        entropy /= max_entropies_[ref_index];
+        mutation_stats.dnc = std::round(100.0 * (1.0 - entropy));
+
+        mutation_stats.dnq = lphred<int32_t>(1.0 - (max_coeff / total), 255);
+        mutation_stats.dnl = pedigree_.labels()[dn_loc];
+        if(pedigree_.transitions()[dn_loc].type == Pedigree::TransitionType::Germline) {
+            mutation_stats.dnt = &meiotic_diploid_mutation_labels[dn_row][dn_col][0];
+        } else {
+            mutation_stats.dnt = &mitotic_diploid_mutation_labels[dn_row][dn_col][0];
+        }
+
+        mutation_stats.node_mu1p.resize(work_.num_nodes, hts::bcf::float_missing);
+        for(size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
+            mutation_stats.node_mu1p[i] = static_cast<float>(event_[i]);
+        }
+    } else {
+        mutation_stats.has_single_mut = false;
+    }
+    return true;
 
     return true;
 
@@ -420,7 +445,7 @@ void FindMutations::calculate_mup(MutationStats &mutation_stats) {
 
 
 void FindMutations::calculate_posterior_probabilities(MutationStats &mutation_stats) {
-
+    //TODO: PeelBackwards can NOT call twice, maybe not a good idea to put here
     pedigree_.PeelBackwards(work_, full_transition_matrices_);
 
     mutation_stats.store_posterior_probabilities(work_);
