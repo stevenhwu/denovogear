@@ -45,18 +45,21 @@ private:
 
 
 public:
-    double store_mup(const double logdata_nomut, const double logdata);
 
 
     MutationStats(double min_prob);
 
+    void set_mup(const double logdata_nomut, const double logdata);
+
     bool check_mutation_prob_lt_threshold();
 
-    void store_scaled_log_likelihood(double scale);
+    void set_scaled_log_likelihood(double scale);
 
-    void store_genotype_likelihood(const std::vector<dng::depth_t> &depths, const dng::peel::workspace_t &workspace);
+    void set_genotype_likelihood(const dng::peel::workspace_t &workspace, const int depth_size);
 
-    void store_posterior_probabilities(const dng::peel::workspace_t &workspace);
+    void set_posterior_probabilities(const dng::peel::workspace_t &workspace);
+
+    void set_node_mup(const std::vector<double> &event, int start_index);
 };
 
 

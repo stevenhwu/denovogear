@@ -5,8 +5,7 @@
 #ifndef DENOVOGEAR_BOOST_UTILS_H
 #define DENOVOGEAR_BOOST_UTILS_H
 
-namespace dng {
-namespace util {
+namespace utils {
 
 
 // Helper function that mimics boost::istream_range
@@ -19,7 +18,6 @@ boost::iterator_range <std::istreambuf_iterator<Elem, Traits>> istreambuf_range(
 }
 
 
-}
-} // namespace dng::util
+} // namespace utils
 
 #endif //DENOVOGEAR_BOOST_UTILS_H

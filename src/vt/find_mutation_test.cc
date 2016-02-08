@@ -41,12 +41,15 @@
 
 #include "version.h"
 
+
+
 #include <dng/pedigree_v2.h>
 
-#include "vcf_utils.h"
-#include "find_mutation.h"
-#include "find_mutation_getter.h"
-#include "assert_utils.h"
+#include <utils/vcf_utils.h>
+#include <utils/assert_utils.h>
+#include <dng/find_mutation.h>
+#include <helpers/find_mutation_helper.h>
+
 #include "boost_utils.h"
 //#include <boost/test/unit_test.hpp>
 
@@ -373,7 +376,7 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
             throw std::runtime_error(
                     "unable to open pedigree file '" + arg.ped + "'.");
         }
-        ped.Parse(dng::util::istreambuf_range(ped_file));
+        ped.Parse(utils::istreambuf_range(ped_file));
     } else {
         throw std::runtime_error("pedigree file was not specified.");
     }

@@ -138,15 +138,18 @@ install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINAR
 
 #####################################################
 ####### STEVEN CUSTOM CMAKE
+INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/utils")
+INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}")
 ADD_EXECUTABLE(dng-call_test
         dng-call_test.cc
         lib/likelihood.cc lib/newick.cc lib/pedigree.cc lib/peeling.cc
         lib/mutation.cc lib/stats.cc
 
         vt/calculateProbs.cc
-        vt/assert_utils.h
-        vt/find_mutation.cc
-        vt/mutation_stats.cc
+        utils/vcf_utils.h
+        utils/assert_utils.h
+        lib/find_mutation.cc
+        lib/mutation_stats.cc
         )
 
 TARGET_LINK_LIBRARIES(dng-call_test
@@ -156,13 +159,14 @@ TARGET_LINK_LIBRARIES(dng-call_test
         )
 
 
-ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cpp
+ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cc
         lib/pedigree.cc lib/peeling.cc lib/likelihood.cc lib/newick.cc lib/mutation.cc lib/stats.cc
         lib/pedigree_v2.cc
 
-        vt/vcf_utils.h vt/find_mutation.h vt/assert_utils.h
-        vt/find_mutation.cc
-        vt/mutation_stats.cc
+        utils/vcf_utils.h
+        utils/assert_utils.h
+        lib/find_mutation.cc
+        lib/mutation_stats.cc
 
         )
 

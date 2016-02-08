@@ -32,7 +32,8 @@
 #include <boost/range/algorithm/replace.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
-#include "../vt/assert_utils.h"
+
+#include "../utils/assert_utils.h"
 
 #define DNG_GL_PREFIX "GL-"
 #define DNG_SM_PREFIX "SM-" // define also in newick.cc

@@ -9,7 +9,7 @@
 //#define private public
 //#define protected public
 
-#include "find_mutation.h"
+#include <dng/find_mutation.h>
 
 
 //Just make testing easier, no real purpose of this class

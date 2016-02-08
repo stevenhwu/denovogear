@@ -93,6 +93,8 @@ protected:
     void calculate_mup(MutationStats &stats);
 
     void calculate_posterior_probabilities(MutationStats &mutation_stats);
+    void calculate_exp_mutation(MutationStats &mutation_stats);
+    void calculate_node_mup(MutationStats &mutation_stats);
 };
 
 #endif //DENOVOGEAR_FIND_MUTATION_H

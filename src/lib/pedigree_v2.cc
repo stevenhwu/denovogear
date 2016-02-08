@@ -34,7 +34,6 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/timer/timer.hpp>
 
-#include "../vt/assert_utils.h"
 
 #define DNG_GL_PREFIX "GL-"
 #define DNG_SM_PREFIX "SM-" // define also in newick.cc

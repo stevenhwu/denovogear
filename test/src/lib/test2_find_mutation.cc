@@ -13,7 +13,7 @@
 #include <dng/task/call.h>
 
 #include <fstream>
-#include <src/vt/find_mutation_getter.h>
+#include <src/helpers/find_mutation_helper.h>
 
 #include "../test_call.h"
 #include "boost_test_helper.h"
@@ -61,13 +61,14 @@ const int NUM_TEST = 100;
 //BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
 
 
-struct Fx {
+struct RandomFamily {
 
     std::string fixture;
 
 
-    double min_prob = arg.min_prob;
+    double min_prob;
     dng::Pedigree pedigree;
+    dng::peel::workspace_t workspace;
 
     FindMutations::params_t test_param_1 {0, {0,0,0,0}, 0,
                                           std::string("0,0,0,0"),
@@ -84,7 +85,7 @@ struct Fx {
         std::string run_path;
     } arg;
 
-    Fx(std::string s = "") : fixture(s) {
+    RandomFamily(std::string s = "") : fixture(s) {
 
         po::options_description ext_desc_, int_desc_;
         po::positional_options_description pos_desc_;
@@ -112,7 +113,7 @@ struct Fx {
         // Parse pedigree from file
         dng::io::Pedigree ped;
         std::ifstream ped_file(arg.ped);
-        ped.Parse(dng::util::istreambuf_range(ped_file));
+        ped.Parse(utils::istreambuf_range(ped_file));
 
         dng::ReadGroups rgs;
         std::vector<hts::File> indata;
@@ -129,26 +130,52 @@ struct Fx {
 
         pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
 
-
         std::array<double, 4> freqs;
         auto f = util::parse_double_list(arg.nuc_freqs, ',', 4);
         std::copy(f.first.begin(), f.first.end(), &freqs[0]);
-        for (auto f : freqs) {
-            std::cout << f<< std::endl;
-        }
+
+        test_param_1 = FindMutations::params_t {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
+
 
         int min_qual = arg.min_basequal;
         min_prob = arg.min_prob;
 
-        test_param_1 = FindMutations::params_t {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
 
     }
 
+    double setup_workspace(int ref_index, std::vector<depth_t> &read_depths ){
 
+        workspace.Resize(5);
+        workspace.founder_nodes = std::make_pair(0, 2);
+        workspace.germline_nodes = std::make_pair(0, 2);
+        workspace.somatic_nodes = std::make_pair(2, 2);
+        workspace.library_nodes = std::make_pair(2, 5);
 
-    ~Fx() {
+        std::array<double, 4> prior {};
+        prior.fill(0);
+        prior[ref_index] = test_param_1.ref_weight;
+        auto genotype_prior_prior = population_prior(test_param_1.theta, test_param_1.nuc_freq, prior);
+        workspace.SetFounders(genotype_prior_prior);
+
+        std::vector<std::string> expect_gamma{"0.98, 0.0005, 0.0005, 1.04",
+                                              "0.02, 0.075,  0.005,  1.18"};
+        dng::genotype::DirichletMultinomialMixture genotype_likelihood_{
+                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[0]},
+                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[1]}  };
+        double scale = 0.0, stemp;
+        for (std::size_t u = 0; u < read_depths.size(); ++u) {
+            std::tie(workspace.lower[2 + u], stemp) =
+                    genotype_likelihood_(read_depths[u], ref_index);
+            scale += stemp;
+        }
+        return scale;
+    }
+
+    ~RandomFamily() {
         BOOST_TEST_MESSAGE("tear down fixture " << fixture);
     }
+
+
 };
 
 void setup() { BOOST_TEST_MESSAGE("set up fun"); }
@@ -305,45 +332,23 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
         read_depths[j].counts[1] = j*j;
         read_depths[j].counts[2] = 1;
         read_depths[j].counts[3] = 0;
+        read_depths[j].counts[j%3] += 30;
     }
 
-    FindMutations::stats_t stats;
-    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    find_mutation(read_depths, ref_index, &stats);
-
-    Pedigree pedigree = find_mutation.getPedigree_();
     std::vector<peel::family_members_t> family {
             {1,4},
             {0,1,2},
             {0,3}
     };
+    min_prob = 0;
+    FindMutations::stats_t stats;
+    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+    find_mutation(read_depths, ref_index, &stats);
 
-    dng::peel::workspace_t workspace;//  = pedigree.CreateWorkspace();
-    workspace.Resize(5);
-    workspace.founder_nodes = std::make_pair(0, 2);
-    workspace.germline_nodes = std::make_pair(0, 2);
-    workspace.somatic_nodes = std::make_pair(2, 2);
-    workspace.library_nodes = std::make_pair(2, 5);
 
-    std::array<double, 4> prior {};
-    prior.fill(0);
-    prior[ref_index] = test_param_1.ref_weight;
-    auto genotype_prior_prior = population_prior(test_param_1.theta, test_param_1.nuc_freq, prior);
-    boost_check_vector(genotype_prior_prior, find_mutation.getGenotype_prior_()[ref_index]);
-    workspace.SetFounders(genotype_prior_prior);
+    double scale = setup_workspace(ref_index, read_depths);
 
-    std::vector<std::string> expect_gamma{"0.98, 0.0005, 0.0005, 1.04",
-                                          "0.02, 0.075,  0.005,  1.18"};
-    dng::genotype::DirichletMultinomialMixture genotype_likelihood_{
-            dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[0]},
-            dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[1]}  };
-    double scale = 0.0, stemp;
-    for (std::size_t u = 0; u < read_depths.size(); ++u) {
-        std::tie(workspace.lower[2 + u], stemp) =
-                genotype_likelihood_(read_depths[u], ref_index);
-        scale += stemp;
-    }
-
+    //Test basic stats
     auto numut_matrices = find_mutation.getNomut_transition_matrices_();
     workspace.CleanupFast();
     dng::peel::up(workspace, family[0], numut_matrices );
@@ -357,7 +362,6 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
     dng::peel::up(workspace, family[0], full_matrices );
     dng::peel::to_father(workspace, family[1], full_matrices );
     dng::peel::up(workspace, family[2], full_matrices );
-
     double result_full = log((workspace.lower[0] * workspace.upper[0]).sum());
 //    std::cout << "Expected: " << result_nomut << std::endl;
 //    std::cout << "Expected full: " << result_full << std::endl;
@@ -374,31 +378,126 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
 
 
     std::cout << stats.mup << "\t" << stats.llh << std::endl;
-//    stats->lld = (logdata + scale) / M_LN10;
-
     std::cout << "EXP: " << expected_mup << "\t" << expected_llh << std::endl;
-//    peeling_ops_;
-//    // The modified, "faster" operations
-//    std::vector<decltype(peel::op::NUM)> peeling_functions_ops_;
-// Peel pedigree one family at a time
-//    for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
-//    std::cout << "PeelForward: index: "<<  i << "\tfunction: " ;
-//    //            std::cout << "\t" << *(peeling_functions_[i]) ;
-//    //            std::cout << "\t" << (peeling_functions_[i]) ;
-//    //
-//    //            std::cout << "\t" << (peeling_ops_[i]) ;
-//    std::cout << std::endl;
-//    //            fprintf(std::cout, )
-//    (*peeling_functions_[i])(workspace, family_members_[i], mat);
-//    }
-//    // Sum over roots
-//    double ret = 0.0;
-//    for(auto r : roots_) {
-//    ret += log((workspace.lower[r] * workspace.upper[r]).sum());
-//    }
-//    bool FindMutations::operator()(const std::vector<depth_t> &depths,
-//                                   int ref_index, stats_t *stats) {
+
+    //Test posterior
+    full_matrices = find_mutation.getFull_transition_matrices_();
+    workspace.CleanupFast();
+    dng::peel::up(workspace, family[0], full_matrices );
+    dng::peel::to_father(workspace, family[1], full_matrices );
+    dng::peel::up(workspace, family[2], full_matrices );
+
+    dng::peel::up_reverse(workspace, family[2], full_matrices );
+    dng::peel::to_father_reverse(workspace, family[1], full_matrices );
+    dng::peel::up_reverse(workspace, family[0], full_matrices );
+
+    dng::GenotypeArray expected_posterior;
+    for(std::size_t i = 0; i < workspace.num_nodes; ++i) {
+        expected_posterior = WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, i);
+        expected_posterior /= expected_posterior.sum();
+
+        boost_check_vector(expected_posterior, stats.posterior_probabilities[i]);
+    }
+
+
+
 }
+
+
+BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) {
+
+    int ref_index = 3;
+    std::vector<depth_t> read_depths(3);
+    for (int j = 0; j < read_depths.size(); ++j) {
+        read_depths[j].counts[0] = 20 + j;
+        read_depths[j].counts[1] = j * j;
+        read_depths[j].counts[2] = 1;
+        read_depths[j].counts[3] = 0;
+    }
+
+    min_prob = 0; //Pass everything
+    FindMutations::stats_t stats;
+    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+    find_mutation(read_depths, ref_index, &stats);
+
+    MutationStats mutation_stats(min_prob);
+    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+
+    BOOST_CHECK_EQUAL(stats.mup, mutation_stats.mup);
+    BOOST_CHECK_EQUAL(stats.llh, mutation_stats.llh);
+    BOOST_CHECK_EQUAL(stats.lld, mutation_stats.lld);
+    BOOST_CHECK_EQUAL(stats.mux, mutation_stats.mux);
+    BOOST_CHECK_EQUAL(stats.has_single_mut, mutation_stats.has_single_mut);
+    BOOST_CHECK_EQUAL(stats.mu1p, mutation_stats.mu1p);
+    BOOST_CHECK_EQUAL(stats.dnt, mutation_stats.dnt);
+    BOOST_CHECK_EQUAL(stats.dnl, mutation_stats.dnl);
+    BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
+
+    for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
+        boost_check_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
+    }
+    for (int i = 2; i < stats.genotype_likelihoods.size(); ++i) {
+        boost_check_vector(stats.genotype_likelihoods[i], mutation_stats.genotype_likelihoods[i]);
+//        std::cout << i << "\t" << stats.genotype_likelihoods[i][0] << "\t" << mutation_stats.genotype_likelihoods[i][0] << std::endl;
+//        std::cout << stats.genotype_likelihoods[i][1] << "\t" << mutation_stats.genotype_likelihoods[i][1] << std::endl;
+    }
+    for (int i = 2; i < stats.node_mup.size(); ++i) {
+        BOOST_CHECK_EQUAL(stats.node_mup[i], mutation_stats.node_mup[i]);
+    }
+
+//    std::cout << stats.dnt << "\t" << stats.dnl  << "\t" << stats.dnq<< "\t" << stats.dnc << std::endl;
+//    for (auto p : stats.posterior_probabilities) {
+//        std::cout << p.prod() << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : stats.genotype_likelihoods) {
+//        std::cout << p.prod() << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : stats.node_mup) {
+//        std::cout << p << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : stats.node_mu1p) {
+//        std::cout << p << "\t";
+//    }
+//    std::cout << "\n========================" << std::endl;
+
+//    IndividualVector posterior_probabilities;
+//    IndividualVector genotype_likelihoods;
+//    std::vector<float> node_mup;
+//    std::vector<float> node_mu1p;
+
+
+//    MutationStats mutation_stats(find_mutation.min_prob_);
+//    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+//    std::cout << "==== call calculate_mutation() ======" << std::endl;
+//    std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
+//    "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
+//    mutation_stats.mu1p << std::endl;
+//    std::cout << mutation_stats.dnt << "\t" << mutation_stats.dnl << "\t" <<
+//    mutation_stats.dnq << "\t" << mutation_stats.dnc << std::endl;
+//    for (auto p : mutation_stats.posterior_probabilities) {
+//        std::cout << p.prod() << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : mutation_stats.genotype_likelihoods) {
+//        std::cout << p.prod() << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : mutation_stats.node_mup) {
+//        std::cout << p << "\t";
+//    }
+//    std::cout << std::endl;
+//    for (auto p : mutation_stats.node_mu1p) {
+//        std::cout << p << "\t";
+//    }
+//    std::cout << "\n========================" << std::endl;
+
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
