@@ -114,6 +114,7 @@ std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse
     peel::workspace_t CreateWorkspace() const {
         peel::workspace_t work;
         work.Resize(num_nodes_);
+        //TODO: The *_nodes.second is kind of confusing, you need to know the order of the node (maybe we should explain that somewhere)
         work.founder_nodes = std::make_pair(first_founder_, first_nonfounder_);
         work.germline_nodes = std::make_pair(first_founder_, first_somatic_);
         work.somatic_nodes = std::make_pair(first_somatic_, first_library_);

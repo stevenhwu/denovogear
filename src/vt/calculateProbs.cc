@@ -58,8 +58,8 @@
 
 
 
-#include "find_mutation.h"
-#include "vcf_utils.h"
+#include <dng/find_mutation.h>
+#include <utils/vcf_utils.h>
 #include "boost_utils.h"
 using namespace dng::task;
 using namespace dng;
@@ -307,7 +307,7 @@ int Call::operator()(Call::argument_type &arg) {
             throw std::runtime_error(
                     "unable to open pedigree file '" + arg.ped + "'.");
         }
-        ped.Parse(istreambuf_range(ped_file));
+        ped.Parse(utils::istreambuf_range(ped_file));
     } else {
         throw std::runtime_error("pedigree file was not specified.");
     }
@@ -431,31 +431,31 @@ int Call::operator()(Call::argument_type &arg) {
     }
 //    pedigree.PrintStates(std::cout);
 
-    std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
-    cout << pedigree.first_founder_ << endl;    // start of founder germline
-    cout << pedigree.first_nonfounder_ << endl; // start of non-founder germline
-    cout << pedigree.first_somatic_ << endl;    // start of somatic nodes
-    cout << pedigree.first_library_ << endl;    // start of libraries
-    cout << pedigree.num_nodes_ << endl;        // total number of nodes
-
-
-
-    cout << pedigree.roots_.size() << endl;
-
-    // Pedigree Structure
-    cout << "Labels: " << pedigree.labels_.size() << endl;
-    cout << pedigree.transitions_.size() << endl;
-
-    // The original, simplified peeling operations
-    cout << pedigree.peeling_ops_.size() << endl;
-    // The modified, "faster" operations
-    cout << pedigree.peeling_functions_ops_.size() << endl;
-    // Array of functions that will be called to perform the peeling
-    cout << pedigree.peeling_functions_.size() << endl;
-    cout << pedigree.peeling_reverse_functions_.size() << endl;
-
-    // The arguments to a peeling operation
-    cout << pedigree.family_members_.size() << endl;
+//    std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
+//    cout << pedigree.first_founder_ << endl;    // start of founder germline
+//    cout << pedigree.first_nonfounder_ << endl; // start of non-founder germline
+//    cout << pedigree.first_somatic_ << endl;    // start of somatic nodes
+//    cout << pedigree.first_library_ << endl;    // start of libraries
+//    cout << pedigree.num_nodes_ << endl;        // total number of nodes
+//
+//
+//
+//    cout << pedigree.roots_.size() << endl;
+//
+//    // Pedigree Structure
+//    cout << "Labels: " << pedigree.labels_.size() << endl;
+//    cout << pedigree.transitions_.size() << endl;
+//
+//    // The original, simplified peeling operations
+//    cout << pedigree.peeling_ops_.size() << endl;
+//    // The modified, "faster" operations
+//    cout << pedigree.peeling_functions_ops_.size() << endl;
+//    // Array of functions that will be called to perform the peeling
+//    cout << pedigree.peeling_functions_.size() << endl;
+//    cout << pedigree.peeling_reverse_functions_.size() << endl;
+//
+//    // The arguments to a peeling operation
+//    cout << pedigree.family_members_.size() << endl;
     
     
     FindMutations calculate { min_prob, pedigree,

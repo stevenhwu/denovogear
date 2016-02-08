@@ -151,8 +151,8 @@ foreach(test ${TESTS2})
           ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
           ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
 
-          ${CMAKE_SOURCE_DIR}/src/vt/find_mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/vt/mutation_stats.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
           )
   target_link_libraries(${testName}
           Threads::Threads

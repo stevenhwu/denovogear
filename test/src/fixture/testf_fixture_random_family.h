@@ -78,11 +78,6 @@ struct Fx {
     }
 };
 
-void setup() { BOOST_TEST_MESSAGE("set up fun"); }
-
-void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
-
-
 
 
 void copy_family_to_workspace(dng::peel::workspace_t &workspace, dng::TransitionVector &full_matrix,

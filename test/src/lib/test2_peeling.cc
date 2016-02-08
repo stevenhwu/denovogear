@@ -16,7 +16,7 @@
 #include <chrono>
 
 #include "boost_test_helper.h"
-#include "testh_helper_peeling.h"
+#include "testf_fixture_random_family.h"
 //#include <boost/test/data/test_case.hpp>
 ////#include <boost/test/data/monomorphic.hpp>
 //namespace data = boost::unit_test::data;
@@ -27,6 +27,12 @@ namespace utf = boost::unit_test;
 const int NUM_TEST = 100;
 
 
+void setup() { BOOST_TEST_MESSAGE("set up fun"); }
+
+void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
+
+
+
 // TODO: Example of BOOST_DATA_TEST_CASE and BOOST_PARAM_TEST_CASE.
 // TODO: Should be able to replace the for loop with these.
 // TODO: Might not be able to use fixture.
@@ -35,8 +41,8 @@ const int NUM_TEST = 100;
 //std::vector<int> test_types;//
 //
 //BOOST_AUTO_TEST_SUITE(suite1,
-//  * utf::fixture<Fx>(std::string("FX"))
-//  * utf::fixture<Fx>(std::string("FX2")))
+//  * utf::fixture<RandomFamily>(std::string("FX"))
+//  * utf::fixture<RandomFamily>(std::string("FX2")))
 //
 //  BOOST_AUTO_TEST_CASE(test1, * utf::fixture(&setup, &teardown))
 //  {
@@ -59,7 +65,7 @@ const int NUM_TEST = 100;
 //BOOST_AUTO_TEST_SUITE_END()
 
 
-//BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
+//BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<RandomFamily>(std::string("FX")) )
 BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
 
     BOOST_AUTO_TEST_CASE(test_sum_over_child, *utf::fixture(&setup, &teardown)) {
