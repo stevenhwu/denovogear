@@ -211,7 +211,7 @@ void test_operator(FindMutationsGetter &find_mutation) {
     }
 
     find_mutation(read_depths, ref_index, &stats);
-
+    std::cout << "==== call operator() ======" << std::endl;
     std::cout << stats.mup << "\t" << stats.llh << "\t" << stats.lld << "\t" << stats.mux << "\t" <<
         stats.has_single_mut  << "\t" << stats.mu1p  << std::endl;
     std::cout << stats.dnt << "\t" << stats.dnl  << "\t" << stats.dnq<< "\t" << stats.dnc << std::endl;
@@ -223,19 +223,45 @@ void test_operator(FindMutationsGetter &find_mutation) {
         std::cout << p.prod() << "\t";
     }
     std::cout << std::endl;
+    for (auto p : stats.node_mup) {
+        std::cout << p << "\t";
+    }
+    std::cout << std::endl;
+    for (auto p : stats.node_mu1p) {
+        std::cout << p << "\t";
+    }
+    std::cout << "\n========================" << std::endl;
+
 //    IndividualVector posterior_probabilities;
 //    IndividualVector genotype_likelihoods;
 //    std::vector<float> node_mup;
 //    std::vector<float> node_mu1p;
 
-    std::cout << "==== call calculate_mutation() ======" << std::endl;
+
     MutationStats mutation_stats(find_mutation.min_prob_);
     find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+    std::cout << "==== call calculate_mutation() ======" << std::endl;
     std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
             "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
             mutation_stats.mu1p << std::endl;
     std::cout << mutation_stats.dnt << "\t" << mutation_stats.dnl << "\t" <<
             mutation_stats.dnq << "\t" << mutation_stats.dnc << std::endl;
+    for (auto p : mutation_stats.posterior_probabilities) {
+        std::cout << p.prod() << "\t";
+    }
+    std::cout << std::endl;
+    for (auto p : mutation_stats.genotype_likelihoods) {
+        std::cout << p.prod() << "\t";
+    }
+    std::cout << std::endl;
+    for (auto p : mutation_stats.node_mup) {
+        std::cout << p << "\t";
+    }
+    std::cout << std::endl;
+    for (auto p : mutation_stats.node_mu1p) {
+        std::cout << p << "\t";
+    }
+    std::cout << "\n========================" << std::endl;
 
 //    find_mutation(read_depths, ref_index, &stats);
 

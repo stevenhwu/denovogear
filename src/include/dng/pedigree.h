@@ -89,6 +89,7 @@ public:
             work.upper[r] /= sum;
         }
 
+
         for (std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
 #ifdef DEBUG_PEDIGREE
 std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse_functions_.size() <<
@@ -98,6 +99,15 @@ std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse
 
         }
         work.dirty_lower = true;
+        ret = 0;
+        for (int j = 0; j < work.upper.size(); ++j) {
+
+
+            double sum = (work.upper[j]).sum();
+            ret += (sum);
+//            sum = sqrt(sum);
+
+        }
         return ret;
     }
 
