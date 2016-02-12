@@ -16,8 +16,8 @@
 #include <dng/peeling.h>
 #include <chrono>
 
-#include "boost_test_helper.h"
-#include "testf_fixture_random_family.h"
+#include <boost_test_helper.h>
+#include <fixture/testf_fixture_random_family.h>
 
 //Time trail/perforamnce test. Will take longer to run than normal test.
 using namespace dng;

@@ -9,13 +9,21 @@
 #include <vector>
 
 #include <dng/matrix.h>
-
+#include <dng/peeling.h>
 class MutationStats {
 
 
 public:
     float get_mup() const {
         return mup;
+    }
+
+    const dng::GenotypeArray& inspect_posterior_at(int index) const {
+        return posterior_probabilities[index];
+    }
+
+    const dng::GenotypeArray& inspect_genotype_at(int index) const {
+        return genotype_likelihoods[index];
     }
 
 //private://TODO: surely it's not public

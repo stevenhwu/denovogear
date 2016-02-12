@@ -71,6 +71,23 @@ public:
     bool Equal(Pedigree &other_ped);
 
 
+    const std::vector<peel::family_members_t>& inspect_family_members() const {
+        return family_members_;
+    }
+    const std::vector<decltype(peel::op::NUM)>& inspect_peeling_ops() const {
+        return peeling_ops_;
+    };
+//    // The original, simplified peeling operations
+//    std::vector<decltype(peel::op::NUM)> peeling_ops_;
+//    // The modified, "faster" operations
+//    std::vector<decltype(peel::op::NUM)> peeling_functions_ops_;
+//    // Array of functions that will be called to perform the peeling
+//    std::vector<peel::function_t> peeling_functions_;
+//    std::vector<peel::function_t> peeling_reverse_functions_;
+//
+//    // The arguments to a peeling operation
+//    std::vector<peel::family_members_t> family_members_;
+
 protected:
 
 

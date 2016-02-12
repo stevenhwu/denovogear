@@ -1,9 +1,9 @@
 //
 // Created by steven on 1/24/16.
 //
-
-#ifndef DENOVOGEAR_TESTH_HELPER_PEELING_H
-#define DENOVOGEAR_TESTH_HELPER_PEELING_H
+#pragma once
+#ifndef DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
+#define DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
 
 #include <dng/peeling.h>
 
@@ -11,7 +11,7 @@
 std::random_device rd;
 std::mt19937 random_gen_mt(rd());
 
-struct Fx {
+struct RandomFamily {
 
     const int CHILD_OFFSET = 2;
     std::string fixture;
@@ -25,8 +25,8 @@ struct Fx {
     int total_family_size;
     std::uniform_int_distribution<> rand_unif;
 
-    Fx(std::string s = "") : fixture(s) {
-        BOOST_TEST_MESSAGE("set up fixture " << s);
+    RandomFamily(std::string s = "") : fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: RandomFamily " << s);
         rand_unif = std::uniform_int_distribution<>(1,10);
         init_family();
     }
@@ -73,12 +73,10 @@ struct Fx {
         }
     }
 
-    ~Fx() {
-        BOOST_TEST_MESSAGE("tear down fixture " << fixture);
+    ~RandomFamily() {
+        BOOST_TEST_MESSAGE("tear down fixture: RandomFamily " << fixture);
     }
 };
-
-
 
 void copy_family_to_workspace(dng::peel::workspace_t &workspace, dng::TransitionVector &full_matrix,
                               int total_family_size, const std::vector<dng::GenotypeArray> &lower,
@@ -93,4 +91,57 @@ void copy_family_to_workspace(dng::peel::workspace_t &workspace, dng::Transition
     }
 }
 
-#endif //DENOVOGEAR_TESTH_HELPER_PEELING_H
+
+struct RandomWorkspace {
+
+
+    std::string fixture;
+
+    dng::peel::workspace_t workspace;
+    dng::TransitionVector full_matrix;
+
+    RandomWorkspace(std::string s = "") : fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: RandomWorkspace " << s);
+
+    }
+
+    void init_workspace(){
+        RandomFamily family;
+
+        family.init_family();
+        copy_family_to_workspace(workspace, full_matrix,
+                                 family.total_family_size, family.lower_array, family.upper_array,
+                                 family.trans_matrix);
+
+    }
+
+
+    ~RandomWorkspace() {
+        BOOST_TEST_MESSAGE("tear down fixture: RandomWorkspace " << fixture);
+    }
+//        int num_child = rand_unif(random_gen_mt);
+//        total_family_size = num_child + CHILD_OFFSET;
+//
+//        family.clear();
+//        trans_matrix.resize(total_family_size);
+//        upper_array.resize(total_family_size);
+//        lower_array.resize(total_family_size);
+//
+//        for (int k = 0; k < total_family_size; ++k) {
+//            family.push_back(k);
+//            lower_array[k] = dng::GenotypeArray::Random();
+//            if (k < CHILD_OFFSET) {
+//                trans_matrix[k] = dng::TransitionMatrix::Random(10, 10);
+//                upper_array[k] = dng::GenotypeArray::Random();
+//            }
+//            else {
+//                trans_matrix[k] = dng::TransitionMatrix::Random(100, 10);
+//
+//            }
+//
+//    void init_family(){
+};
+
+
+
+#endif //DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
