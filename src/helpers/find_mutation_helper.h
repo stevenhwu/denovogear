@@ -1,7 +1,7 @@
 //
 // Created by steven on 1/15/16.
 //
-
+#pragma once
 #ifndef DENOVOGEAR_FIND_MUTATION_GETTER_H
 #define DENOVOGEAR_FIND_MUTATION_GETTER_H
 
@@ -21,8 +21,14 @@ public:
                                                                                                            pedigree,
                                                                                                            params) { }
 public:
+    //TODO, three (more) ways to expose these for testing
 //    double min_prob_ = FindMutations::min_prob_; //HACK: 1
     using FindMutations::min_prob_; //HACK: 2
+    //getter()
+    double getMin_prob_() const {
+        return min_prob_;
+    }
+
     const Pedigree &getPedigree_() const {
         return pedigree_;
     }
@@ -31,9 +37,6 @@ public:
         return params_;
     }
 
-    double getMin_prob_() const {
-        return min_prob_;
-    }
 
     const peel::workspace_t &getworkspace() const {
         return work_;

@@ -30,14 +30,15 @@ SET_TESTS_PROPERTIES(build_gitkeep PROPERTIES
 ################################################################################
 # Compile unit tests
 include_directories(../src/include)
-include_directories(../)
+include_directories(../src)
+include_directories(./src/)
 
 
 # Make a test for each unit test file located in test/ dir
 file(GLOB_RECURSE TESTS test_*[cc|cpp])
 foreach(test ${TESTS})
   get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test})
+  add_executable(${testName} EXCLUDE_FROM_ALL ${test} )
   target_link_libraries(${testName}
     Threads::Threads
     Boost::PROGRAM_OPTIONS
@@ -58,6 +59,7 @@ endforeach(test)
 
 ################################################################################
 ## TODO: How to build something like "make timetrail" and compile all time measuring files
+include_directories(./src/)
 IF(DEVEL_MODE)
   ADD_DEFINITIONS(-DDNG_DEVEL)
 ENDIF()
@@ -100,7 +102,7 @@ endforeach(test)
 # TODO: Use a different filename pattern for now (test2_* instead of test_*).
 # TODO: How to add min *.cc files instead of all *.cc later?
 include_directories(./)
-include_directories(./lib/)
+#include_directories(./lib/)
 
 file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
 foreach(test ${TESTS2})
@@ -113,6 +115,7 @@ foreach(test ${TESTS2})
           ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
           ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
 
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree_v2.cc
           ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
           ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
           )

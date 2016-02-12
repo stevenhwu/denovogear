@@ -9,16 +9,17 @@
 
 #include <ctime>
 #include <iostream>
+#include <fstream>
 
 #include <dng/task/call.h>
 
-#include <fstream>
-#include <src/helpers/find_mutation_helper.h>
+#include <helpers/find_mutation_helper.h>
 
-#include "../test_call.h"
+
 #include "boost_test_helper.h"
 
-#include "../../../src/vt/boost_utils.h"
+#include <fixture/testf_fixture_read_trio_from_file.h>
+
 
 using namespace dng;
 namespace utf = boost::unit_test;
@@ -61,12 +62,10 @@ const int NUM_TEST = 100;
 //BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
 
 
-struct RandomFamily {
-
-    std::string fixture;
-
+struct TrioWorkspace : public  ReadTrioFromFile {
 
     double min_prob;
+
     dng::Pedigree pedigree;
     dng::peel::workspace_t workspace;
 
@@ -74,59 +73,9 @@ struct RandomFamily {
                                           std::string("0,0,0,0"),
                                           std::string("0,0,0,0") };
 
-    typedef dng::task::Call task_type;
+    TrioWorkspace(std::string s = "") : ReadTrioFromFile(s) {
+        BOOST_TEST_MESSAGE("set up fixture: TrioWorkspace " << s);
 
-    struct arg_t : public task_type::argument_type {
-        bool help;
-        bool version;
-        std::string arg_file;
-
-        std::string run_name;
-        std::string run_path;
-    } arg;
-
-    RandomFamily(std::string s = "") : fixture(s) {
-
-        po::options_description ext_desc_, int_desc_;
-        po::positional_options_description pos_desc_;
-        po::variables_map vm_;
-
-        int argc=4;
-        char *argv[argc+1];
-        argv[0] = (char*) "test";
-        argv[1] = (char*) "-p";
-        argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
-        argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
-//        argv[2] = (char*) "testDataSW/ceu3.ped"; //"pedFile";
-//        argv[3] = (char*) "testDataSW/test3.vcf"; //test1.bam
-
-        add_app_args(ext_desc_, static_cast<typename task_type::argument_type &>(arg));
-        int_desc_.add_options()
-                ("input", po::value< std::vector<std::string> >(&arg.input), "input files")
-                ;
-        int_desc_.add(ext_desc_);
-        pos_desc_.add("input", -1);
-        po::store(po::command_line_parser(argc, argv)
-                          .options(int_desc_).positional(pos_desc_).run(), vm_);
-        po::notify(vm_);
-
-        // Parse pedigree from file
-        dng::io::Pedigree ped;
-        std::ifstream ped_file(arg.ped);
-        ped.Parse(utils::istreambuf_range(ped_file));
-
-        dng::ReadGroups rgs;
-        std::vector<hts::File> indata;
-        std::vector<hts::bcf::File> bcfdata;
-        for (auto &&str : arg.input) {
-            indata.emplace_back(str.c_str(), "r");
-            if (indata.back().is_open()) {
-                continue;
-            }
-            throw std::runtime_error("unable to open input file '" + str + "'.");
-        }
-        bcfdata.emplace_back(std::move(indata[0]));
-        rgs.ParseSamples(bcfdata[0]);
 
         pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
 
@@ -139,7 +88,6 @@ struct RandomFamily {
 
         int min_qual = arg.min_basequal;
         min_prob = arg.min_prob;
-
 
     }
 
@@ -171,8 +119,8 @@ struct RandomFamily {
         return scale;
     }
 
-    ~RandomFamily() {
-        BOOST_TEST_MESSAGE("tear down fixture " << fixture);
+    ~TrioWorkspace() {
+        BOOST_TEST_MESSAGE("tear down fixture: TrioWorkspace " << fixture);
     }
 
 
@@ -184,7 +132,7 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
 
 
-BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, Fx)
+BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 
 BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
 
@@ -198,7 +146,7 @@ BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
 
     std::array<double, 4> expect_freqs{0.3, 0.2, 0.2, 0.3};
     auto freqs1 = find_mutation.getParams_().nuc_freq;
-    boost_check_vector(expect_freqs, freqs1, 4);
+    boost_check_close_vector(expect_freqs, freqs1, 4);
 //    for (int j = 0; j < 4; ++j) {
 //        BOOST_CHECK_EQUAL(freqs1[j], expect_freqs[j]);
 //    }
@@ -271,7 +219,7 @@ cat("{", paste(s, collapse="}, \n{"), "}\n" )
 
     for (int i = 0; i < 5; ++i) {
         auto prior_array = pArray[i];
-        boost_check_vector(expected_prior[i], prior_array);
+        boost_check_close_vector(expected_prior[i], prior_array);
     }
 
 
@@ -349,11 +297,11 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
     double scale = setup_workspace(ref_index, read_depths);
 
     //Test basic stats
-    auto numut_matrices = find_mutation.getNomut_transition_matrices_();
+    auto nomut_matrices = find_mutation.getNomut_transition_matrices_();
     workspace.CleanupFast();
-    dng::peel::up(workspace, family[0], numut_matrices );
-    dng::peel::to_father_fast(workspace, family[1], numut_matrices );
-    dng::peel::up(workspace, family[2], numut_matrices );
+    dng::peel::up(workspace, family[0], nomut_matrices);
+    dng::peel::to_father_fast(workspace, family[1], nomut_matrices);
+    dng::peel::up(workspace, family[2], nomut_matrices);
     double result_nomut = log((workspace.lower[0] * workspace.upper[0]).sum());
 
 
@@ -396,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
         expected_posterior = WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, i);
         expected_posterior /= expected_posterior.sum();
 
-        boost_check_vector(expected_posterior, stats.posterior_probabilities[i]);
+        boost_check_close_vector(expected_posterior, stats.posterior_probabilities[i]);
     }
 
 
@@ -405,7 +353,7 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
 
 
 BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) {
-
+    //TODO: Compare operator() with calculate_mutation ONLY, NOT a real test
     int ref_index = 3;
     std::vector<depth_t> read_depths(3);
     for (int j = 0; j < read_depths.size(); ++j) {
@@ -434,10 +382,10 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
     BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
 
     for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
-        boost_check_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
+        boost_check_close_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
     }
     for (int i = 2; i < stats.genotype_likelihoods.size(); ++i) {
-        boost_check_vector(stats.genotype_likelihoods[i], mutation_stats.genotype_likelihoods[i]);
+        boost_check_close_vector(stats.genotype_likelihoods[i], mutation_stats.genotype_likelihoods[i]);
 //        std::cout << i << "\t" << stats.genotype_likelihoods[i][0] << "\t" << mutation_stats.genotype_likelihoods[i][0] << std::endl;
 //        std::cout << stats.genotype_likelihoods[i][1] << "\t" << mutation_stats.genotype_likelihoods[i][1] << std::endl;
     }

@@ -16,7 +16,7 @@
 #include <chrono>
 
 #include "boost_test_helper.h"
-#include "testf_fixture_random_family.h"
+#include <fixture/testf_fixture_random_family.h>
 //#include <boost/test/data/test_case.hpp>
 ////#include <boost/test/data/monomorphic.hpp>
 //namespace data = boost::unit_test::data;
@@ -66,7 +66,7 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
 
 //BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<RandomFamily>(std::string("FX")) )
-BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
+BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, RandomFamily)
 
     BOOST_AUTO_TEST_CASE(test_sum_over_child, *utf::fixture(&setup, &teardown)) {
         for (int t = 0; t <NUM_TEST; ++t) {
@@ -122,7 +122,7 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
                                      lower_array, upper_array, trans_matrix);
 
             GenotypeArray result = dng::peel::up_core(workspace, family, full_matrix);
-            boost_check_vector(expected, result, 10);
+            boost_check_close_vector(expected, result, 10);
 
         }
     }
@@ -156,8 +156,8 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
             dng::peel::down_fast(workspace, family, full_matrix);
             GenotypeArray result_fast = workspace.upper[1];
 
-            boost_check_vector(expected, result, 10);
-            boost_check_vector(expected_fast, result_fast, 10);
+            boost_check_close_vector(expected, result, 10);
+            boost_check_close_vector(expected_fast, result_fast, 10);
 
         }
     }
@@ -190,8 +190,8 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
             dng::peel::up_fast(workspace, family, full_matrix);
             GenotypeArray result_fast = workspace.lower[0];
 
-            boost_check_vector(expected, result, 10);
-            boost_check_vector(expected_fast, result_fast, 10);
+            boost_check_close_vector(expected, result, 10);
+            boost_check_close_vector(expected_fast, result_fast, 10);
 
         }
     }
@@ -247,8 +247,8 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
             GenotypeArray result_fast = workspace.lower[0];
 
 
-            boost_check_vector(expected, result, 10);
-            boost_check_vector(expected_fast, result_fast, 10);
+            boost_check_close_vector(expected, result, 10);
+            boost_check_close_vector(expected_fast, result_fast, 10);
 
 
 
@@ -303,8 +303,8 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
             dng::peel::to_mother_fast(workspace, family, full_matrix);
             GenotypeArray result_fast = workspace.lower[1];
 
-            boost_check_vector(expected, result, 10);
-            boost_check_vector(expected_fast, result_fast, 10);
+            boost_check_close_vector(expected, result, 10);
+            boost_check_close_vector(expected_fast, result_fast, 10);
 
 
         }
@@ -369,8 +369,8 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, Fx)
             GenotypeArray result_fast = workspace.upper[2];
 
 
-            boost_check_vector(expected, result, 10);
-            boost_check_vector(expected_fast, result_fast, 10);
+            boost_check_close_vector(expected, result, 10);
+            boost_check_close_vector(expected_fast, result_fast, 10);
 
         }
     }

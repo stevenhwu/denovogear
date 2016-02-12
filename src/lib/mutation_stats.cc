@@ -23,7 +23,6 @@ void MutationStats::set_mup(const double logdata_nomut, const double logdata){
 }
 
 bool MutationStats::check_mutation_prob_lt_threshold() {//overkill?
-    std::cout << mup << "\t" << min_prob << std::endl;
     return mup < min_prob;
 }
 
