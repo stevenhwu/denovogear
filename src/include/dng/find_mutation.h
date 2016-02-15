@@ -34,7 +34,7 @@ public:
         dng::genotype::DirichletMultinomialMixture::params_t params_b;
     };
 
-
+    //TODO: might replace struct stats_t with mutation_stats.cc
     struct stats_t {
         float mup;
         float lld;
@@ -59,6 +59,7 @@ public:
     bool operator()(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
 
+    //TODO: either place with this function, or replace operator() with this
     bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index, MutationStats &mutation_stats);
 
 protected:
@@ -90,7 +91,7 @@ protected:
     std::vector<double> event_;
 
 
-    void calculate_mup(MutationStats &stats);
+    bool calculate_mup(MutationStats &stats);
 
     void calculate_posterior_probabilities(MutationStats &mutation_stats);
     void calculate_exp_mutation(MutationStats &mutation_stats);

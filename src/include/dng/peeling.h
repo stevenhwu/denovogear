@@ -31,6 +31,8 @@
 #include <dng/matrix.h>
 #include <map>
 
+#include <dng/likelihood.h>
+
 
 
 namespace dng {
@@ -66,6 +68,7 @@ std::map<decltype(peel::op::NUM), std::string> map_enum_string {
     kroneckerProduct(WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix(),  \
                      WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix() )
 
+//XXX: Maybe this should turn into a class, too many functions
 struct workspace_t {
     IndividualVector upper; // Holds P(~Descendent_Data & G=g)
     IndividualVector lower; // Holds P( Descendent_Data | G=g)
@@ -119,6 +122,19 @@ struct workspace_t {
     void SetLibraries(const T &range) {
         assert(boost::size(range) == library_nodes.second - library_nodes.first);
         boost::copy(range, lower.begin() + library_nodes.first);
+    }
+
+    // calculate genotype likelihoods and store in the lower library vector, maybe/maybe not
+    double set_genotype_likelihood(dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
+                                   const std::vector<depth_t> &depths, int ref_index){
+        double scale = 0.0, stemp;
+        for(std::size_t u = 0; u < depths.size(); ++u) {
+            std::tie(lower[library_nodes.first + u], stemp) =
+                    genotype_likelihood(depths[u], ref_index);
+            scale += stemp;
+        }
+        return scale;
+
     }
 
 

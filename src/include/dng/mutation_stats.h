@@ -10,6 +10,7 @@
 
 #include <dng/matrix.h>
 #include <dng/peeling.h>
+#include <dng/hts/bcf.h>
 class MutationStats {
 
 
@@ -18,11 +19,11 @@ public:
         return mup;
     }
 
-    const dng::GenotypeArray& inspect_posterior_at(int index) const {
+    const dng::GenotypeArray &inspect_posterior_at(int index) const {
         return posterior_probabilities[index];
     }
 
-    const dng::GenotypeArray& inspect_genotype_at(int index) const {
+    const dng::GenotypeArray &inspect_genotype_at(int index) const {
         return genotype_likelihoods[index];
     }
 
@@ -57,7 +58,7 @@ public:
 
     MutationStats(double min_prob);
 
-    void set_mup(const double logdata_nomut, const double logdata);
+    bool set_mup(const double logdata_nomut, const double logdata);
 
     bool check_mutation_prob_lt_threshold();
 
@@ -67,8 +68,15 @@ public:
 
     void set_posterior_probabilities(const dng::peel::workspace_t &workspace);
 
-    void set_node_mup(const std::vector<double> &event, int start_index);
+    void set_node_mup(const std::vector<double> &event, int first_nonfounder_index);
+
+    //TODO: Not implemented yet
+    void add_stats();
+
+    void calculate_stats();
+
+    void output_to_vcf(hts::bcf::Variant &record);
+
+
 };
-
-
 #endif //DENOVOGEAR_MUTATION_STATS_H

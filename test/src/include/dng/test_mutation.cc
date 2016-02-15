@@ -304,61 +304,6 @@ BOOST_AUTO_TEST_CASE(test_meiosis_haploid_matrix, *utf::fixture(&setup, &teardow
 //                                                    const MutationMatrix &mmom) {
 //}
 //
-//namespace f81 {
-//
-//// Construct an F81 mutation matrix
-//inline MutationMatrix matrix(double mu, const std::array<double, 4> &nuc_freq) {
-//    double beta = 1.0;
-//    for(auto d : nuc_freq) {
-//        beta -= d * d;
-//    }
-//    double p = -expm1(-mu / beta);
-//
-//    MutationMatrix ret;
-//    for(int i = 0; i < 4; ++i) {
-//        for(int j = 0; j < 4; ++j) {
-//            ret(i, j) = nuc_freq[j] * p;
-//        }
-//        ret(i, i) += 1.0 - p;
-//    }
-//    return ret;
-//}
-//
-//// Calculate the maximum likelihood estimate of mu given q fraction of observed differences
-//inline double estimate(double q, const std::array<double, 4> &nuc_freq) {
-//    double beta = 1.0;
-//    for(auto d : nuc_freq) {
-//        beta -= d * d;
-//    }
-//    return -beta * log(1.0 - q / beta);
-//}
-//
-//} // namespace f81
-//
-//
-//inline GenotypeArray population_prior(double theta,
-//                                           const std::array<double, 4> &nuc_freq,
-//                                           const std::array<double, 4> &prior) {
-//    double alpha[4] = {
-//            theta *nuc_freq[0] + prior[0], theta *nuc_freq[1] + prior[1],
-//            theta *nuc_freq[2] + prior[2], theta *nuc_freq[3] + prior[3]
-//    };
-//    double alpha_sum = alpha[0] + alpha[1] + alpha[2] + alpha[3];
-//    GenotypeArray ret{10};
-//    ret <<
-//    alpha[0]*(1.0 + alpha[0]) / alpha_sum / (1.0 + alpha_sum), // AA
-//            2.0 * alpha[0]*(alpha[1]) / alpha_sum / (1.0 + alpha_sum), // AC
-//            2.0 * alpha[0]*(alpha[2]) / alpha_sum / (1.0 + alpha_sum), // AG
-//            2.0 * alpha[0]*(alpha[3]) / alpha_sum / (1.0 + alpha_sum), // AT
-//            alpha[1]*(1.0 + alpha[1]) / alpha_sum / (1.0 + alpha_sum), // CC
-//            2.0 * alpha[1]*(alpha[2]) / alpha_sum / (1.0 + alpha_sum), // CG
-//            2.0 * alpha[1]*(alpha[3]) / alpha_sum / (1.0 + alpha_sum), // CT
-//            alpha[2]*(1.0 + alpha[2]) / alpha_sum / (1.0 + alpha_sum), // GG
-//            2.0 * alpha[2]*(alpha[3]) / alpha_sum / (1.0 + alpha_sum), // GT
-//            alpha[3]*(1.0 + alpha[3]) / alpha_sum / (1.0 + alpha_sum); // GG
-//    return ret;
-//}
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

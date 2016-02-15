@@ -53,19 +53,46 @@ class PedigreeV2 : public Pedigree {
 //    auto families = get(edge_family, pedigree_graph);
 //    // Add the labels for the germline nodes
 //
-    //XXX: struct FamilyInfo ??
-    enum class FamilyToOps : int {
+
+
+    enum class InheritancePattern : int {
+        AUTOSOMAL = 0,
+        DEFAULT = 0,
+        MATERNAL = 1,
+        PATERNAL = 2,
+        X_LINKED = 3,
+        Y_LINKED = 4,
+        W_LINKED = 5,
+        Z_LINKED = 6,
+
+//        autosomal (the default)
+//        xlinked (females have 2 copies, males have 1; males transmit to daughters, not to sons)
+//        ylinked (males have 1 copy, only transmits it to sons)
+//        wlinked (females have 1 copy, only transmited to daughters)
+//        zlinked (males have 2 copies, females have 1; females transmit to sons, not to daughters)
+//        maternal (transmitted by mother to child)
+//        paternal (transmitter by father to child)
+    };
+
+    //TODO: struct FamilyInfo/Family structure.
+    //Op1: A struct to record info in each family. family_t and ops
+    //Op2: Another struct to group families together, include pivots and root?
+    enum class FamilyType : int {
         PAIR = 2,
         TRIO = 3
     };
     struct FamilyInfo {
-        int family_type;
+        FamilyType family_type;
         family_labels_t family_labels;//(num_families);
         std::vector<vertex_t> pivots;//(num_families, dummy_index);
     };
 
 public:
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
+                   double mu, double mu_somatic, double mu_library);
+
+    //TODO: Eventually replace with this, or pass inheritance with a different method
+    bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs, const InheritancePattern &pattern,
                    double mu, double mu_somatic, double mu_library);
 
     bool Equal(Pedigree &other_ped);
@@ -76,6 +103,9 @@ public:
     }
     const std::vector<decltype(peel::op::NUM)>& inspect_peeling_ops() const {
         return peeling_ops_;
+    };
+    const std::vector<decltype(peel::op::NUM)>& inspect_peeling_functions_ops() const {
+        return peeling_functions_ops_;
     };
 //    // The original, simplified peeling operations
 //    std::vector<decltype(peel::op::NUM)> peeling_ops_;
