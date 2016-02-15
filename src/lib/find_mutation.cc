@@ -319,19 +319,14 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
 
 //    assert(stats != nullptr); //TODO: Implement similar check or reset for MutationStats
 
-    // calculate genotype likelihoods and store in the lower library vector
-    double scale = 0.0, stemp;
-    for(std::size_t u = 0; u < depths.size(); ++u) {
-        std::tie(work_.lower[work_.library_nodes.first + u], stemp) =
-                genotype_likelihood_(depths[u], ref_index);
-        scale += stemp;
-    }
+    double scale = work_.set_genotype_likelihood(genotype_likelihood_, depths, ref_index);
+
     // Set the prior probability of the founders given the reference
     work_.SetFounders(genotype_prior_[ref_index]);
 
-    calculate_mup(mutation_stats);
+    bool is_mup_lt_threshold = calculate_mup(mutation_stats);
 //TODO: ADD this back!! commend out just for easier debug
-    if(mutation_stats.check_mutation_prob_lt_threshold() ){
+    if(is_mup_lt_threshold ){
         return false;
     }
 
@@ -350,7 +345,8 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
     calculate_node_mup(mutation_stats);
 
 
-    // ===== NOT DONE =====
+    // TODO: Not yet/might/might not refactored after this point
+    // TODO: keep location? remove entropy?
     stats_t *stats;
     double pmut = mutation_stats.get_mup();
 
@@ -422,7 +418,7 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
 
 }
 
-void FindMutations::calculate_mup(MutationStats &mutation_stats) {
+bool FindMutations::calculate_mup(MutationStats &mutation_stats) {
     // Calculate log P(Data, nomut ; model)
     const double logdata_nomut = pedigree_.PeelForwards(work_, nomut_transition_matrices_);
 
@@ -431,9 +427,9 @@ void FindMutations::calculate_mup(MutationStats &mutation_stats) {
     const double logdata = pedigree_.PeelForwards(work_, full_transition_matrices_);
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-    mutation_stats.set_mup(logdata_nomut, logdata);
+    bool is_mup_lt_threshold = mutation_stats.set_mup(logdata_nomut, logdata);
     std::cout << logdata_nomut << "\t" << logdata << "\t" << mutation_stats.get_mup() << "\t" << min_prob_ << std::endl;
-
+    return is_mup_lt_threshold;
 }
 
 
