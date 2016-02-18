@@ -188,18 +188,25 @@ endforeach(test)
 
 
 ################################################################################
-# temp Compile unit tests with *.cc
 # TODO: Use a different filename pattern for now (test2_* instead of test_*).
 # TODO: How to add min *.cc files instead of all *.cc later?
 include_directories(./)
+#include_directories(./lib/)
 
 file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
 foreach(test ${TESTS2})
   get_filename_component(testName ${test} NAME_WE)
   add_executable(${testName} EXCLUDE_FROM_ALL ${test}
           ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ##            ../src/lib/likelihood.cc ../src/lib/newick.cc ../src/lib/pedigree.cc
-          ##            ../src/lib/mutation.cc ../src/lib/stats.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
+
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree_v2.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
           )
   target_link_libraries(${testName}
           Threads::Threads
