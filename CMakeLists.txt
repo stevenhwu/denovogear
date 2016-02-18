@@ -7,7 +7,7 @@ CMAKE_POLICY(SET CMP0025 NEW)
 
 ## Important Variables
 SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Modules")
-SET(CMAKE_BUILD_TY  PE_INIT "RelWithDebInfo")
+SET(CMAKE_BUILD_TYPE_INIT "RelWithDebInfo")
 SET_PROPERTY(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON)
 
 ## Compiling options
@@ -49,10 +49,10 @@ endif()
 ## Guard against bad build-type strings
 IF(CMAKE_BUILD_TYPE)
   string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-  if(    NOT cmake_build_type_tolower STREQUAL "debug"
-     AND NOT cmake_build_type_tolower STREQUAL "release"
-     AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
-     AND NOT cmake_build_type_tolower STREQUAL "none")
+  if(NOT cmake_build_type_tolower STREQUAL "debug"
+      AND NOT cmake_build_type_tolower STREQUAL "release"
+      AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
+      AND NOT cmake_build_type_tolower STREQUAL "none")
     message(FATAL_ERROR "Unsupported build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release, RelWithDebInfo, and None (case-insensitive).")
   endif()
 ENDIF()

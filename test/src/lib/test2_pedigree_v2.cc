@@ -9,7 +9,7 @@
 
 #include <dng/pedigree_v2.h>
 #include <dng/pedigree.h>
-#include <fixture/testf_fixture_read_trio_from_file.h>
+#include <fixture/fixture_read_trio_from_file.h>
 
 #include "boost_test_helper.h"
 
@@ -254,19 +254,19 @@ BOOST_AUTO_TEST_CASE(test_pedigree_v2, *utf::fixture(&setup, &teardown)) {
     };
 
     for (int f = 0; f < expected_family.size(); ++f) {
-        boost_check_vector_equal(expected_family, family);
+        boost_check_equal_vector(expected_family, family);
     }
 
     std::vector<decltype(peel::op::NUM)> ops = pedigree.inspect_peeling_ops();
     std::vector<decltype(peel::op::NUM)> expected_ops = {peel::op::UP, peel::op::TOFATHER, peel::op::UP};
-    boost_check_vector_equal(expected_ops, ops);
+    boost_check_equal_vector(expected_ops, ops);
 
 
 
     std::vector<decltype(peel::op::NUM)> functions_ops = pedigree.inspect_peeling_functions_ops();
     std::vector<decltype(peel::op::NUM)> expected_functions_ops = {peel::op::UPFAST, peel::op::TOFATHERFAST,
                                                                   peel::op::UP};
-    boost_check_vector_equal(expected_functions_ops, functions_ops);
+    boost_check_equal_vector(expected_functions_ops, functions_ops);
 
 
 }

@@ -18,7 +18,7 @@
 
 #include "boost_test_helper.h"
 
-#include <fixture/testf_fixture_read_trio_from_file.h>
+#include <fixture/fixture_read_trio_from_file.h>
 
 
 using namespace dng;
@@ -73,8 +73,8 @@ struct TrioWorkspace : public  ReadTrioFromFile {
                                           std::string("0,0,0,0"),
                                           std::string("0,0,0,0") };
 
-    TrioWorkspace(std::string s = "") : ReadTrioFromFile(s) {
-        BOOST_TEST_MESSAGE("set up fixture: TrioWorkspace " << s);
+    TrioWorkspace(std::string s = "TrioWorkspace") : ReadTrioFromFile(s) {
+        BOOST_TEST_MESSAGE("set up fixture: " << s);
 
 
         pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
@@ -120,7 +120,7 @@ struct TrioWorkspace : public  ReadTrioFromFile {
     }
 
     ~TrioWorkspace() {
-        BOOST_TEST_MESSAGE("tear down fixture: TrioWorkspace " << fixture);
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
 
 
@@ -164,11 +164,13 @@ BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
     BOOST_CHECK_EQUAL(gamma_b.epsilon, expect_gamma[1][2]);
     BOOST_CHECK_EQUAL(gamma_b.omega, expect_gamma[1][3]);
 
+#if CALCULATE_ENTROPY == true
     auto event = find_mutation.getEvent_();
     BOOST_CHECK_EQUAL(event.size(), 5);
     for (int k = 0; k < 5; ++k) {
         BOOST_CHECK_EQUAL(event[k], 0);
     }
+#endif
 }
 
 
@@ -379,7 +381,6 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
     BOOST_CHECK_EQUAL(stats.mu1p, mutation_stats.mu1p);
     BOOST_CHECK_EQUAL(stats.dnt, mutation_stats.dnt);
     BOOST_CHECK_EQUAL(stats.dnl, mutation_stats.dnl);
-    BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
 
     for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
         boost_check_close_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
@@ -392,6 +393,10 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
     for (int i = 2; i < stats.node_mup.size(); ++i) {
         BOOST_CHECK_EQUAL(stats.node_mup[i], mutation_stats.node_mup[i]);
     }
+
+#if CALCULATE_ENTROPY == true
+    BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
+#endif
 
 //    std::cout << stats.dnt << "\t" << stats.dnl  << "\t" << stats.dnq<< "\t" << stats.dnc << std::endl;
 //    for (auto p : stats.posterior_probabilities) {

@@ -76,7 +76,7 @@ public:
         }
         return ret;
     }
-
+    //TODO: Some sort of check to make sure PeelBackwards use the same matrix as Forwards
     double PeelBackwards(peel::workspace_t &work,
                          const TransitionVector &mat) const {
         double ret = 0.0;
@@ -128,6 +128,7 @@ std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse
 
     std::vector<std::string> BCFHeaderLines() const;
 
+    //TODO: transitions() and lables() are nevered used in vector form.
     const std::vector<transition_t> &transitions() const { return transitions_; }
 
     const std::vector<std::string> &labels() const { return labels_; }
@@ -137,7 +138,7 @@ std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse
     std::pair<size_t, size_t> library_nodes() const { return {first_library_, num_nodes_}; }
 
 protected:
-//public: //HACK: REMOVE later
+
     // node structure:
     // founder germline, non-founder germline, somatic, library
     std::size_t num_nodes_{0};        // total number of nodes

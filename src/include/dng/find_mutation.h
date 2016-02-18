@@ -35,7 +35,8 @@ public:
     };
 
     //TODO: might replace struct stats_t with mutation_stats.cc
-    struct stats_t {
+
+    struct [[deprecated]] stats_t {
         float mup;
         float lld;
         float llh;
@@ -91,11 +92,14 @@ protected:
     std::vector<double> event_;
 
 
-    bool calculate_mup(MutationStats &stats);
+    bool calculate_mutation_prob(MutationStats &stats);
 
     void calculate_posterior_probabilities(MutationStats &mutation_stats);
-    void calculate_exp_mutation(MutationStats &mutation_stats);
-    void calculate_node_mup(MutationStats &mutation_stats);
+    void calculate_expected_mutation(MutationStats &mutation_stats);
+    void calculate_node_mutation(MutationStats &mutation_stats);
+    void calculate_denovo_mutation(MutationStats &mutation_stats);
+
+
 };
 
 #endif //DENOVOGEAR_FIND_MUTATION_H

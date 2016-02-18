@@ -17,7 +17,7 @@
 #include <chrono>
 
 #include <boost_test_helper.h>
-#include <fixture/testf_fixture_random_family.h>
+#include "fixture_random_family.h"
 
 //Time trail/perforamnce test. Will take longer to run than normal test.
 using namespace dng;
