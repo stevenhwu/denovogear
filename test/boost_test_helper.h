@@ -18,7 +18,7 @@ const double BOOST_SMALL_THRESHOLD = sqrt(std::numeric_limits<double>::epsilon()
 //TODO: What is a good cut? 1e-8?// sqrt(std::numeric_limits<double>::epsilon());
 
 template<typename V, typename V2>
-void boost_check_vector_equal(V &expected, V2 &result) {
+void boost_check_equal_vector(V &expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {
@@ -44,7 +44,7 @@ template<typename V, typename V2>
 void boost_check_close_vector(V &expected, V2 &result, int expected_size) {
     
     BOOST_CHECK_EQUAL(expected_size, expected.size());
-    boost_check_vector(expected, result);
+    boost_check_close_vector(expected, result);
 }
 
 

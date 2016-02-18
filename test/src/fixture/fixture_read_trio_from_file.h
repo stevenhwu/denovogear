@@ -35,8 +35,8 @@ struct ReadTrioFromFile {
         std::string run_path;
     } arg;
 
-    ReadTrioFromFile(std::string s = "") : fixture(s) {
-        BOOST_TEST_MESSAGE("set up fixture: ReadTrioFromFile " << s);
+    ReadTrioFromFile(std::string s = "ReadTrioFromFile") : fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: " << s);
 
         po::options_description ext_desc_, int_desc_;
         po::positional_options_description pos_desc_;
@@ -83,7 +83,7 @@ struct ReadTrioFromFile {
 
 
     ~ReadTrioFromFile() {
-        BOOST_TEST_MESSAGE("tear down fixture: ReadTrioFromFile " << fixture);
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
 
 

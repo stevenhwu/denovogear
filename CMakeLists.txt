@@ -7,7 +7,7 @@ CMAKE_POLICY(SET CMP0025 NEW)
 
 ## Important Variables
 SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Modules")
-SET(CMAKE_BUILD_TY  PE_INIT "RelWithDebInfo")
+SET(CMAKE_BUILD_TYPE_INIT "RelWithDebInfo")
 SET_PROPERTY(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON)
 
 ## Compiling options
@@ -49,12 +49,30 @@ endif()
 ## Guard against bad build-type strings
 IF(CMAKE_BUILD_TYPE)
   string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-  if(    NOT cmake_build_type_tolower STREQUAL "debug"
-     AND NOT cmake_build_type_tolower STREQUAL "release"
-     AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
-     AND NOT cmake_build_type_tolower STREQUAL "none")
+  if(NOT cmake_build_type_tolower STREQUAL "debug"
+      AND NOT cmake_build_type_tolower STREQUAL "release"
+      AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
+      AND NOT cmake_build_type_tolower STREQUAL "none")
     message(FATAL_ERROR "Unsupported build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release, RelWithDebInfo, and None (case-insensitive).")
   endif()
+ENDIF()
+
+################################################################################
+# Always make a full statement RPATH
+# See http://www.itk.org/Wiki/CMake_RPATH_handling
+
+SET(CMAKE_SKIP_BUILD_RPATH FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}" is_system_dir)
+IF("${is_system_dir}" STREQUAL "-1")
+  SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}")
+ENDIF("${is_system_dir}" STREQUAL "-1")
+################################################################################
+
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  ADD_DEFINITIONS(-D_GLIBCXX_USE_C99)
 ENDIF()
 
 ## Specify Project Information

@@ -11,7 +11,7 @@
 #include <dng/mutation_stats.h>
 
 #include "boost_test_helper.h"
-#include <fixture/testf_fixture_random_family.h>
+#include <fixture/fixture_random_family.h>
 
 using namespace dng;
 namespace utf = boost::unit_test;
@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(test_set_mup, *utf::fixture(&setup, &teardown)) {
         double expected = 1 - (prob_no_mut / prob_mu);
         double expected_log =  - std::expm1(ln_no_mut - ln_mut);
 
-        stats.set_mup(ln_no_mut, ln_mut);
+        stats.set_mutation_prob(ln_no_mut, ln_mut);
         BOOST_CHECK_CLOSE(expected, expected_log, 0.01);
-        BOOST_CHECK_CLOSE(expected_log, stats.get_mup(), BOOST_CLOSE_THRESHOLD);
+        BOOST_CHECK_CLOSE(expected_log, stats.get_mutation_prob(), BOOST_CLOSE_THRESHOLD);
     }
 
     for (int t = 0; t <NUM_TEST; ++t) {
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(test_set_mup, *utf::fixture(&setup, &teardown)) {
 
         double expected = 1 - (prob_no_mut / prob_mu);
 
-        stats.set_mup(ln_no_mut, ln_mu);
-        BOOST_CHECK_CLOSE(expected, stats.get_mup(), BOOST_CLOSE_THRESHOLD);
+        stats.set_mutation_prob(ln_no_mut, ln_mu);
+        BOOST_CHECK_CLOSE(expected, stats.get_mutation_prob(), BOOST_CLOSE_THRESHOLD);
     }
 
 }
