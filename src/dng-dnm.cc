@@ -45,14 +45,14 @@ int callMakeSNPLookup(lookup_table_t &tgtSNP, lookup_snp_t &lookupSNP,
     }
 
     cerr << "\nCreated SNP lookup table\n";
-    cerr << " First mrate: " << lookupSNP.mrate(1,
-            1) << " last: " << lookupSNP.mrate(100, 10) << endl;
-    cerr << " First code: " << lookupSNP.code(1,
-            1) << " last: " << lookupSNP.code(100, 10) << endl;
+    cerr << " First mrate: " << lookupSNP.mrate(0,
+            0) << " last: " << lookupSNP.mrate(99, 9) << endl;
+    cerr << " First code: " << lookupSNP.code(0,
+            0) << " last: " << lookupSNP.code(99, 9) << endl;
     cerr << " First target string: " << tgtSNP[0][0] << " last: " << tgtSNP[99][9]
          << endl;
-    cerr << " First tref: " << lookupSNP.tref(1,
-            1) << " last: " << lookupSNP.tref(100, 10) << endl;
+    cerr << " First tref: " << lookupSNP.tref(0,
+            0) << " last: " << lookupSNP.tref(99, 9) << endl;
     return 0;
 }
 
@@ -76,12 +76,12 @@ int callMakeINDELLookup(lookup_table_t &tgtIndel, lookup_indel_t &lookupIndel,
     }
 
     std::cerr << "\nCreated indel lookup table";
-    std::cerr << " First code: " << lookupIndel.code(1,
-              1) << " last: " << lookupIndel.code(9, 3) << std::endl;
+    std::cerr << " First code: " << lookupIndel.code(0,
+              0) << " last: " << lookupIndel.code(8, 2) << std::endl;
     std::cerr << " First target string: " << tgtIndel[0][0] << " last: " <<
               tgtIndel[8][2] << std::endl;
-    std::cerr << " First prior: " << lookupIndel.priors(1,
-              1) << " last: " << lookupIndel.priors(9, 3) << std::endl;
+    std::cerr << " First prior: " << lookupIndel.priors(0,
+              0) << " last: " << lookupIndel.priors(8, 2) << std::endl;
     return 0;
 }
 
@@ -97,8 +97,8 @@ int callMakePairedLookup(lookup_table_t &tgtPair, lookup_pair_t &lookupPair) {
     std::cerr << "\nCreated paired lookup table" << std::endl;
     std::cerr << " First target string: " << tgtPair[0][0] << " last: " <<
               tgtPair[9][9] << std::endl;
-    std::cerr << " First prior " << lookupPair.priors(1,
-              1) << " last: " << lookupPair.priors(10, 10) << std::endl;
+    std::cerr << " First prior " << lookupPair.priors(0,
+              0) << " last: " << lookupPair.priors(9, 9) << std::endl;
     return 0;
 }
 
@@ -234,8 +234,7 @@ int DNM::operator()(std::string &model, DNM::argument_type &arg) {
     int indel_total_count = 0, indel_pass_count = 0;
     int pair_total_count = 0, pair_pass_count = 0;
 
-    hts::bcf::File vcf_input(input_file.c_str(), "r"); // hts::bcf::File can read both VCF and BCF
-    const bcf_hdr_t *hdr = vcf_input.header();
+
     bcf_srs_t *rec_reader = bcf_sr_init(); // used for iterating each rec in BCF/VCF
 
     // Open region if specified
@@ -265,6 +264,10 @@ int DNM::operator()(std::string &model, DNM::argument_type &arg) {
         };
     }
 
+    // Get the header (should be only one input file)
+    const bcf_hdr_t *hdr = bcf_sr_get_header(rec_reader, 0);
+
+    
     while(bcf_sr_next_line(rec_reader)) {
         bcf1_t *rec = bcf_sr_get_line(rec_reader, 0);
         int j = 0;
