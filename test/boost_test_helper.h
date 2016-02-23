@@ -13,9 +13,10 @@
 //TODO: Where should this file go?
 //FIXME: too many global
 const double ABS_TEST_THRESHOLD = 1e-10;
-const double BOOST_CLOSE_THRESHOLD = 1e-4;//
+const double BOOST_CLOSE_THRESHOLD = 1e-3;//
 const double BOOST_SMALL_THRESHOLD = sqrt(std::numeric_limits<double>::epsilon());
 //TODO: What is a good cut? 1e-8?// sqrt(std::numeric_limits<double>::epsilon());
+
 
 template<typename V, typename V2>
 void boost_check_equal_vector(V &expected, V2 &result) {
@@ -28,6 +29,20 @@ void boost_check_equal_vector(V &expected, V2 &result) {
 
 template<typename V, typename V2>
 void boost_check_close_vector(V &expected, V2 &result) {
+
+    BOOST_CHECK_EQUAL(expected.size(), result.size());
+    for (int i = 0; i < expected.size(); ++i) {
+        if(expected[i] == 0){
+            BOOST_CHECK_EQUAL(0, result[i]);
+        }
+        else {
+            BOOST_CHECK_CLOSE(expected[i], result[i], BOOST_CLOSE_THRESHOLD);
+        }
+    }
+}
+
+template<typename V, typename V2>
+void boost_check_close_vector(V &&expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {

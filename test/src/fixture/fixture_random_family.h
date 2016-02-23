@@ -2,19 +2,20 @@
 // Created by steven on 1/24/16.
 //
 #pragma once
-#ifndef DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
-#define DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
+#ifndef DENOVOGEAR_FIXTURE_RANDOM_FAMILY_H
+#define DENOVOGEAR_FIXTURE_RANDOM_FAMILY_H
 
 #include <dng/peeling.h>
 
-//TODO: Fix this files!! New filename system and mixed global and local here.
-std::random_device rd;
-std::mt19937 random_gen_mt(rd());
+namespace utf = boost::unit_test;
+
 
 struct RandomFamily {
-
     const int CHILD_OFFSET = 2;
     std::string fixture;
+
+    std::mt19937 random_gen_mt {1}; //seed = 1
+
 
     dng::peel::family_members_t family;
     std::vector<dng::TransitionMatrix> trans_matrix;
@@ -25,8 +26,8 @@ struct RandomFamily {
     int total_family_size;
     std::uniform_int_distribution<> rand_unif;
 
-    RandomFamily(std::string s = "") : fixture(s) {
-        BOOST_TEST_MESSAGE("set up fixture: RandomFamily " << s);
+    RandomFamily(std::string s = "RandomFamily") : fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture:  " << fixture);
         rand_unif = std::uniform_int_distribution<>(1,10);
         init_family();
     }
@@ -35,7 +36,6 @@ struct RandomFamily {
 
         int num_child = rand_unif(random_gen_mt);
         total_family_size = num_child + CHILD_OFFSET;
-
         family.clear();
         trans_matrix.resize(total_family_size);
         upper_array.resize(total_family_size);
@@ -74,7 +74,7 @@ struct RandomFamily {
     }
 
     ~RandomFamily() {
-        BOOST_TEST_MESSAGE("tear down fixture: RandomFamily " << fixture);
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
 };
 
@@ -144,4 +144,4 @@ struct RandomWorkspace {
 
 
 
-#endif //DENOVOGEAR_TESTF_FIXTURE_RANDOM_FAMILY_H
+#endif //DENOVOGEAR_FIXTURE_RANDOM_FAMILY_H

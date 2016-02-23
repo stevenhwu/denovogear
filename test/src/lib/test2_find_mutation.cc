@@ -12,16 +12,13 @@
 #include <fstream>
 
 #include <dng/task/call.h>
-
 #include <helpers/find_mutation_helper.h>
 
-
-#include "boost_test_helper.h"
-
-#include <fixture/fixture_read_trio_from_file.h>
+#include <boost_test_helper.h>
+#include <fixture/fixture_trio_workspace.h>
 
 
-using namespace dng;
+
 namespace utf = boost::unit_test;
 
 const int NUM_TEST = 100;
@@ -62,69 +59,6 @@ const int NUM_TEST = 100;
 //BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
 
 
-struct TrioWorkspace : public  ReadTrioFromFile {
-
-    double min_prob;
-
-    dng::Pedigree pedigree;
-    dng::peel::workspace_t workspace;
-
-    FindMutations::params_t test_param_1 {0, {0,0,0,0}, 0,
-                                          std::string("0,0,0,0"),
-                                          std::string("0,0,0,0") };
-
-    TrioWorkspace(std::string s = "TrioWorkspace") : ReadTrioFromFile(s) {
-        BOOST_TEST_MESSAGE("set up fixture: " << s);
-
-
-        pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-
-        std::array<double, 4> freqs;
-        auto f = util::parse_double_list(arg.nuc_freqs, ',', 4);
-        std::copy(f.first.begin(), f.first.end(), &freqs[0]);
-
-        test_param_1 = FindMutations::params_t {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
-
-
-        int min_qual = arg.min_basequal;
-        min_prob = arg.min_prob;
-
-    }
-
-    double setup_workspace(int ref_index, std::vector<depth_t> &read_depths ){
-
-        workspace.Resize(5);
-        workspace.founder_nodes = std::make_pair(0, 2);
-        workspace.germline_nodes = std::make_pair(0, 2);
-        workspace.somatic_nodes = std::make_pair(2, 2);
-        workspace.library_nodes = std::make_pair(2, 5);
-
-        std::array<double, 4> prior {};
-        prior.fill(0);
-        prior[ref_index] = test_param_1.ref_weight;
-        auto genotype_prior_prior = population_prior(test_param_1.theta, test_param_1.nuc_freq, prior);
-        workspace.SetFounders(genotype_prior_prior);
-
-        std::vector<std::string> expect_gamma{"0.98, 0.0005, 0.0005, 1.04",
-                                              "0.02, 0.075,  0.005,  1.18"};
-        dng::genotype::DirichletMultinomialMixture genotype_likelihood_{
-                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[0]},
-                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[1]}  };
-        double scale = 0.0, stemp;
-        for (std::size_t u = 0; u < read_depths.size(); ++u) {
-            std::tie(workspace.lower[2 + u], stemp) =
-                    genotype_likelihood_(read_depths[u], ref_index);
-            scale += stemp;
-        }
-        return scale;
-    }
-
-    ~TrioWorkspace() {
-        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
-    }
-
-
-};
 
 void setup() { BOOST_TEST_MESSAGE("set up fun"); }
 
@@ -176,37 +110,6 @@ BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
 
 
 BOOST_AUTO_TEST_CASE(test_prior, *utf::fixture(&setup, &teardown)) {
-
-/* R Code
-prior0<- c(0,0,0,0)
-freq<- c(0.3,0.2,0.2,0.3)
-theta <- 0.001
-tempComb<- combn(4,2)
-allComb<-cbind(c(1,1), tempComb[,1:3], c(2,2), tempComb[,4:5], c(3,3), tempComb[,6], c(4,4))
-result<- vector(mode="list", length=5)
-for(i in 1:5){
-    prior<- prior0
-    if(i<5){
-        prior[i]<- prior[i]+1
-    }
-    alpha <- freq*theta + prior
-    alpha_sum <- sum(alpha)
-    scale<- alpha_sum * (1+alpha_sum)
-    result[[i]]<- apply(allComb, 2, function(x){
-        if(x[1]==x[2]){
-            return(alpha[x[1]]*(1+alpha[x[1]])/scale)
-        }
-        else{
-            return(2*alpha[x[1]]*alpha[x[2]]/scale)
-        }
-    })
-}
-
-s<- sapply(result, function(x){
-    paste(x, sep="", collapse=", ")
-})
-cat("{", paste(s, collapse="}, \n{"), "}\n" )
-*/
 
     std::vector<std::array<double, 10>> expected_prior {
         {0.998951118846171, 0.000199760259730275, 0.000199760259730275, 0.000299640389595412, 9.98701448476561e-05, 3.99400699250774e-08, 5.99101048876161e-08, 9.98701448476561e-05, 5.99101048876161e-08, 0.000149820194797706},
@@ -261,7 +164,6 @@ BOOST_AUTO_TEST_CASE(test_full_transition, *utf::fixture(&setup, &teardown)) {
     std::vector<TransitionMatrix> exp_posmut {{},{},exp_germline_posmut, exp_somatic_posmut, exp_somatic_posmut};
     std::vector<TransitionMatrix> exp_onemut {{},{},exp_germline_onemut, exp_somatic_onemut, exp_somatic_onemut};
     std::vector<TransitionMatrix> exp_mean {{},{},exp_germline_mean, exp_somatic_mean, exp_somatic_mean};
-
     for (int i = 0; i < 5; ++i) {
         boost_check_matrix(exp_full[i],   full_matrices[i]);
         boost_check_matrix(exp_nomut[i],  nomut_matrices[i]);
@@ -269,21 +171,12 @@ BOOST_AUTO_TEST_CASE(test_full_transition, *utf::fixture(&setup, &teardown)) {
         boost_check_matrix(exp_onemut[i], onemut_matrices[i]);
         boost_check_matrix(exp_mean[i],   mean_matrices[i]);
     }
-
 }
 
 
 BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
 
-    int ref_index = 3;
-    std::vector<depth_t> read_depths(3);
-    for (int j = 0; j < read_depths.size(); ++j) {
-        read_depths[j].counts[0] = 20 + j;
-        read_depths[j].counts[1] = j*j;
-        read_depths[j].counts[2] = 1;
-        read_depths[j].counts[3] = 0;
-        read_depths[j].counts[j%3] += 30;
-    }
+
 
     std::vector<peel::family_members_t> family {
             {1,4},
@@ -354,16 +247,30 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
 }
 
 
+BOOST_AUTO_TEST_CASE(test_calculate_mutation_expected, *utf::fixture(&setup, &teardown)) {
+
+    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+
+    MutationStats mutation_stats(min_prob);
+    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mup, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(-30.5967, mutation_stats.lld, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(-6.68014, mutation_stats.llh, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mux, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mu1p, BOOST_CLOSE_THRESHOLD);
+
+    BOOST_CHECK_EQUAL("GGxGG>GT", mutation_stats.dnt);
+    BOOST_CHECK_EQUAL("LB-NA12878:Solexa-135852", mutation_stats.dnl);
+    BOOST_CHECK_EQUAL(42, mutation_stats.dnq);
+
+
+}
+
+
 BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) {
     //TODO: Compare operator() with calculate_mutation ONLY, NOT a real test
-    int ref_index = 3;
-    std::vector<depth_t> read_depths(3);
-    for (int j = 0; j < read_depths.size(); ++j) {
-        read_depths[j].counts[0] = 20 + j;
-        read_depths[j].counts[1] = j * j;
-        read_depths[j].counts[2] = 1;
-        read_depths[j].counts[3] = 0;
-    }
+
 
     min_prob = 0; //Pass everything
     FindMutations::stats_t stats;
@@ -379,73 +286,28 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
     BOOST_CHECK_EQUAL(stats.mux, mutation_stats.mux);
     BOOST_CHECK_EQUAL(stats.has_single_mut, mutation_stats.has_single_mut);
     BOOST_CHECK_EQUAL(stats.mu1p, mutation_stats.mu1p);
+
     BOOST_CHECK_EQUAL(stats.dnt, mutation_stats.dnt);
     BOOST_CHECK_EQUAL(stats.dnl, mutation_stats.dnl);
+    BOOST_CHECK_EQUAL(stats.dnq, mutation_stats.dnq);
 
     for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
         boost_check_close_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
     }
     for (int i = 2; i < stats.genotype_likelihoods.size(); ++i) {
         boost_check_close_vector(stats.genotype_likelihoods[i], mutation_stats.genotype_likelihoods[i]);
-//        std::cout << i << "\t" << stats.genotype_likelihoods[i][0] << "\t" << mutation_stats.genotype_likelihoods[i][0] << std::endl;
-//        std::cout << stats.genotype_likelihoods[i][1] << "\t" << mutation_stats.genotype_likelihoods[i][1] << std::endl;
     }
     for (int i = 2; i < stats.node_mup.size(); ++i) {
-        BOOST_CHECK_EQUAL(stats.node_mup[i], mutation_stats.node_mup[i]);
+        BOOST_CHECK_CLOSE(stats.node_mup[i], mutation_stats.node_mup[i], BOOST_CLOSE_THRESHOLD);
+    }
+
+    for (int i = 2; i < stats.node_mu1p.size(); ++i) {
+        BOOST_CHECK_CLOSE(stats.node_mu1p[i], mutation_stats.node_mu1p[i], BOOST_CLOSE_THRESHOLD);
     }
 
 #if CALCULATE_ENTROPY == true
     BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
 #endif
-
-//    std::cout << stats.dnt << "\t" << stats.dnl  << "\t" << stats.dnq<< "\t" << stats.dnc << std::endl;
-//    for (auto p : stats.posterior_probabilities) {
-//        std::cout << p.prod() << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : stats.genotype_likelihoods) {
-//        std::cout << p.prod() << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : stats.node_mup) {
-//        std::cout << p << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : stats.node_mu1p) {
-//        std::cout << p << "\t";
-//    }
-//    std::cout << "\n========================" << std::endl;
-
-//    IndividualVector posterior_probabilities;
-//    IndividualVector genotype_likelihoods;
-//    std::vector<float> node_mup;
-//    std::vector<float> node_mu1p;
-
-
-//    MutationStats mutation_stats(find_mutation.min_prob_);
-//    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
-//    std::cout << "==== call calculate_mutation() ======" << std::endl;
-//    std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
-//    "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
-//    mutation_stats.mu1p << std::endl;
-//    std::cout << mutation_stats.dnt << "\t" << mutation_stats.dnl << "\t" <<
-//    mutation_stats.dnq << "\t" << mutation_stats.dnc << std::endl;
-//    for (auto p : mutation_stats.posterior_probabilities) {
-//        std::cout << p.prod() << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : mutation_stats.genotype_likelihoods) {
-//        std::cout << p.prod() << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : mutation_stats.node_mup) {
-//        std::cout << p << "\t";
-//    }
-//    std::cout << std::endl;
-//    for (auto p : mutation_stats.node_mu1p) {
-//        std::cout << p << "\t";
-//    }
-//    std::cout << "\n========================" << std::endl;
 
 }
 

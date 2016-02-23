@@ -143,7 +143,7 @@ protected:
                           family_labels_t &family_labels, std::vector<vertex_t> &pivots);
 
 private:
-    void PrintDebugEdges(std::string prefix, const dng::Graph &pedigree_graph);
+    void PrintDebugEdges(const std::string &prefix, const dng::Graph &pedigree_graph);
 
 
     const vertex_t DUMMY_INDEX = 0;

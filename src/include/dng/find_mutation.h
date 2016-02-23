@@ -34,9 +34,9 @@ public:
         dng::genotype::DirichletMultinomialMixture::params_t params_b;
     };
 
-    //TODO: might replace struct stats_t with mutation_stats.cc
-
-    struct [[deprecated]] stats_t {
+    //TODO: replace struct stats_t with mutation_stats.cc
+//    struct [[deprecated]] stats_t {
+    struct stats_t {
         float mup;
         float lld;
         float llh;
@@ -64,16 +64,11 @@ public:
     bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index, MutationStats &mutation_stats);
 
 protected:
+
     const dng::Pedigree &pedigree_;
-
     params_t params_;
-
     double min_prob_;
-
-//    MutationStats mutation_stats;
-
     dng::peel::workspace_t work_;
-
 
     dng::TransitionVector full_transition_matrices_;
     dng::TransitionVector nomut_transition_matrices_;
@@ -86,14 +81,11 @@ protected:
     dng::genotype::DirichletMultinomialMixture genotype_likelihood_;
 
     dng::GenotypeArray genotype_prior_[5]; // Holds P(G | theta)
-
     std::array<double, 5> max_entropies_;
-
     std::vector<double> event_;
 
 
     bool calculate_mutation_prob(MutationStats &stats);
-
     void calculate_posterior_probabilities(MutationStats &mutation_stats);
     void calculate_expected_mutation(MutationStats &mutation_stats);
     void calculate_node_mutation(MutationStats &mutation_stats);

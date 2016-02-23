@@ -33,6 +33,7 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/timer/timer.hpp>
+#include <utils/assert_utils.h>
 
 
 #define DNG_GL_PREFIX "GL-"
@@ -94,11 +95,7 @@ bool dng::PedigreeV2::Construct(const io::Pedigree &pedigree,
     // Construct a graph of the pedigree and somatic information
     Graph pedigree_graph(num_members);
 
-//#ifdef DEBUG_VERBOSE
-    std::cout << "========== VERISON 2 =========\ninit pedigree: V E: " << num_vertices(pedigree_graph) << "\t" <<
-        num_edges(pedigree_graph) << std::endl;
-//    std::cout << pedigree.table().size() << "\t" << pedigree.table().size() << "\t" << rgs.libraries().size() << std::endl;
-//#endif
+    PrintDebugEdges("========== VERISON 2 =========\ninit pedigree", pedigree_graph);
 
     auto edge_types = get(edge_type, pedigree_graph);
     auto lengths = get(edge_length, pedigree_graph);
@@ -518,7 +515,7 @@ void dng::PedigreeV2::EraseRemovedLibraries(dng::ReadGroups &rgs, std::vector<si
 }
 
 
-void dng::PedigreeV2::PrintDebugEdges(std::string prefix, const dng::Graph &pedigree_graph) {
+void dng::PedigreeV2::PrintDebugEdges(const std::string &prefix, const dng::Graph &pedigree_graph) {
 #ifdef DEBUG_VERBOSE
 
 //    typedef property_map<Graph, vertex_index_t>::type IndexMap;
@@ -846,33 +843,9 @@ void dng::PedigreeV2::CreatePeelingOps(dng::Graph &pedigree_graph, const std::ve
 }
 
 
-template<class T>
-std::string
-type_name() {
-    typedef typename std::remove_reference<T>::type TR;
-    std::unique_ptr<char, void (*)(void *)> own
-            (
-#ifndef _MSC_VER
-            abi::__cxa_demangle(typeid(TR).name(), nullptr,
-                                nullptr, nullptr),
-#else
-            nullptr,
-#endif
-            std::free
-    );
-    std::string r = own != nullptr ? own.get() : typeid(TR).name();
-    if (std::is_const<TR>::value)
-        r += " const";
-    if (std::is_volatile<TR>::value)
-        r += " volatile";
-    if (std::is_lvalue_reference<T>::value)
-        r += "&";
-    else if (std::is_rvalue_reference<T>::value)
-        r += "&&";
-    return r;
-}
 
 
+//
 //bool dng::PedigreeV2::Equal(dng::Pedigree &other_ped) {
 //
 //    AssertEqual(num_nodes_, other_ped.num_nodes());
@@ -907,22 +880,11 @@ type_name() {
 //    auto other_peeling_functions = other_ped.peeling_functions_;
 //    for (int j = 0; j < peeling_functions_.size() - 1; ++j) {
 //        int op_index = peeling_functions_ops_[j];
-////        std::cout<<
-//////                typeid(peeling_functions_[j]).name() << "\t" <<
-//////                type_name<decltype(peeling_functions_[j])>() << "\n" <<
-//////                typeid(dng::peel::functions[0]).name() << "\t" <<
-//////                type_name<decltype(dng::peel::functions[0])>() << "\n" <<
-//////                op_index << "\t" <<
-////                (dng::peel::functions[op_index] == peeling_functions_[j]) << "\t" <<
-//////                (dng::peel::functions[0] == peeling_functions_[j]) << "\t" <<
-////                (other_peeling_functions[j] == peeling_functions_[j]) << "\t" <<
-////                (other_peeling_functions[0] == peeling_functions_[j]) << "\t" <<
-//////                (typeid(dng::peel::functions[0]).name() == typeid(peeling_functions_[j]).name() ) << "\t" <<
-////                "\n" << std::endl; ;
-//        assert(dng::peel::functions[op_index] ==
-//               other_peeling_functions[j]); //Check against expected dng::peel::functions
+//
+//        assert(dng::peel::functions[op_index] == other_peeling_functions[j]);
+//        //Check against expected dng::peel::functions
 //        assert(peeling_functions_[j] == other_peeling_functions[j]); //Check against others
-////
+//        //
 //
 //    }
 //
