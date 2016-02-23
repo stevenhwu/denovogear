@@ -60,6 +60,7 @@
 
 #include <dng/find_mutation.h>
 #include <utils/vcf_utils.h>
+#include <utils/assert_utils.h>
 #include "boost_utils.h"
 using namespace dng::task;
 using namespace dng;
@@ -479,6 +480,8 @@ int Call::operator()(Call::argument_type &arg) {
     MutationStats mutation_stats(min_prob);
 
     const int min_basequal = arg.min_basequal;
+
+
     auto filter_read = [min_basequal](
             dng::BamPileup::data_type::value_type::const_reference r) -> bool {
         return (r.is_missing
@@ -486,6 +489,8 @@ int Call::operator()(Call::argument_type &arg) {
                 || seq::base_index(r.aln.seq_at(r.pos)) >= 4);
     };
     std::cout << "\n========================================\n========================================\n"<< std::endl;
+
+
     // Treat sequence_data and variant data separately
     if(cat == sequence_data)
     {
@@ -736,11 +741,13 @@ int Call::operator()(Call::argument_type &arg) {
             record.Clear();
         });
     }
+
     else if(cat == variant_data) {
         const char *fname = bcfdata[0].name();
 
         dng::pileup::vcf::VCFPileup vcfpileup{rgs.libraries()};
         vcfpileup(fname, [&](bcf_hdr_t *hdr, bcf1_t *rec) {
+            using namespace std;
             // Won't be able to access ref->d unless we unpack the record first
             bcf_unpack(rec, BCF_UN_STR);
 
@@ -750,6 +757,8 @@ int Call::operator()(Call::argument_type &arg) {
             uint32_t n_alleles = rec->n_allele;
             uint32_t n_samples = bcf_hdr_nsamples(hdr);
             const char ref_base = *(rec->d.allele[0]);
+
+
 cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\t" << n_samples << "\t" << ref_base << endl;
 
             // Read all the Allele Depths for every sample into ad array
@@ -758,8 +767,11 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             int n_ad_array = 0;
             n_ad = bcf_get_format_int32(hdr, rec, "AD", &ad, &n_ad_array);
 
+            std::cout << "AD: " << sizeof(ad) << "\t" << n_ad << "\t" << n_ad_array << std::endl;
+
+
             // Create a map between the order of vcf alleles (REF+ALT) and their correct index in read_depths.counts[]
-            vector<size_t> a2i;
+            std::vector<size_t> a2i;
             string allele_order_str;
             int acgt_to_refalt_allele[5] = { -1, -1, -1, -1, -1}; // Maps allele to REF+ALT order
             int refalt_to_acgt_allele[5] = { -1, -1, -1, -1, -1}; // Maps REF+ALT order to A,C,G,T,N order
@@ -789,23 +801,31 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
                         continue;
                     }
                     read_depths[pos].counts[base] = depth;
+//std::cout << n_alleles * sample_ndx + allele_ndx << "\t" << ad[n_alleles * sample_ndx + allele_ndx] << std::endl;
                 }
             }
 
             size_t ref_index = seq::char_index(ref_base);
-            std::cout << "======START FM::calculate: ref: " << ref_base << "\t" << ref_index << std::endl;
+std::cout << "======START FM::calculate: ref: " << ref_base << "\t" << ref_index << std::endl;
             if(!calculate(read_depths, ref_index, &stats)) {
                 return;
             }
-            std::cout << "======END FM::calculate" << std::endl;
+            MutationStats mutation_stats (min_prob);
+            calculate.calculate_mutation(read_depths, ref_index, mutation_stats);
+std::cout << "======END FM::calculate" << std::endl;
+
+std::cout << mutation_stats.get_mutation_prob() << "==" << stats.mup << std::endl;
 
             // reformatted AD fields for output. The first few fields are the GL and SM fields and "AD" is missing. The
             // remaining fields are just copied from the input file
-            std::vector<int32_t> ad_counts(library_start*n_alleles, hts::bcf::int32_missing);
-            ad_counts.insert(ad_counts.end(), ad, ad + n_samples*n_alleles);
 
+            std::vector<int32_t> ad_counts( n_alleles*library_start, hts::bcf::int32_missing);
+            ad_counts.insert(ad_counts.end(), ad, ad + n_samples*n_alleles);
+for (auto item : ad_counts) {
+    std::cout << "ad_count: " << item << std::endl;
+}
             // sum up all the counts
-            vector<int32_t> ad_info(n_alleles, 0);
+            std::vector<int32_t> ad_info(n_alleles, 0);
             for(size_t a = 0; a < n_ad; a++)
                 ad_info[a%n_alleles] += ad[a];
 
@@ -827,7 +847,22 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             typedef pair<int, int> key_t;
             key_t total_depths[4] = {{0, 0}, {1, 0}, {2, 0}, {3, 0}};
 
-            // Construct numeric genotypes
+//            int numeric_genotype[10][2] = create_numeric_genotype(acgt_to_refalt_allele);
+//            int genotype_index[15] = create_genotype_index(refalt_to_acgt_allele);
+//            calculate_sample_genotype();
+//            calculate_sample_likelihoods();
+            mutation_stats.set_genotype_related_stats(acgt_to_refalt_allele, refalt_to_acgt_allele, n_alleles,
+            ref_index, num_nodes, library_start);
+
+//
+//            void MutationStats::set_genotype_related_stats(const int (&acgt_to_refalt_allele)[5],
+//                                                           const int (&refalt_to_acgt_allele)[5],
+//                                                           const uint32_t n_alleles,
+//                                                           const std::size_t ref_index,
+//                                                           const std::size_t num_nodes,
+//                                                           const std::size_t library_start
+
+                    // Construct numeric genotypes
             int numeric_genotype[10][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
                                            {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}
             };
@@ -857,7 +892,7 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             vector<int32_t> best_genotypes(2 * num_nodes);
             vector<int32_t> genotype_qualities(num_nodes);
             int gt_count = n_alleles * (n_alleles + 1) / 2;
-            vector<float> gp_scores(num_nodes * gt_count);
+            vector<float> gp_scores(gt_count*num_nodes );
 
             for(size_t i = 0, k = 0; i < num_nodes; ++i) {
                 size_t pos;
@@ -878,7 +913,7 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             }
 
             // Sample Likelihoods
-            vector<float> gl_scores(num_nodes * gt_count, hts::bcf::float_missing);
+            vector<float> gl_scores(gt_count *num_nodes, hts::bcf::float_missing);
             for(size_t i = library_start, k = library_start * gt_count; i < num_nodes;
                 ++i) {
                 for(int j = 0; j < gt_count; ++j) {
@@ -889,29 +924,50 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             }
 
 
-            record.info("MUP", stats.mup);
-            record.info("LLD", stats.lld);
-            record.info("LLH", stats.llh);
-            record.info("MUX", stats.mux);
-            record.info("MU1P", stats.mu1p);
 
-            record.sample_genotypes(best_genotypes);
-            record.samples("GQ", genotype_qualities);
-            record.samples("GP", gp_scores);
-            record.samples("GL", gl_scores);
+//            AssertVectorEqual(gp_scores, mutation_stats.gp_scores);
+//            AssertVectorEqual(best_genotypes, mutation_stats.best_genotypes);
+//            AssertVectorEqual(genotype_qualities, mutation_stats.genotype_qualities);
+//            for(size_t i = 0; i < gl_scores.size(); ++i) {
+//                if( bcf_float_is_missing (gl_scores[i]) ){
+//                    assert( bcf_float_is_missing (mutation_stats.gl_scores[i])  );
+//                }
+//                else{
+//                    AssertEqual(gl_scores[i], mutation_stats.gl_scores[i]);
+//                }
+//            }
+
+
+
+//            record.info("MUP", stats.mup);
+//            record.info("LLD", stats.lld);
+//            record.info("LLH", stats.llh);
+//            record.info("MUX", stats.mux);
+//            record.info("MU1P", stats.mu1p);
+            mutation_stats.record_basic_stats(record);//TODO: replace with this
+
+//            record.sample_genotypes(best_genotypes);
+//            record.samples("GQ", genotype_qualities);
+//            record.samples("GP", gp_scores);
+//            record.samples("GL", gl_scores);
+            mutation_stats.record_genotype_stats(record);//TODO: replace with this
+
+
             record.samples("DP", dp_counts);
             record.samples("AD", ad_counts);
 
             record.samples("MUP", stats.node_mup);
 
-            if(stats.has_single_mut) {
-                record.info("DNT", stats.dnt);
-                record.info("DNL", stats.dnl);
-                record.info("DNQ", stats.dnq);
-                record.info("DNC", stats.dnc);
+//            if(stats.has_single_mut) {
+//                record.info("DNT", stats.dnt);
+//                record.info("DNL", stats.dnl);
+//                record.info("DNQ", stats.dnq);
+//                record.info("DNC", stats.dnc);
+//
+//                record.samples("MU1P", stats.node_mu1p);
+//            }
+            mutation_stats.record_single_mutation_stats(record); //TODO: replace with this
 
-                record.samples("MU1P", stats.node_mu1p);
-            }
 
             record.info("DP", dp_info);
             record.info("AD", ad_info);

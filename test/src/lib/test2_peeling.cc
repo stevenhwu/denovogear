@@ -13,26 +13,13 @@
 #include <iostream>
 
 #include <dng/peeling.h>
-#include <chrono>
 
-#include "boost_test_helper.h"
-#include "fixture_random_family.h"
+#include <boost_test_helper.h>
+#include <fixture/fixture_random_family.h>
+
 //#include <boost/test/data/test_case.hpp>
 ////#include <boost/test/data/monomorphic.hpp>
 //namespace data = boost::unit_test::data;
-
-using namespace dng;
-namespace utf = boost::unit_test;
-
-const int NUM_TEST = 100;
-
-
-void setup() { BOOST_TEST_MESSAGE("set up fun"); }
-
-void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
-
-
-
 // TODO: Example of BOOST_DATA_TEST_CASE and BOOST_PARAM_TEST_CASE.
 // TODO: Should be able to replace the for loop with these.
 // TODO: Might not be able to use fixture.
@@ -63,6 +50,18 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 //}
 //BOOST_PARAM_TEST_CASE(test_function, params_begin, params_end);
 //BOOST_AUTO_TEST_SUITE_END()
+
+
+using namespace dng;
+namespace utf = boost::unit_test;
+
+const int NUM_TEST = 100;
+
+
+void setup() { BOOST_TEST_MESSAGE("set up fun"); }
+
+void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
+
 
 
 //BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<RandomFamily>(std::string("FX")) )

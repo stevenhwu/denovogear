@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#ifndef DENOVOGEAR_TESTF_FIXTURE_READ_TRIO_FROM_FILE_H
-#define DENOVOGEAR_TESTF_FIXTURE_READ_TRIO_FROM_FILE_H
+#ifndef DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H
+#define DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H
 
 #include <fstream>
 
@@ -14,13 +14,11 @@
 
 
 using namespace dng;
-
+namespace utf = boost::unit_test;
 
 struct ReadTrioFromFile {
 
     std::string fixture;
-
-
 
     dng::io::Pedigree ped;
     dng::ReadGroups rgs;
@@ -36,18 +34,24 @@ struct ReadTrioFromFile {
     } arg;
 
     ReadTrioFromFile(std::string s = "ReadTrioFromFile") : fixture(s) {
-        BOOST_TEST_MESSAGE("set up fixture: " << s);
+        BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
         po::options_description ext_desc_, int_desc_;
         po::positional_options_description pos_desc_;
         po::variables_map vm_;
 
         int argc=4;
-        char *argv[argc+1];
+        char *argv[argc];
         argv[0] = (char*) "test";
         argv[1] = (char*) "-p";
-        argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
-        argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
+
+        std::string ped_filename (TESTDATA_DIR);
+        ped_filename.append("/sample_5_3/ceu.ped");
+        argv[2] = (char*) ped_filename.data();
+
+        std::string vcf_filename = TESTDATA_DIR;
+        vcf_filename.append("/sample_5_3/test1.vcf");
+        argv[3] = (char*) vcf_filename.data();
 
         add_app_args(ext_desc_, static_cast<typename task_type::argument_type &>(arg));
         int_desc_.add_options()
@@ -78,6 +82,7 @@ struct ReadTrioFromFile {
         rgs.ParseSamples(bcfdata[0]);
 
 
+
     }
 
 
@@ -90,4 +95,4 @@ struct ReadTrioFromFile {
 };
 
 
-#endif //DENOVOGEAR_TESTF_FIXTURE_READ_TRIO_FROM_FILE_H
+#endif //DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H

@@ -38,15 +38,37 @@ public:
     void set_exactly_one_mutation(double total);
 
     void set_node_mup(const std::vector<double> &event, std::size_t first_nonfounder_index);
-    void set_node_mu1p(std::vector<double> &event, int total, std::size_t first_nonfounder_index);
+
+    void set_node_mu1p(std::vector<double> &event, double total, std::size_t first_nonfounder_index);
 
 
-    //TODO: Not implemented yet
-    void output_to_vcf(hts::bcf::Variant &record);
+
+    void record_basic_stats(hts::bcf::Variant &record);
+
+    void record_genotype_stats(hts::bcf::Variant &record);
+
+    void record_single_mutation_stats(hts::bcf::Variant &record);
 
 
-//private://TODO: surely these should not be public. Refactor these while working with call.cc
-    //TODO: float vs double?
+    enum class OutputLevel {BASIC, COMPLETE, SINGLE};
+    //TODO: Record different sets of variables, [basic, complete, everytihng/single], something like the following
+    //basic [ mup, lld, llh, genotype_likelihood]?
+    //complete [basic, mux, posterior, node_mup]
+    //single [complete, has_single_mut, mu1p, dnt, dnl, dnq, dnc, node_mu1p]
+
+
+
+    void set_genotype_related_stats(const int (&acgt_to_refalt_allele)[5],
+                                                   const int (&refalt_to_acgt_allele)[5],
+                                                   const uint32_t n_alleles,
+                                                   const std::size_t ref_index,
+                                                   const std::size_t num_nodes,
+                                                   const std::size_t library_start);
+
+
+
+private://TODO: surely these should not be public. Refactor these while working with call.cc
+public:
     float mup;
     float lld;
     float llh;
@@ -58,19 +80,17 @@ public:
     std::string dnt;
     std::string dnl;
     int32_t dnq;
-    int32_t dnc;
+    [[deprecated]] int32_t dnc;
 
     dng::IndividualVector posterior_probabilities;
     dng::IndividualVector genotype_likelihoods;
     std::vector<float> node_mup;
     std::vector<float> node_mu1p;
 
-    enum class output_levels {BASIC, COMPLETE, EVERYTHING};
-    //TODO: Record different sets of variables, [basic, complete, everytihng], something like the following
-    //basic [ mup, lld, llh, genotype_likelihood]?
-    //complete [basci, mux, posterior, node_mup]
-    //everything [complete, has_single_mut, mu1p, dnt, dnl, dnq, dnc, node_mu1p]
-
+    std::vector<int32_t> best_genotypes;//.resize(2 * num_nodes);
+    std::vector<int32_t> genotype_qualities;//(num_nodes);
+    std::vector<float> gp_scores;//(gt_count*num_nodes );
+    std::vector<float> gl_scores;//(gt_count *num_nodes, hts::bcf::float_missing);
 
 private:
 

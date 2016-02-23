@@ -7,9 +7,6 @@
 #include <dng/find_mutation.h>
 
 
-//using namespace dng::task;
-//using namespace dng;
-
 // Build a list of all of the possible contigs to add to the vcf header
 std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr) {
     if(hdr == nullptr)
@@ -59,7 +56,7 @@ std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) {
 }
 
 
-
+//TODO: eventually min_prob can be removed from this class
 FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
                              params_t params) :
         pedigree_{pedigree}, min_prob_{min_prob},
@@ -67,11 +64,6 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
         work_(pedigree.CreateWorkspace()) {
 
     using namespace dng;
-    std::cout << "theta: " << params_.theta << std::endl;
-
-    for(auto s: params_.nuc_freq)
-        std::cout << s << ' ';
-    std::cout << "<- fresq" << std::endl;
 
     // Use a parent-independent mutation model, which produces a
     // beta-binomial
@@ -91,8 +83,8 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     for(size_t child = 0; child < work_.num_nodes; ++child) {
 
         auto trans = pedigree.transitions()[child];
-        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2 <<
-                "\tType:" << (int) trans.type << std::endl;
+//        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2 <<
+//                "\tType:" << (int) trans.type << std::endl;
 
         if(trans.type == Pedigree::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
@@ -146,7 +138,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     }
 #endif
 
-    std::cout << "END FM const" << std::endl;
+//    std::cout << "END FM const" << std::endl;
 
 
 }
@@ -309,11 +301,6 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
 bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
                                int ref_index, MutationStats &mutation_stats) {
 
-    using namespace std;
-    using namespace hts::bcf;
-//    using dng::util::lphred;
-//    using dng::util::phred;
-
     double scale = work_.set_genotype_likelihood(genotype_likelihood_, depths, ref_index);
 
     // Set the prior probability of the founders given the reference
@@ -329,12 +316,12 @@ bool FindMutations::calculate_mutation(const std::vector<depth_t> &depths,
 
 
     // Peel Backwards with full-mutation
-    std::cout << "Peel Backwards with full-mutation" << std::endl;
+//    std::cout << "Peel Backwards with full-mutation" << std::endl;
     pedigree_.PeelBackwards(work_, full_transition_matrices_);
     mutation_stats.set_posterior_probabilities(work_);
 //    calculate_posterior_probabilities(mutation_stats);
 
-    std::cout << "Mux expected number of mutation and node_mup[i]" << std::endl;
+//    std::cout << "Mux expected number of mutation and node_mup[i]" << std::endl;
     calculate_expected_mutation(mutation_stats);
     calculate_node_mutation(mutation_stats);
 
@@ -355,17 +342,17 @@ bool FindMutations::calculate_mutation_prob(MutationStats &mutation_stats) {
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
     bool is_mup_lt_threshold = mutation_stats.set_mutation_prob(logdata_nomut, logdata);
-    std::cout << logdata_nomut << "\t" << logdata << "\t" << mutation_stats.get_mutation_prob() << "\t" << min_prob_ << std::endl;
+
     return is_mup_lt_threshold;
 }
 
 
-void FindMutations::calculate_posterior_probabilities(MutationStats &mutation_stats) {
-    //TODO: PeelBackwards can NOT call twice, maybe not a good idea to put here
-    pedigree_.PeelBackwards(work_, full_transition_matrices_);
-    mutation_stats.set_posterior_probabilities(work_);
-
-}
+//void FindMutations::calculate_posterior_probabilities(MutationStats &mutation_stats) {
+//    //TODO: PeelBackwards can NOT call twice, maybe not a good idea to put here
+//    pedigree_.PeelBackwards(work_, full_transition_matrices_);
+//    mutation_stats.set_posterior_probabilities(work_);
+//
+//}
 
 
 void FindMutations::calculate_expected_mutation(MutationStats &mutation_stats) {

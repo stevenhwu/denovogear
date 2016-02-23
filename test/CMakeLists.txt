@@ -141,7 +141,7 @@ endforeach(test)
 # TODO: How to add min *.cc files instead of all *.cc later?
 include_directories(./)
 #include_directories(./lib/)
-
+add_definitions(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
 file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
 foreach(test ${TESTS2})
   get_filename_component(testName ${test} NAME_WE)
@@ -167,7 +167,7 @@ foreach(test ${TESTS2})
           HTSLIB::HTSLIB
           )
   add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
-  add_test(${testName}_run ${testName})
+  add_test(${testName}_run ${testName} )
   set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
 endforeach(test)
 

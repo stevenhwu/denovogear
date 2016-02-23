@@ -103,7 +103,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     vertex_t dummy_index = 0;
     for (auto &row : pedigree.table()) {
         std::cout << "Loop START: V E: " << num_vertices(pedigree_graph) << "\t" <<
-                num_edges(pedigree_graph) << "\t" << std::endl;
+                num_edges(pedigree_graph) << "\t" <<  std::endl;
         vertex_t child = row.child;
         vertex_t dad = row.dad;
         vertex_t mom = row.mom;
@@ -123,8 +123,10 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
         if (!id.second) {
             add_edge(dad, mom, EdgeType::Spousal, pedigree_graph);
             //Connect dad-mom to make a dependend trio
+            std::cout << "===after spoesal: V E:" << num_vertices(pedigree_graph) << "\t" <<
+            num_edges(pedigree_graph) << " Connect Dad-mom: " << dad << "\t" << mom << std::endl;
         }
-        std::cout << "===after spoesal: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
+
         // add the meiotic edges
         add_edge(mom, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
         add_edge(dad, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
@@ -188,12 +190,14 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
 
     // Connect somatic samples to libraries
     for(vertex_t v = first_somatic_; v < first_library_; ++v) {
+        std::cout << v << "=======\t" << labels[v] << "\t"  << std::endl;
         if(labels[v].empty()) {
             continue;
         }
 //using orders from vcf files rgs
         auto r = rgs.data().get<rg::sm>().equal_range(labels[v].c_str() + strlen(
                      DNG_SM_PREFIX));
+
         for(; r.first != r.second; ++r.first) {
             vertex_t w = first_library_ + rg::index(rgs.libraries(),
                                                     r.first->library);
