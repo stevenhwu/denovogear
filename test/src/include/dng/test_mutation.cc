@@ -10,7 +10,7 @@
 
 #include <boost_test_helper.h>
 #include <iostream>
-#include <gdbm.h>
+
 
 using namespace dng;
 namespace utf = boost::unit_test;
