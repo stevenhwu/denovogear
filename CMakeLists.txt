@@ -49,10 +49,10 @@ endif()
 ## Guard against bad build-type strings
 IF(CMAKE_BUILD_TYPE)
   string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-  if(NOT cmake_build_type_tolower STREQUAL "debug"
-      AND NOT cmake_build_type_tolower STREQUAL "release"
-      AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
-      AND NOT cmake_build_type_tolower STREQUAL "none")
+  if(    NOT cmake_build_type_tolower STREQUAL "debug"
+     AND NOT cmake_build_type_tolower STREQUAL "release"
+     AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo"
+     AND NOT cmake_build_type_tolower STREQUAL "none")
     message(FATAL_ERROR "Unsupported build type \"${CMAKE_BUILD_TYPE}\". Allowed values are Debug, Release, RelWithDebInfo, and None (case-insensitive).")
   endif()
 ENDIF()

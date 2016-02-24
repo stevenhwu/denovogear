@@ -30,14 +30,11 @@
 #include <dng/newick.h>
 #include <dng/read_group.h>
 #include <dng/peeling.h>
-
-//TODO: Control this in CMAKE as well
-//#define DEBUG_PEDIGREE ;
+#include <utils/assert_utils.h>
 
 namespace dng {
 
 class Pedigree {
-
 public:
 
     enum class TransitionType {
@@ -56,29 +53,34 @@ public:
 
     double PeelForwards(peel::workspace_t &work,
                         const TransitionVector &mat) const {
+#ifdef DEBUG_PEDIGREE
+    std::cerr << "PeelForward: index: " << i << "/" << peeling_functions_.size() <<
+        "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i]]  << std::endl;
+#endif
+
         if(work.dirty_lower) {
             work.CleanupFast();
         }
         // Peel pedigree one family at a time
         for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
-#ifdef DEBUG_PEDIGREE
-    std::cerr << "PeelForward: index: " << i << "/" << peeling_functions_.size() <<
-        "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i]]  << std::endl;
-#endif
             (*peeling_functions_[i])(work, family_members_[i], mat);
-
         }
         // Sum over roots
         double ret = 0.0;
         for(auto r : roots_) {
-
             ret += log((work.lower[r] * work.upper[r]).sum());
         }
         return ret;
     }
+
     //TODO: Some sort of check to make sure PeelBackwards use the same matrix as Forwards
     double PeelBackwards(peel::workspace_t &work,
                          const TransitionVector &mat) const {
+#ifdef DEBUG_PEDIGREE
+std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse_functions_.size() <<
+    "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << std::endl;
+#endif
+
         double ret = 0.0;
         // Divide by the log-likelihood
         for(auto r : roots_) {
@@ -89,32 +91,17 @@ public:
             work.upper[r] /= sum;
         }
 
-
-        for (std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
-#ifdef DEBUG_PEDIGREE
-std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse_functions_.size() <<
-    "\tfunction: " << peel::op::map_enum_string[peeling_functions_ops_[i - 1]] << std::endl;
-#endif
+        for(std::size_t i = peeling_reverse_functions_.size(); i > 0; --i) {
             (*peeling_reverse_functions_[i - 1])(work, family_members_[i - 1], mat);
-
         }
         work.dirty_lower = true;
-        ret = 0;
-        for (int j = 0; j < work.upper.size(); ++j) {
-
-
-            double sum = (work.upper[j]).sum();
-            ret += (sum);
-//            sum = sqrt(sum);
-
-        }
         return ret;
     }
+//TODO: The *_nodes.second is kind of confusing, you need to know the order of the node (maybe we should explain that somewhere)
 
     peel::workspace_t CreateWorkspace() const {
         peel::workspace_t work;
         work.Resize(num_nodes_);
-        //TODO: The *_nodes.second is kind of confusing, you need to know the order of the node (maybe we should explain that somewhere)
         work.founder_nodes = std::make_pair(first_founder_, first_nonfounder_);
         work.germline_nodes = std::make_pair(first_founder_, first_somatic_);
         work.somatic_nodes = std::make_pair(first_somatic_, first_library_);
@@ -134,18 +121,18 @@ std::cerr << "Peel_reverse_function: index: " << (i-1) << "/" << peeling_reverse
     const std::vector<std::string> &labels() const { return labels_; }
 
     size_t num_nodes() const { return num_nodes_; }
-
     std::pair<size_t, size_t> library_nodes() const { return {first_library_, num_nodes_}; }
 
+    bool Equal(Pedigree &other_ped);
+    
 protected:
-
     // node structure:
     // founder germline, non-founder germline, somatic, library
-    std::size_t num_nodes_;        // total number of nodes
-    std::size_t first_founder_;    // start of founder germline
-    std::size_t first_nonfounder_; // start of non-founder germline
-    std::size_t first_somatic_;    // start of somatic nodes
-    std::size_t first_library_;    // start of libraries
+    std::size_t num_nodes_{0};        // total number of nodes
+    std::size_t first_founder_{0};    // start of founder germline
+    std::size_t first_nonfounder_{0}; // start of non-founder germline
+    std::size_t first_somatic_{0};    // start of somatic nodes
+    std::size_t first_library_{0};    // start of libraries
 
     std::vector<std::size_t> roots_;
 
@@ -165,10 +152,6 @@ protected:
     std::vector<peel::family_members_t> family_members_;
 
     void ConstructPeelingMachine();
-
-public:
-    bool Equal(Pedigree &other_ped);
-
 };
 
 }; // namespace dng
