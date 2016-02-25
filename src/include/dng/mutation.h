@@ -73,7 +73,7 @@ inline TransitionMatrix mitosis_haploid_matrix(const MutationMatrix &m,
 
     return ret; // 4 x 4
 }
-gedi
+
 inline TransitionMatrix mitosis_diploid_matrix(const MutationMatrix &m,
         int mutype = -1) {
     TransitionMatrix ret = TransitionMatrix::Zero(10, 10);
