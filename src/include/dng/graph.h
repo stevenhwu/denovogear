@@ -20,8 +20,11 @@
 #ifndef DNG_GRAPH_H
 #define DNG_GRAPH_H
 
-#include <boost/graph/adjacency_list.hpp>
 #include <string>
+
+#include <boost/graph/adjacency_list.hpp>
+
+#include <dng/io/ped.h>
 
 // Install graph properties for pedigree analysis.
 namespace boost {
@@ -32,12 +35,16 @@ enum vertex_label_t { vertex_label };
 enum edge_family_t { edge_family };
 enum vertex_group_t { vertex_group };
 
+enum vertex_sex_t { vertex_sex };
+
 BOOST_INSTALL_PROPERTY(edge, length);
 BOOST_INSTALL_PROPERTY(edge, type);
 BOOST_INSTALL_PROPERTY(vertex, label);
 
 BOOST_INSTALL_PROPERTY(edge, family);
 BOOST_INSTALL_PROPERTY(vertex, group);
+
+BOOST_INSTALL_PROPERTY(vertex, sex);
 }
 
 namespace dng {
@@ -45,15 +52,21 @@ namespace graph {
 enum struct EdgeType : std::size_t {
     Spousal, Meiotic, Mitotic, Library
 };
+//TODO: Refactor/Move dng::io::Pedigree::Gender to somewhere else
+typedef boost::property<boost::vertex_sex_t, dng::io::Pedigree::Gender> VertexSexProp;
 
-typedef boost::property<boost::vertex_group_t, std::size_t> VertexGroupProp;
+typedef boost::property<boost::vertex_group_t, std::size_t, VertexSexProp>
+        VertexGroupProp;
+
 typedef boost::property<boost::vertex_label_t, std::string, VertexGroupProp>
         VertexLabelProp;
+
 typedef boost::property<boost::edge_family_t, std::size_t> EdgeFamilyProp;
 typedef boost::property<boost::edge_length_t, float, EdgeFamilyProp>
         EdgeLengthProp;
 typedef boost::property<boost::edge_type_t, EdgeType, EdgeLengthProp>
         EdgeTypeProp;
+
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
         VertexLabelProp, EdgeTypeProp> Graph;
 } // namespace graph

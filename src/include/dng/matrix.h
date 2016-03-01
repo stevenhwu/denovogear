@@ -29,6 +29,7 @@
 #include <Eigen/StdVector>
 #include <Eigen/KroneckerProduct>
 
+#include <iostream>
 namespace dng {
 
 union depth_t {

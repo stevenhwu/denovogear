@@ -36,6 +36,7 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/timer/timer.hpp>
 #include <utils/assert_utils.h>
+#include <gdbm.h>
 
 
 #define DNG_GL_PREFIX "GL-"
@@ -62,7 +63,8 @@ RULES FOR LINKING READ GROUPS TO PEOPLE.
 
 */
 
-//#define DEBUG_VERBOSE 0
+//#define DEBUG_VERBOSE 1
+//#define DNG_DEVEL 1
 
 bool dng::PedigreeV2::Construct(const io::Pedigree &pedigree,
                                 dng::ReadGroups &rgs,
@@ -102,6 +104,9 @@ bool dng::PedigreeV2::Construct(const io::Pedigree &pedigree,
     auto edge_types = get(edge_type, pedigree_graph);
     auto lengths = get(edge_length, pedigree_graph);
     auto labels = get(vertex_label, pedigree_graph);
+
+    auto sex  = get(vertex_sex, pedigree_graph);
+
 //    auto groups = get(vertex_group, pedigree_graph);
 //    auto families = get(edge_family, pedigree_graph);
     // Add the labels for the germline nodes
@@ -110,10 +115,18 @@ bool dng::PedigreeV2::Construct(const io::Pedigree &pedigree,
     for (size_t i = 1; i < num_members; ++i) {
         labels[i] = DNG_GL_PREFIX + pedigree.name(i);
     }
+
     PrintDebugEdges("Start", pedigree_graph);
     // Go through rows and construct the pedigree part.
 
     ParseIoPedigree(pedigree_graph, pedigree);
+
+//    for(vertex_t v = 0; v < num_members; ++v){
+//        std::cout << labels[v] << "\t" <<  std::endl;
+//        std::cout << static_cast<int>( sex[v] )<< "\t" <<  std::endl;
+//    }
+
+
     AddLibrariesFromReadGroups(pedigree_graph, rgs, labels);
 
     vector<size_t> node_ids(num_nodes_, -1);//num_nodes used twice for different contex
@@ -164,14 +177,22 @@ TODO: cont. Everything else should stay the same (can be simplified, but might n
 
 void dng::PedigreeV2::ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io::Pedigree &pedigree) {
 
+    auto sex  = get(boost::vertex_sex, pedigree_graph);
     for (auto &row : pedigree.table()) {
 
         vertex_t child = row.child;
         vertex_t dad = row.dad;
         vertex_t mom = row.mom;
-#ifdef DEBUG_VERBOSE
 
-        std::cout << "===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom << std::endl;
+        sex[child] = row.sex;
+
+
+#ifdef DEBUG_VERBOSE
+        int sex2 = static_cast<char>( sex[child] );
+        std::cout << "==START\n===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom <<
+                "\tsex: " << sex << std::endl;
+
+
 #endif
         if (child == 0) {
             continue;
@@ -188,16 +209,16 @@ void dng::PedigreeV2::ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io:
             add_edge(dad, mom, EdgeType::Spousal, pedigree_graph);
             //Connect dad-mom to make a dependend trio
         }
-#ifdef DEBUG_VERBOSE
 
+#ifdef DEBUG_VERBOSE
         std::cout << "===after spoesal: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
         std::endl;
 #endif
                 // add the meiotic edges
         add_edge(mom, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
         add_edge(dad, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
-#ifdef DEBUG_VERBOSE
 
+#ifdef DEBUG_VERBOSE
         std::cout << "===after add_edge: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
         std::endl;
         std::cout << "===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom << std::endl;
@@ -206,6 +227,7 @@ void dng::PedigreeV2::ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io:
         // Process newick file
         // TODO: should newick::parse add edge? or do it here?
         int res = newick::parse(row.sample_tree, child, pedigree_graph);
+
 #ifdef DEBUG_VERBOSE
         std::cout << "===after parse: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
         std::endl;
@@ -214,15 +236,17 @@ void dng::PedigreeV2::ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io:
             // this line has a blank somatic line, so use the name from the pedigree
             vertex_t v = add_vertex(DNG_SM_PREFIX + pedigree.name(child), pedigree_graph);
             add_edge(child, v, {EdgeType::Mitotic, 1.0f}, pedigree_graph);
+
 #ifdef DEBUG_VERBOSE
             std::cout << "===add res==0: " << child << "\t" << v << "\t" << pedigree.name(child) << std::endl;
 #endif
+
         } else if (res == -1) {
             throw std::runtime_error("unable to parse somatic data for individual '" +
                                      pedigree.name(child) + "'.");
         }
-#ifdef DEBUG_VERBOSE
 
+#ifdef DEBUG_VERBOSE
         std::cout << "Loop END: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
 #endif
     }
@@ -349,7 +373,8 @@ void dng::PedigreeV2::SimplifyPedigree(dng::Graph &pedigree_graph, const PropEdg
                     boost::swap(edge_trio[child_index], edge_trio[p]);
                 }
                 add_edge(vertex_trio[p], vertex_trio[child_index],
-                         {edge_types[edge_trio[p]], lengths[edge_trio[p]] + lengths[edge_trio[child_index]]},
+                         {edge_types[edge_trio[p]],
+                          lengths[edge_trio[p]] + lengths[edge_trio[child_index]]},
                          pedigree_graph);
 
             }
@@ -531,10 +556,10 @@ void dng::PedigreeV2::PrintDebugEdges(const std::string &prefix, const dng::Grap
         std::cout << "(" << index[source(*ei2, pedigree_graph)]
         << "," << index[target(*ei2, pedigree_graph)] << ") ";
     }
-    std::cout << " ==END==" << std::endl;
+    std::cout << "\t\t==" << std::endl;
     std::cout << "Founder, Non_F, Lib, Somatic: " << first_founder_ << "\t" << first_nonfounder_ << "\t" <<
     first_library_ << "\t" << first_somatic_ << std::endl;
-    std::cout << std::endl;
+    std::cout << "==END==" << std::endl;
 #endif
 
 }

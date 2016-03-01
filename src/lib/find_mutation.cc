@@ -21,6 +21,11 @@
 #include <dng/find_mutation.h>
 
 
+
+#include <chrono>
+#include <dng/matrix.h>
+
+
 // Build a list of all of the possible contigs to add to the vcf header
 std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr) {
     if (hdr == nullptr) {
@@ -105,6 +110,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     for (size_t child = 0; child < work_nomut_.num_nodes; ++child) {
 
         auto trans = pedigree.transitions()[child];
+//                std::endl;
 
         if (trans.type == Pedigree::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);

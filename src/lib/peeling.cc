@@ -61,7 +61,8 @@ dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const f
     assert(family.size() >= 3);
     assert(family.size() >= first_child_index);
 
-    PairedGenotypeArray buffer = (mat[family[first_child_index]] * work.lower[family[first_child_index]].matrix()).array();
+    auto child_1 = family[first_child_index];
+    PairedGenotypeArray buffer = (mat[child_1] * work.lower[child_1].matrix()).array();
     for(std::size_t i = first_child_index+1; i < family.size(); ++i) {
         buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
     }

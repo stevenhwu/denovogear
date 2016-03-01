@@ -60,6 +60,9 @@ extern const char mitotic_diploid_mutation_labels[10][10][6];
 extern const char meiotic_diploid_mutation_labels[100][10][9];
 
 //TODO(SW): Somewhere we need to explain mutype = -1,0,1 -> full, no, one. Maybe enum class?
+//TODO: replace  kronecker_product, 1e9 ite, eigen 90s, k_p 130s
+// double x= Eigen::KroneckerProduct<TransitionMatrix,TransitionMatrix>(a,b).coeff(i,j);
+// double y = a(i / b.rows(), j / b.cols()) * b(i % b.rows(), j % b.cols());
 
 inline TransitionMatrix mitosis_haploid_matrix(const MutationMatrix &m,
         int mutype = -1) {

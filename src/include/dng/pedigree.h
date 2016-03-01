@@ -40,12 +40,14 @@ public:
     enum class TransitionType {
         Founder, Germline, Somatic, Library
     };
+
     struct transition_t {
         TransitionType type;
         std::size_t parent1;
         std::size_t parent2;
         double length1;
         double length2;
+        dng::io::Pedigree::Gender sex;
     };
 
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,

@@ -54,6 +54,8 @@
 #include "boost_utils.h"
 //#include <boost/test/unit_test.hpp>
 
+#include <dng/find_mutation_x.h>
+
 using namespace dng::task;
 using namespace dng;
 
@@ -361,15 +363,8 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 
     std::cout << arg.mu << "\t" << arg.mu_somatic << "\t" << arg.mu_library << std::endl;
 
-    std::vector<std::string> a;
-    a.push_back("1       1       0       0       1       NA12891");
-    a.push_back("1       2       0       0       2       NA12892");
-    a.push_back("1       3       1       2       2       NA12878");
-
-
     // Parse pedigree from file
     dng::io::Pedigree ped;
-//    ped.Parse(a);
 
     if (!arg.ped.empty()) {
         ifstream ped_file(arg.ped);
@@ -395,19 +390,8 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 
     // Parse Nucleotide Frequencies
     std::array<double, 4> freqs;
-    // TODO: read directly into freqs????  This will need a wrapper that provides an "insert" function.
-    // TODO: include the size into the pattern, but this makes it harder to catch the second error.
-    // TODO: turn all of this into a template function that returns array<double,4>?
     {
         auto f = utility::parse_double_list(arg.nuc_freqs, ',', 4);
-        if (!f.second) {
-            throw std::runtime_error("Unable to parse nuc-freq option. "
-                                             "It must be a comma separated list of floating-point numbers.");
-        }
-        if (f.first.size() != 4) {
-            throw std::runtime_error("Wrong number of values passed to nuc-freq. "
-                                             "Expected 4; found " + std::to_string(f.first.size()) + ".");
-        }
         std::copy(f.first.begin(), f.first.end(), &freqs[0]);
     }
 
@@ -494,11 +478,11 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
         vcfout.AddHeaderMetadata(line.c_str());
 //        cout << line.c_str() << endl;
     }
-    pedigree.PrintTable(std::cout);
-    pedigree.PrintMachine(std::cout);
-    for(auto && line : pedigree.BCFHeaderLines()) {
-        cout << line.c_str() << endl;
-    }
+//    pedigree.PrintTable(std::cout);
+//    pedigree.PrintMachine(std::cout);
+//    for(auto && line : pedigree.BCFHeaderLines()) {
+//        cout << line.c_str() << endl;
+//    }
 //    pedigree.PrintStates(std::cout);
 
     dng::PedigreeV2 pedigree2;
@@ -537,6 +521,14 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 
 //    FindMutations calculate{min_prob, pedigree,
 //                            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]}};
+    int ref_index = 2;
+    std::vector<depth_t> read_depths{3};
+    uint16_t cc[3][4] = {{0, 1, 25, 29},
+                         {0, 0, 57, 0},
+                         {0, 0, 76, 1}};
+    for (int j = 0; j < 3; ++j) {
+        std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
+    }
 
 
     FindMutations::FindMutationParams test_param_1
@@ -548,7 +540,7 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 ////
 //    test_full_transition(find_mutation);
 ////
-    test_operator(find_mutation);
+//    test_operator(find_mutation);
 
     workspace_t tt;// = pedigree.CreateWorkspace();
     tt.Resize(10);
@@ -572,6 +564,14 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     std::cout << "\n"<< std::endl;
     std::cout << t2.lower[0]<< std::endl;
 
+    FindMutations fm_x{0.01, pedigree, {arg.theta, freqs, arg.ref_weight,
+                                        arg.gamma[0], arg.gamma[1]}};
+//    FindMutationsXLinked fm_x{pedigree, find_mutation_params};
+//
+//    fm_x.init();
+//    MutationStats stats = {0.001};
+//    fm_x.run(read_depths, ref_index, stats);
+//
     std::cout << "ready to exit: " << EXIT_SUCCESS << std::endl;
     return EXIT_SUCCESS;
 
