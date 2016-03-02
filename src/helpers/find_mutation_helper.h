@@ -39,7 +39,7 @@ public:
 
 
     const peel::workspace_t &getworkspace() const {
-        return work_;
+        return work_nomut_;
     }
 
     const TransitionVector &getFull_transition_matrices_() const {

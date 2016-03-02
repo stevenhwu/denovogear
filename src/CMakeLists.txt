@@ -133,6 +133,7 @@ ADD_EXECUTABLE(dng-call_test
         utils/assert_utils.h
         lib/find_mutation.cc
         lib/mutation_stats.cc
+        lib/workspace.cc
         )
 
 TARGET_LINK_LIBRARIES(dng-call_test
@@ -150,7 +151,7 @@ ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cc
         utils/assert_utils.h
         lib/find_mutation.cc
         lib/mutation_stats.cc
-
+        lib/workspace.cc
         )
 
 TARGET_LINK_LIBRARIES(dng_vt

@@ -49,6 +49,7 @@
 #include <utils/assert_utils.h>
 #include <dng/find_mutation.h>
 #include <helpers/find_mutation_helper.h>
+#include <include/dng/workspace.h>
 
 #include "boost_utils.h"
 //#include <boost/test/unit_test.hpp>
@@ -242,8 +243,8 @@ void test_operator(FindMutationsGetter &find_mutation) {
 
 
     MutationStats mutation_stats(find_mutation.min_prob_);
-    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
-    std::cout << "==== call calculate_mutation() ======" << std::endl;
+    find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
+    std::cout << "==== call CalculateMutation() ======" << std::endl;
     std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
             "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
             mutation_stats.mu1p << std::endl;
@@ -547,6 +548,28 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 //    test_full_transition(find_mutation);
 ////
     test_operator(find_mutation);
+
+    workspace_t tt;// = pedigree.CreateWorkspace();
+    tt.Resize(10);
+    tt.Cleanup();
+
+
+
+    for(std::size_t u = 0; u < 10; ++u) {
+        tt.lower[tt.library_nodes.first + u] = GenotypeArray::Random();
+    }
+    workspace_t t2;
+    t2 = tt;
+
+    std::cout << tt.lower[0]<< std::endl;
+    std::cout << "\n"<< std::endl;
+    std::cout << t2.lower[0]<< std::endl;
+
+    std::cout << "\n"<< std::endl;
+    tt.lower[0] = GenotypeArray::Random();
+    std::cout << tt.lower[0]<< std::endl;
+    std::cout << "\n"<< std::endl;
+    std::cout << t2.lower[0]<< std::endl;
 
     std::cout << "ready to exit: " << EXIT_SUCCESS << std::endl;
     return EXIT_SUCCESS;

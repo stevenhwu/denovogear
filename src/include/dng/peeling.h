@@ -76,6 +76,8 @@ struct workspace_t {
 
     bool dirty_lower = false;
 
+    double forward_result;
+
     // Temporary data used by some peeling ops
     PairedGenotypeArray paired_buffer;
 
