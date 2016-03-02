@@ -62,9 +62,13 @@ BOOST_AUTO_TEST_CASE(test_set_mup, *utf::fixture(&setup, &teardown)) {
         double expected = 1 - (prob_no_mut / prob_mu);
         double expected_log =  - std::expm1(ln_no_mut - ln_mut);
 
-        stats.set_mutation_prob(ln_no_mut, ln_mut);
+        peel::workspace_t work_nomut;
+        peel::workspace_t work_full;
+        work_nomut.forward_result = ln_no_mut;
+        work_full.forward_result = ln_mut;
+        stats.CalculateMutationProb(work_nomut, work_full);
         BOOST_CHECK_CLOSE(expected, expected_log, 0.01);
-        BOOST_CHECK_CLOSE(expected_log, stats.get_mutation_prob(), BOOST_CLOSE_THRESHOLD);
+        BOOST_CHECK_CLOSE(expected_log, stats.mup_, BOOST_CLOSE_THRESHOLD);
     }
 
     for (int t = 0; t <NUM_TEST; ++t) {
@@ -77,8 +81,12 @@ BOOST_AUTO_TEST_CASE(test_set_mup, *utf::fixture(&setup, &teardown)) {
 
         double expected = 1 - (prob_no_mut / prob_mu);
 
-        stats.set_mutation_prob(ln_no_mut, ln_mu);
-        BOOST_CHECK_CLOSE(expected, stats.get_mutation_prob(), BOOST_CLOSE_THRESHOLD);
+        peel::workspace_t work_nomut;
+        peel::workspace_t work_full;
+        work_nomut.forward_result = ln_no_mut;
+        work_full.forward_result = ln_mu;
+        stats.CalculateMutationProb(work_nomut, work_full);
+        BOOST_CHECK_CLOSE(expected, stats.mup_, BOOST_CLOSE_THRESHOLD);
     }
 
 }
@@ -106,17 +114,17 @@ BOOST_AUTO_TEST_CASE(test_set_node, *utf::fixture(&setup, &teardown)) {
         expected_mu1p[i] = static_cast<float>(event[i]/total);
     }
 
-    stats.set_node_mup(event, first_non_founder);
-    stats.set_node_mu1p(event, total, first_non_founder);
+    stats.SetNodeMup(event, first_non_founder);
+    stats.SetNodeMu1p(event, total, first_non_founder);
 
     for (int i = 0; i < first_non_founder; ++i) {
-        BOOST_CHECK( bcf_float_is_missing(stats.node_mup[i]) );
-        BOOST_CHECK( bcf_float_is_missing(stats.node_mu1p[i]));
+        BOOST_CHECK( bcf_float_is_missing(stats.node_mup_[i]) );
+        BOOST_CHECK( bcf_float_is_missing(stats.node_mu1p_[i]));
     }
 
     for (int i = first_non_founder; i < event.size(); ++i) {
-        BOOST_CHECK_EQUAL(i, stats.node_mup[i]);
-        BOOST_CHECK_EQUAL(expected_mu1p[i], stats.node_mu1p[i]);
+        BOOST_CHECK_EQUAL(i, stats.node_mup_[i]);
+        BOOST_CHECK_EQUAL(expected_mu1p[i], stats.node_mu1p_[i]);
     }
 
 }
@@ -125,7 +133,7 @@ BOOST_AUTO_TEST_CASE(test_set_node, *utf::fixture(&setup, &teardown)) {
 BOOST_AUTO_TEST_CASE(test_record, *utf::fixture(&setup, &teardown)) {
     BOOST_TEST_MESSAGE("Not yet implemented!");
     //TODO: implement check on record_info/stats, hts::bcf::Variant
-    // record_single_mutation_stats(hts::bcf::Variant &record){
+    // RecordSingleMutationStats(hts::bcf::Variant &record){
 }
 
 
@@ -151,9 +159,9 @@ BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities, *utf::fixture(&setup, &te
     }
 
     MutationStats stats (min_prob);
-    stats.set_posterior_probabilities(workspace);
+    stats.SetPosteriorProbabilities(workspace);
     for (int i = 0; i < workspace.num_nodes; ++i) {
-        boost_check_close_vector(expected_probs[i], stats.inspect_posterior_at(i));
+        boost_check_close_vector(expected_probs[i], stats.posterior_probabilities_[i]);
 
     }
 
@@ -166,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_genotype_stats, *utf::fixture(&setup, &teardown)) {
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
     MutationStats stats(min_prob);
 
-    find_mutation.calculate_mutation(read_depths, ref_index, stats);
+    find_mutation.CalculateMutation(read_depths, ref_index, stats);
 
     const int acgt_to_refalt_allele[] = {-1, 2, 0, 1, -1};
     const int refalt_to_acgt_allele[5] = {2, 3, 1, -1, -1};
@@ -193,20 +201,20 @@ BOOST_AUTO_TEST_CASE(test_genotype_stats, *utf::fixture(&setup, &teardown)) {
     std::vector<int> expected_genotype_qualities {38, 18, 9, 38, 18};
 
 
-    stats.set_genotype_related_stats(acgt_to_refalt_allele, refalt_to_acgt_allele,
-                                     n_alleles, ref_index, num_nodes, library_start);
+    stats.SetGenotypeRelatedStats(acgt_to_refalt_allele, refalt_to_acgt_allele,
+                                  n_alleles, ref_index, num_nodes, library_start);
 
-    boost_check_close_vector(expected_gp_scores, stats.gp_scores);
-    boost_check_equal_vector(expected_best_genotype, stats.best_genotypes);
-    boost_check_equal_vector(expected_genotype_qualities, stats.genotype_qualities);
+    boost_check_close_vector(expected_gp_scores, stats.gp_scores_);
+    boost_check_equal_vector(expected_best_genotype, stats.best_genotypes_);
+    boost_check_equal_vector(expected_genotype_qualities, stats.genotype_qualities_);
 
-    BOOST_CHECK_EQUAL(expected_gl_scores.size(), stats.gl_scores.size());
+    BOOST_CHECK_EQUAL(expected_gl_scores.size(), stats.gl_scores_.size());
     for (int i = 0; i < expected_gl_scores.size(); ++i) {
         if( isnan(expected_gl_scores[i]) ){
-            BOOST_CHECK( bcf_float_is_missing(stats.gl_scores[i]) );
+            BOOST_CHECK( bcf_float_is_missing(stats.gl_scores_[i]) );
         }
         else{
-            BOOST_CHECK_CLOSE(expected_gl_scores[i], stats.gl_scores[i], BOOST_CLOSE_THRESHOLD);
+            BOOST_CHECK_CLOSE(expected_gl_scores[i], stats.gl_scores_[i], BOOST_CLOSE_THRESHOLD);
         }
     }
 

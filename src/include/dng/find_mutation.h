@@ -14,7 +14,8 @@
 #include <dng/likelihood.h>
 #include <dng/mutation.h>
 
-#include "mutation_stats.h"
+#include <dng/mutation_stats.h>
+
 
 //using namespace dng::task;
 using namespace dng;
@@ -57,18 +58,21 @@ public:
 
     FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
 
-    bool operator()(const std::vector<depth_t> &depths, int ref_index,
+    bool old_operator(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
 
     //TODO: either place with this function, or replace operator() with this
-    bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index, MutationStats &mutation_stats);
+    bool CalculateMutation(const std::vector<depth_t> &depths, int ref_index,
+                           MutationStats &mutation_stats);
 
 protected:
 
     const dng::Pedigree &pedigree_;
     params_t params_;
     double min_prob_;
-    dng::peel::workspace_t work_;
+//    dng::peel::workspace_t work_;
+    dng::peel::workspace_t work_full_;
+    dng::peel::workspace_t work_nomut_;
 
     dng::TransitionVector full_transition_matrices_;
     dng::TransitionVector nomut_transition_matrices_;
@@ -85,11 +89,11 @@ protected:
     std::vector<double> event_;
 
 
-    bool calculate_mutation_prob(MutationStats &stats);
-    void calculate_posterior_probabilities(MutationStats &mutation_stats);
-    void calculate_expected_mutation(MutationStats &mutation_stats);
-    void calculate_node_mutation(MutationStats &mutation_stats);
-    void calculate_denovo_mutation(MutationStats &mutation_stats);
+    bool CalculateMutationProb(MutationStats &stats);
+    void CalculatePosteriorProbabilities(MutationStats &mutation_stats);
+    void CalculateExpectedMutation(MutationStats &mutation_stats);
+    void CalculateNodeMutation(MutationStats &mutation_stats);
+    void CalculateDenovoMutation(MutationStats &mutation_stats);
 
 
 };

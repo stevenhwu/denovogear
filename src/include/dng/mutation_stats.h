@@ -8,9 +8,13 @@
 #include <string>
 #include <vector>
 
+#include <dng/hts/bcf.h>
+
 #include <dng/matrix.h>
 #include <dng/peeling.h>
-#include <dng/hts/bcf.h>
+#include <dng/pedigree.h>
+#include <dng/mutation.h>
+
 
 class MutationStats {
 
@@ -18,88 +22,104 @@ public:
 
     MutationStats(double min_prob);
 
-    float get_mutation_prob() const;
 
-    bool get_has_single_mut() const;
+    bool CalculateMutationProb(const dng::peel::workspace_t &work_nomut,
+                               const dng::peel::workspace_t &work_full);
 
-    const dng::GenotypeArray &inspect_posterior_at(int index) const;
+    void SetScaledLogLikelihood(double scale);
 
-    const dng::GenotypeArray &inspect_genotype_at(int index) const;
+    void SetGenotypeLikelihoods(const dng::peel::workspace_t &workspace,
+                                const int depth_size);
 
-
-    bool set_mutation_prob(const double logdata_nomut, const double logdata);
-
-    void set_scaled_log_likelihood(double scale);
-
-    void set_genotype_likelihood(const dng::peel::workspace_t &workspace, const int depth_size);
-
-    void set_posterior_probabilities(const dng::peel::workspace_t &workspace);
-
-    void set_exactly_one_mutation(double total);
-
-    void set_node_mup(const std::vector<double> &event, std::size_t first_nonfounder_index);
-
-    void set_node_mu1p(std::vector<double> &event, double total, std::size_t first_nonfounder_index);
+    void SetPosteriorProbabilities(const dng::peel::workspace_t &workspace);
 
 
+    void CalculateExpectedMutation(dng::peel::workspace_t &work_full,
+                                   dng::TransitionVector &mean_matrices);
 
-    void record_basic_stats(hts::bcf::Variant &record);
-
-    void record_genotype_stats(hts::bcf::Variant &record);
-
-    void record_single_mutation_stats(hts::bcf::Variant &record);
+    void CalculateNodeMutation(dng::peel::workspace_t &work_full,
+                               dng::TransitionVector &posmut_transition_matrices);
 
 
-    enum class OutputLevel {BASIC, COMPLETE, SINGLE};
-    //TODO: Record different sets of variables, [basic, complete, everytihng/single], something like the following
+    void CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
+                                 dng::TransitionVector &onemut_transition_matrices,
+                                 const dng::Pedigree &pedigree);
+
+
+
+    void SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
+                                 const int (&refalt_to_acgt_allele)[5],
+                                 const uint32_t n_alleles,
+                                 const std::size_t ref_index,
+                                 const std::size_t num_nodes,
+                                 const std::size_t library_start);
+
+
+    void RecordBasicStats(hts::bcf::Variant &record);
+
+    void RecordGenotypeStats(hts::bcf::Variant &record);
+
+    void RecordSingleMutationStats(hts::bcf::Variant &record);
+
+
+    enum class OutputLevel {
+        Basic, Complete, Singcle
+    };
+    //TODO: Record different sets of variables,
+    // [basic, complete, everytihng/single], something like the following
     //basic [ mup, lld, llh, genotype_likelihood]?
     //complete [basic, mux, posterior, node_mup]
     //single [complete, has_single_mut, mu1p, dnt, dnl, dnq, dnc, node_mu1p]
 
 
+    void SetNodeMup(const std::vector<double> &event,
+                    std::size_t first_nonfounder_index);
 
-    void set_genotype_related_stats(const int (&acgt_to_refalt_allele)[5],
-                                                   const int (&refalt_to_acgt_allele)[5],
-                                                   const uint32_t n_alleles,
-                                                   const std::size_t ref_index,
-                                                   const std::size_t num_nodes,
-                                                   const std::size_t library_start);
+    void SetNodeMu1p(std::vector<double> &event, double total,
+                     std::size_t first_nonfounder_index);
+
 
 
 
 private://TODO: surely these should not be public. Refactor these while working with call.cc
 public:
-    float mup;
-    float lld;
-    float llh;
-    float mux;
+    float mup_;
+    float lld_;
+    float llh_;
+    float mux_;
 
-    bool has_single_mut;
-    float mu1p;
+    bool has_single_mut_;
+    float mu1p_;
 
-    std::string dnt;
-    std::string dnl;
-    int32_t dnq;
-    [[deprecated]] int32_t dnc;
+    std::string dnt_;
+    std::string dnl_;
+    int32_t dnq_;
+    [[deprecated]] int32_t dnc_;
 
-    dng::IndividualVector posterior_probabilities;
-    dng::IndividualVector genotype_likelihoods;
-    std::vector<float> node_mup;
-    std::vector<float> node_mu1p;
+    dng::IndividualVector posterior_probabilities_;
+    dng::IndividualVector genotype_likelihoods_;
+    std::vector<float> node_mup_;
+    std::vector<float> node_mu1p_;
 
-    std::vector<int32_t> best_genotypes;//.resize(2 * num_nodes);
-    std::vector<int32_t> genotype_qualities;//(num_nodes);
-    std::vector<float> gp_scores;//(gt_count*num_nodes );
-    std::vector<float> gl_scores;//(gt_count *num_nodes, hts::bcf::float_missing);
+    std::vector<int32_t> best_genotypes_; //.resize(2 * num_nodes);
+    std::vector<int32_t> genotype_qualities_;//(num_nodes);
+    std::vector<float> gp_scores_; //(gt_count * num_nodes);
+    std::vector<float> gl_scores_; //(gt_count * num_nodes, hts::bcf::float_missing);
 
 private:
 
-    double min_prob;
-    double logdata;//TODO: Maybe hack these away, using lld, llh
-    double logdata_nomut;
+    double min_prob_;
+    //TODO: Maybe hack these away, using lld, llh
+    double logdata_;
+    double logdata_nomut_;
 
-    void set_node_core(std::vector<float> &stats, const std::vector<double> &event,
-                       std::size_t first_nonfounder_index);
+    void SetExactlyOneMutation(double total);
+
+
+    void SetNodeCore(std::vector<float> &stats,
+                     const std::vector<double> &event,
+                     std::size_t first_nonfounder_index);
 
 };
+
 #endif //DENOVOGEAR_MUTATION_STATS_H

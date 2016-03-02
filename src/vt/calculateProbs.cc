@@ -811,10 +811,10 @@ std::cout << "======START FM::calculate: ref: " << ref_base << "\t" << ref_index
                 return;
             }
             MutationStats mutation_stats (min_prob);
-            calculate.calculate_mutation(read_depths, ref_index, mutation_stats);
+            calculate.CalculateMutation(read_depths, ref_index, mutation_stats);
 std::cout << "======END FM::calculate" << std::endl;
 
-std::cout << mutation_stats.get_mutation_prob() << "==" << stats.mup << std::endl;
+std::cout << mutation_stats.mup << "==" << stats.mup << std::endl;
 
             // reformatted AD fields for output. The first few fields are the GL and SM fields and "AD" is missing. The
             // remaining fields are just copied from the input file
@@ -851,11 +851,12 @@ for (auto item : ad_counts) {
 //            int genotype_index[15] = create_genotype_index(refalt_to_acgt_allele);
 //            calculate_sample_genotype();
 //            calculate_sample_likelihoods();
-            mutation_stats.set_genotype_related_stats(acgt_to_refalt_allele, refalt_to_acgt_allele, n_alleles,
-            ref_index, num_nodes, library_start);
+            mutation_stats.SetGenotypeRelatedStats(acgt_to_refalt_allele,
+                                                   refalt_to_acgt_allele, n_alleles,
+                                                   ref_index, num_nodes, library_start);
 
 //
-//            void MutationStats::set_genotype_related_stats(const int (&acgt_to_refalt_allele)[5],
+//            void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
 //                                                           const int (&refalt_to_acgt_allele)[5],
 //                                                           const uint32_t n_alleles,
 //                                                           const std::size_t ref_index,
@@ -944,13 +945,13 @@ for (auto item : ad_counts) {
 //            record.info("LLH", stats.llh);
 //            record.info("MUX", stats.mux);
 //            record.info("MU1P", stats.mu1p);
-            mutation_stats.record_basic_stats(record);//TODO: replace with this
+            mutation_stats.RecordBasicStats(record);//TODO: replace with this
 
 //            record.sample_genotypes(best_genotypes);
 //            record.samples("GQ", genotype_qualities);
 //            record.samples("GP", gp_scores);
 //            record.samples("GL", gl_scores);
-            mutation_stats.record_genotype_stats(record);//TODO: replace with this
+            mutation_stats.RecordGenotypeStats(record);//TODO: replace with this
 
 
             record.samples("DP", dp_counts);
@@ -966,7 +967,7 @@ for (auto item : ad_counts) {
 //
 //                record.samples("MU1P", stats.node_mu1p);
 //            }
-            mutation_stats.record_single_mutation_stats(record); //TODO: replace with this
+            mutation_stats.RecordSingleMutationStats(record); //TODO: replace with this
 
 
             record.info("DP", dp_info);

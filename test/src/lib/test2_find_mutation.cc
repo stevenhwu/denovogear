@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
     min_prob = 0;
     FindMutations::stats_t stats;
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    find_mutation(read_depths, ref_index, &stats);
+    find_mutation.old_operator(read_depths, ref_index, &stats);
 
 
     double scale = setup_workspace(ref_index, read_depths);
@@ -252,57 +252,61 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation_expected, *utf::fixture(&setup, &te
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
 
     MutationStats mutation_stats(min_prob);
-    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+    find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
 
-    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mup, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(-30.5967, mutation_stats.lld, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(-6.68014, mutation_stats.llh, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mux, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mu1p, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mup_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(-30.5967, mutation_stats.lld_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(-6.68014, mutation_stats.llh_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mux_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(0.116189, mutation_stats.mu1p_, BOOST_CLOSE_THRESHOLD);
 
-    BOOST_CHECK_EQUAL("GGxGG>GT", mutation_stats.dnt);
-    BOOST_CHECK_EQUAL("LB-NA12878:Solexa-135852", mutation_stats.dnl);
-    BOOST_CHECK_EQUAL(42, mutation_stats.dnq);
+    BOOST_CHECK_EQUAL("GGxGG>GT", mutation_stats.dnt_);
+    BOOST_CHECK_EQUAL("LB-NA12878:Solexa-135852", mutation_stats.dnl_);
+    BOOST_CHECK_EQUAL(42, mutation_stats.dnq_);
 
 
 }
 
 
 BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) {
-    //TODO: Compare operator() with calculate_mutation ONLY, NOT a real test
+    //TODO: Compare operator() with CalculateMutation ONLY, NOT a real test
 
 
     min_prob = 0; //Pass everything
     FindMutations::stats_t stats;
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    find_mutation(read_depths, ref_index, &stats);
+    find_mutation.old_operator(read_depths, ref_index, &stats);
 
     MutationStats mutation_stats(min_prob);
-    find_mutation.calculate_mutation(read_depths, ref_index, mutation_stats);
+    find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
 
-    BOOST_CHECK_EQUAL(stats.mup, mutation_stats.mup);
-    BOOST_CHECK_EQUAL(stats.llh, mutation_stats.llh);
-    BOOST_CHECK_EQUAL(stats.lld, mutation_stats.lld);
-    BOOST_CHECK_EQUAL(stats.mux, mutation_stats.mux);
-    BOOST_CHECK_EQUAL(stats.has_single_mut, mutation_stats.has_single_mut);
-    BOOST_CHECK_EQUAL(stats.mu1p, mutation_stats.mu1p);
+    BOOST_CHECK_EQUAL(stats.mup, mutation_stats.mup_);
+    BOOST_CHECK_EQUAL(stats.llh, mutation_stats.llh_);
+    BOOST_CHECK_EQUAL(stats.lld, mutation_stats.lld_);
+    BOOST_CHECK_EQUAL(stats.mux, mutation_stats.mux_);
+    BOOST_CHECK_EQUAL(stats.has_single_mut, mutation_stats.has_single_mut_);
+    BOOST_CHECK_EQUAL(stats.mu1p, mutation_stats.mu1p_);
 
-    BOOST_CHECK_EQUAL(stats.dnt, mutation_stats.dnt);
-    BOOST_CHECK_EQUAL(stats.dnl, mutation_stats.dnl);
-    BOOST_CHECK_EQUAL(stats.dnq, mutation_stats.dnq);
+    BOOST_CHECK_EQUAL(stats.dnt, mutation_stats.dnt_);
+    BOOST_CHECK_EQUAL(stats.dnl, mutation_stats.dnl_);
+    BOOST_CHECK_EQUAL(stats.dnq, mutation_stats.dnq_);
 
     for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
-        boost_check_close_vector(stats.posterior_probabilities[i], mutation_stats.posterior_probabilities[i]);
+        boost_check_close_vector(stats.posterior_probabilities[i],
+                                 mutation_stats.posterior_probabilities_[i]);
     }
     for (int i = 2; i < stats.genotype_likelihoods.size(); ++i) {
-        boost_check_close_vector(stats.genotype_likelihoods[i], mutation_stats.genotype_likelihoods[i]);
+        boost_check_close_vector(stats.genotype_likelihoods[i],
+                                 mutation_stats.genotype_likelihoods_[i]);
     }
     for (int i = 2; i < stats.node_mup.size(); ++i) {
-        BOOST_CHECK_CLOSE(stats.node_mup[i], mutation_stats.node_mup[i], BOOST_CLOSE_THRESHOLD);
+        BOOST_CHECK_CLOSE(stats.node_mup[i], mutation_stats.node_mup_[i],
+                          BOOST_CLOSE_THRESHOLD);
     }
 
     for (int i = 2; i < stats.node_mu1p.size(); ++i) {
-        BOOST_CHECK_CLOSE(stats.node_mu1p[i], mutation_stats.node_mu1p[i], BOOST_CLOSE_THRESHOLD);
+        BOOST_CHECK_CLOSE(stats.node_mu1p[i], mutation_stats.node_mu1p_[i],
+                          BOOST_CLOSE_THRESHOLD);
     }
 
 #if CALCULATE_ENTROPY == true
