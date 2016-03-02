@@ -1,16 +1,31 @@
-//
-// Created by steven on 2/10/16.
-//
+/*
+ * Copyright (c) 2016 Steven H. Wu
+ * Authors:  Steven H. Wu <stevenwu@asu.edu>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 
-#define BOOST_TEST_MODULE lib::mutation
+#define BOOST_TEST_MODULE dng::mutation
 
-#include <boost/test/unit_test.hpp>
-#include <dng/mutation.h>
-
-#include <boost_test_helper.h>
 #include <iostream>
 
+#include <boost/test/unit_test.hpp>
+#include <boost_test_helper.h>
+
+#include <dng/mutation.h>
 
 using namespace dng;
 namespace utf = boost::unit_test;

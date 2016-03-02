@@ -21,6 +21,8 @@
 #ifndef DNG_READ_GROUP_H
 #define DNG_READ_GROUP_H
 
+#include <unordered_set>
+
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/size.hpp>
@@ -34,8 +36,6 @@
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
-
-#include <unordered_set>
 
 #include <htslib/vcf.h>
 

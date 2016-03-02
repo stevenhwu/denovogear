@@ -1,23 +1,38 @@
-//
-// Created by steven on 1/15/16.
-//
+/*
+ * Copyright (c) 2016 Steven H. Wu
+ * Authors:  Steven H. Wu <stevenwu@asu.edu>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #define BOOST_TEST_MODULE dng::lib::peeling
+
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
+
+#include <string>
+#include <iostream>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/timer/timer.hpp>
 
-#include <string>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-
 #include <dng/peeling.h>
-#include <chrono>
-
 #include <boost_test_helper.h>
-#include "fixture_random_family.h"
+#include <fixture/fixture_random_family.h>
 
 //Time trail/perforamnce test. Will take longer to run than normal test.
 using namespace dng;

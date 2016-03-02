@@ -1,20 +1,35 @@
-//
-// Created by steven on 2/3/16.
-//
-
+/*
+ * Copyright (c) 2016 Steven H. Wu
+ * Authors:  Steven H. Wu <stevenwu@asu.edu>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+#pragma once
 #ifndef DENOVOGEAR_MUTATION_STATS_H
 #define DENOVOGEAR_MUTATION_STATS_H
+
 
 #include <string>
 #include <vector>
 
 #include <dng/hts/bcf.h>
-
 #include <dng/matrix.h>
 #include <dng/peeling.h>
 #include <dng/pedigree.h>
 #include <dng/mutation.h>
-
+#include <dng/detail/unit_test.h>
 
 class MutationStats {
 
@@ -81,7 +96,7 @@ public:
 
 
 
-private://TODO: surely these should not be public. Refactor these while working with call.cc
+private://TODO: surely these should not be public. maybe these can stay public
 public:
     float mup_;
     float lld_;
@@ -115,10 +130,12 @@ private:
 
     void SetExactlyOneMutation(double total);
 
-
-    void SetNodeCore(std::vector<float> &stats,
-                     const std::vector<double> &event,
+    void SetNodeCore(std::vector<float> &stats, const std::vector<double> &event,
                      std::size_t first_nonfounder_index);
+
+    void UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat, size_t &index,
+                                 double &max_coeff, size_t &dn_row, size_t &dn_col,
+                                 size_t &dn_loc);
 
 };
 

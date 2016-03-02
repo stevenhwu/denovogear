@@ -25,7 +25,6 @@
 #include <limits>
 #include <unordered_map>
 
-#include <dng/hts/bam.h>
 #include <htslib/faidx.h>
 
 #include <boost/range/begin.hpp>
@@ -35,6 +34,7 @@
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/sort.hpp>
 
+#include <dng/hts/bam.h>
 #include <dng/pool.h>
 #include <dng/fileio.h>
 #include <dng/cigar.h>
