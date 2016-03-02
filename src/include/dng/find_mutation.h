@@ -1,6 +1,21 @@
-//
-// Created by steven on 1/11/16.
-//
+/*
+ * Copyright (c) 2016 Steven H. Wu
+ * Authors:  Steven H. Wu <stevenwu@asu.edu>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 #ifndef DENOVOGEAR_FIND_MUTATION_H
@@ -13,8 +28,8 @@
 #include <dng/pedigree.h>
 #include <dng/likelihood.h>
 #include <dng/mutation.h>
-
 #include <dng/mutation_stats.h>
+#include <dng/detail/unit_test.h>
 
 
 //using namespace dng::task;
@@ -24,8 +39,41 @@ std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr
 
 std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) ;
 
+#ifdef BOOST_TEST_MODULE
+namespace test_find_mutation_suite
+{
+    struct test_constructor;
+}
+#endif
+
 class FindMutations {
 public:
+
+    DNG_UNIT_TEST(test_constructor);
+    DNG_UNIT_TEST(test_prior);
+
+
+
+//    friend class test_constructor;
+//    friend struct TrioWorkspace;
+//    friend struct test_find_mutation_suite;
+
+//    friend struct test_constructor; //Work without suite
+//    friend struct test_find_mutation_suite::test_constructor;//work with suit, need to predeclare
+
+//    friend struct test_find_mutation_suite;
+//    friend struct test_find_mutation_suite::test_constructor;
+
+
+
+//    friend struct test_constructor;
+
+//    friend void test_constructor();
+
+
+//    friend class FindMutationsUnitTest
+
+
     struct params_t {
         double theta;
         std::array<double, 4> nuc_freq;
@@ -55,7 +103,7 @@ public:
         std::vector<float> node_mup;
         std::vector<float> node_mu1p;
     };
-
+    ;
     FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
 
     bool old_operator(const std::vector<depth_t> &depths, int ref_index,

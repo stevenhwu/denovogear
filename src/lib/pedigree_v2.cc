@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2014-2015 Reed A. Cartwright
+ * Copyright (c) 2016 Steven H. Wu
  * Authors:  Reed A. Cartwright <reed@cartwrig.ht>
+ *           Steven H. Wu <stevenwu@asu.edu>
  *
  * This file is part of DeNovoGear.
  *

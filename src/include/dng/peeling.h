@@ -23,6 +23,7 @@
 
 #include <vector>
 #include <utility>
+#include <map>
 
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/algorithm/fill.hpp>
@@ -30,9 +31,10 @@
 
 #include <dng/matrix.h>
 #include <dng/detail/unit_test.h>
-#include <map>
-
 #include <dng/likelihood.h>
+
+
+
 
 
 

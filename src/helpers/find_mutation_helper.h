@@ -13,7 +13,8 @@
 
 
 //Just make testing easier, no real purpose of this class
-class FindMutationsGetter : public FindMutations {
+
+class [[deprecated]] FindMutationsGetter : public FindMutations {
 
 
 public:

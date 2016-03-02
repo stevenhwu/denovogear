@@ -1,22 +1,38 @@
-//
-// Created by steven on 2/4/16.
-//
+/*
+ * Copyright (c) 2016 Steven H. Wu
+ * Authors:  Steven H. Wu <stevenwu@asu.edu>
+ *
+ * This file is part of DeNovoGear.
+ *
+ * DeNovoGear is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 
 #define BOOST_TEST_MODULE dng::lib::find_mutation
 
-#include <boost/test/unit_test.hpp>
-
 #include <ctime>
+
 #include <iostream>
 #include <fstream>
 
-#include <dng/task/call.h>
-#include <helpers/find_mutation_helper.h>
+#include <boost/test/unit_test.hpp>
 
+#include <dng/task/call.h>
+#include <dng/find_mutation.h>
 #include <boost_test_helper.h>
 #include <fixture/fixture_trio_workspace.h>
 
+#include <helpers/find_mutation_helper.h>
 
 
 namespace utf = boost::unit_test;
@@ -65,12 +81,27 @@ void setup() { BOOST_TEST_MESSAGE("set up fun"); }
 void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
 
-
 BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 
+
+
 BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
+//BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
+//    TrioWorkspace tw{};
+
+//    FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
+//    FindMutations find_mutation2 {min_prob, pedigree, test_param_1};
 
     FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
+
+    FindMutations find_mutation2 {min_prob, pedigree, test_param_1};
+
+//    FindMutations f2{find_mutation2};
+//    find_mutation2.min_prob_;
+
+//    ff.fm.min_prob_;
+//    find_mutation2.min_prob_;
+//    ff.get(find_mutation2);
 
     BOOST_CHECK_EQUAL(find_mutation.getMin_prob_() , 0.01);
 
