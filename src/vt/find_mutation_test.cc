@@ -214,7 +214,7 @@ void test_operator(FindMutationsGetter &find_mutation) {
         read_depths[j].counts[j%3] += 30;
     }
 
-    find_mutation(read_depths, ref_index, &stats);
+    find_mutation.old_operator(read_depths, ref_index, &stats);
     std::cout << "==== call operator() ======" << std::endl;
     std::cout << stats.mup << "\t" << stats.llh << "\t" << stats.lld << "\t" << stats.mux << "\t" <<
         stats.has_single_mut  << "\t" << stats.mu1p  << std::endl;
@@ -245,24 +245,24 @@ void test_operator(FindMutationsGetter &find_mutation) {
     MutationStats mutation_stats(find_mutation.min_prob_);
     find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
     std::cout << "==== call CalculateMutation() ======" << std::endl;
-    std::cout << mutation_stats.mup << "\t" << mutation_stats.llh << "\t" << mutation_stats.lld <<
-            "\t" << mutation_stats.mux << "\t?:" << mutation_stats.has_single_mut << "\t" <<
-            mutation_stats.mu1p << std::endl;
-    std::cout << mutation_stats.dnt << "\t" << mutation_stats.dnl << "\t" <<
-            mutation_stats.dnq << "\t" << mutation_stats.dnc << std::endl;
-    for (auto p : mutation_stats.posterior_probabilities) {
+    std::cout << mutation_stats.mup_ << "\t" << mutation_stats.llh_ << "\t" << mutation_stats.lld_ <<
+            "\t" << mutation_stats.mux_ << "\t?:" << mutation_stats.has_single_mut_ << "\t" <<
+            mutation_stats.mu1p_ << std::endl;
+    std::cout << mutation_stats.dnt_ << "\t" << mutation_stats.dnl_ << "\t" <<
+            mutation_stats.dnq_ << "\t" << mutation_stats.dnc_ << std::endl;
+    for (auto p : mutation_stats.posterior_probabilities_) {
         std::cout << p.prod() << "\t";
     }
     std::cout << std::endl;
-    for (auto p : mutation_stats.genotype_likelihoods) {
+    for (auto p : mutation_stats.genotype_likelihoods_) {
         std::cout << p.prod() << "\t";
     }
     std::cout << std::endl;
-    for (auto p : mutation_stats.node_mup) {
+    for (auto p : mutation_stats.node_mup_) {
         std::cout << p << "\t";
     }
     std::cout << std::endl;
-    for (auto p : mutation_stats.node_mu1p) {
+    for (auto p : mutation_stats.node_mu1p_) {
         std::cout << p << "\t";
     }
     std::cout << "\n========================" << std::endl;

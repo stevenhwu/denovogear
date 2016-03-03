@@ -31,6 +31,8 @@
 #include <dng/mutation.h>
 #include <dng/detail/unit_test.h>
 
+#define CALCULATE_ENTROPY 0
+
 class MutationStats {
 
 public:
@@ -60,14 +62,19 @@ public:
                                  dng::TransitionVector &onemut_transition_matrices,
                                  const dng::Pedigree &pedigree);
 
-
+#if CALCULATE_ENTROPY == 1
+    [[deprecated]] void CalculateEntropy(dng::peel::workspace_t &work_nomut,
+                                         dng::TransitionVector &onemut_transition_matrices,
+                                         std::array<double, 5> max_entropies,
+                                         std::size_t ref_index);
+#endif
 
     void SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
-                                 const int (&refalt_to_acgt_allele)[5],
-                                 const uint32_t n_alleles,
-                                 const std::size_t ref_index,
-                                 const std::size_t num_nodes,
-                                 const std::size_t library_start);
+                             const int (&refalt_to_acgt_allele)[5],
+                             const uint32_t n_alleles,
+                             const std::size_t ref_index,
+                             const std::size_t num_nodes,
+                             const std::size_t library_start);
 
 
     void RecordBasicStats(hts::bcf::Variant &record);

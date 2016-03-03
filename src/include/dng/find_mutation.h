@@ -32,6 +32,7 @@
 #include <dng/detail/unit_test.h>
 
 
+
 //using namespace dng::task;
 using namespace dng;
 
@@ -39,39 +40,16 @@ std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr
 
 std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) ;
 
-#ifdef BOOST_TEST_MODULE
-namespace test_find_mutation_suite
-{
-    struct test_constructor;
-}
-#endif
 
 class FindMutations {
 public:
 
     DNG_UNIT_TEST(test_constructor);
     DNG_UNIT_TEST(test_prior);
-
-
-
-//    friend class test_constructor;
-//    friend struct TrioWorkspace;
-//    friend struct test_find_mutation_suite;
-
-//    friend struct test_constructor; //Work without suite
-//    friend struct test_find_mutation_suite::test_constructor;//work with suit, need to predeclare
-
-//    friend struct test_find_mutation_suite;
-//    friend struct test_find_mutation_suite::test_constructor;
-
-
-
-//    friend struct test_constructor;
-
-//    friend void test_constructor();
-
-
-//    friend class FindMutationsUnitTest
+    DNG_UNIT_TEST(test_full_transition);
+    DNG_UNIT_TEST(test_operator);
+//    DNG_UNIT_TEST(test_calculate_mutation_expected);
+//    DNG_UNIT_TEST(test_calculate_mutation);
 
 
     struct params_t {
@@ -83,9 +61,15 @@ public:
         dng::genotype::DirichletMultinomialMixture::params_t params_b;
     };
 
-    //TODO: replace struct stats_t with mutation_stats.cc
-//    struct [[deprecated]] stats_t {
-    struct stats_t {
+    FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
+
+
+    //TODO: either place with this function, or replace operator() with this
+    bool CalculateMutation(const std::vector<depth_t> &depths, std::size_t ref_index,
+                           MutationStats &mutation_stats);
+
+    //TODO: use mutation_stats.cc
+    struct [[deprecated]] stats_t {
         float mup;
         float lld;
         float llh;
@@ -103,22 +87,17 @@ public:
         std::vector<float> node_mup;
         std::vector<float> node_mu1p;
     };
-    ;
-    FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
 
-    bool old_operator(const std::vector<depth_t> &depths, int ref_index,
-                    stats_t *stats);
+    [[deprecated]] bool old_operator(const std::vector<depth_t> &depths, int ref_index,
+                                    stats_t *stats);
 
-    //TODO: either place with this function, or replace operator() with this
-    bool CalculateMutation(const std::vector<depth_t> &depths, int ref_index,
-                           MutationStats &mutation_stats);
 
 protected:
 
     const dng::Pedigree &pedigree_;
     params_t params_;
-    double min_prob_;
-//    dng::peel::workspace_t work_;
+
+
     dng::peel::workspace_t work_full_;
     dng::peel::workspace_t work_nomut_;
 
@@ -133,14 +112,17 @@ protected:
     dng::genotype::DirichletMultinomialMixture genotype_likelihood_;
 
     dng::GenotypeArray genotype_prior_[5]; // Holds P(G | theta)
-    std::array<double, 5> max_entropies_;
-    std::vector<double> event_;
+
+    [[deprecated]] double min_prob_;
+    [[deprecated]] dng::peel::workspace_t work_;
+
+    [[deprecated]] std::array<double, 5> max_entropies_;
+    [[deprecated]] std::vector<double> event_;
+
 
 
     bool CalculateMutationProb(MutationStats &stats);
-    void CalculatePosteriorProbabilities(MutationStats &mutation_stats);
-    void CalculateExpectedMutation(MutationStats &mutation_stats);
-    void CalculateNodeMutation(MutationStats &mutation_stats);
+
     void CalculateDenovoMutation(MutationStats &mutation_stats);
 
 

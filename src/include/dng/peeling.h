@@ -131,7 +131,7 @@ struct workspace_t {
 
     // calculate genotype likelihoods and store in the lower library vector, maybe/maybe not
     double set_genotype_likelihood(dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
-                                   const std::vector<depth_t> &depths, int ref_index){
+                                   const std::vector<depth_t> &depths, std::size_t ref_index){
         double scale = 0.0, stemp;
         for(std::size_t u = 0; u < depths.size(); ++u) {
             std::tie(lower[library_nodes.first + u], stemp) =

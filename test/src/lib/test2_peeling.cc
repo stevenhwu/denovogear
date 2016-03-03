@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_SUITE(test_peeling_suite, RandomFamily)
 
             PairedGenotypeArray result = dng::peel::sum_over_children(workspace, family, full_matrix);
 
-            boost_check_matrix(expected, result, 100, 1);
+            BoostCheckMatrix(expected, result, 100, 1);
         }
     }
 

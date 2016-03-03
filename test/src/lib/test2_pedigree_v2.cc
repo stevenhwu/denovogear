@@ -19,8 +19,9 @@
 
 #define BOOST_TEST_MODULE dng::lib::pedigree
 
-#include <boost/test/unit_test.hpp>
 #include <iostream>
+
+#include <boost/test/unit_test.hpp>
 
 #include <dng/pedigree_v2.h>
 #include <dng/pedigree.h>

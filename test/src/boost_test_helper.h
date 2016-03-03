@@ -97,7 +97,7 @@ void boost_check_matrix(M &expected, M &result) {
 
 
 template<typename M>
-void boost_check_matrix(M &expected, M &result, int expected_rows, int expected_cols) {
+void BoostCheckMatrix(M &expected, M &result, int expected_rows, int expected_cols) {
     BOOST_CHECK_EQUAL(expected_rows, expected.rows());
     BOOST_CHECK_EQUAL(expected_cols, expected.cols());
 

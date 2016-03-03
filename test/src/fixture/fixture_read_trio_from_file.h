@@ -24,8 +24,10 @@
 #include <fstream>
 
 #include <dng/task/call.h>
+#include <dng/hts/bam.h>
+#include <dng/hts/bcf.h>
 #include <utils/boost_utils.h>
-#include <helpers/find_mutation_helper.h>
+
 
 
 using namespace dng;

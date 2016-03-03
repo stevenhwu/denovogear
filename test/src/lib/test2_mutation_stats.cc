@@ -20,11 +20,9 @@
 
 #define BOOST_TEST_MODULE dng::lib::mutation_stats
 
-#include <boost/test/unit_test.hpp>
 #include <iostream>
 
 #include <dng/mutation_stats.h>
-
 #include <boost_test_helper.h>
 #include <fixture/fixture_trio_workspace.h>
 
@@ -186,7 +184,7 @@ BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities, *utf::fixture(&setup, &te
 BOOST_AUTO_TEST_CASE(test_genotype_stats, *utf::fixture(&setup, &teardown)) {
 
 
-    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, test_param_1};
     MutationStats stats(min_prob);
 
     find_mutation.CalculateMutation(read_depths, ref_index, stats);
