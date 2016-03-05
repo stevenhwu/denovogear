@@ -129,15 +129,7 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
 
 #if CALCULATE_ENTROPY == true
         // Calculate entropy of mutation location
-                entropy = (-entropy / total + log(total)) / M_LN2;
-                entropy /= max_entropies_[ref_index];
-                mutation_stats.dnc = std::round(100.0 * (1.0 - entropy));
 #endif
-
-    }
-}
-
-
 
 
 void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
@@ -292,3 +284,35 @@ void MutationStats::UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat,
     }
 
 }
+
+
+#if CALCULATE_ENTROPY == 1
+void MutationStats::CalculateEntropy(dng::peel::workspace_t &work_nomut,
+                                     dng::TransitionVector &onemut_transition_matrices,
+                                     std::array<double, 5> max_entropies,
+                                     std::size_t ref_index) {
+
+
+    double total = 0.0;
+    double entropy = 0.0;
+
+    if (has_single_mut_) {
+
+        for (std::size_t i = work_nomut.founder_nodes.second; i < work_nomut.num_nodes; ++i) {
+            Eigen::ArrayXXd mat = (work_nomut.super[i].matrix() *
+                                   work_nomut.lower[i].matrix().transpose()).array() *
+                                  onemut_transition_matrices[i].array();
+            total += mat.sum();
+
+            entropy += (mat.array() == 0.0).select(mat.array(),
+                                                   mat.array() * mat.log()).sum();
+        }
+
+        entropy = (-entropy / total + log(total)) / M_LN2;
+        entropy /= max_entropies[ref_index];
+        dnc_ = std::round(100.0 * (1.0 - entropy));
+
+    }
+
+}
+#endif

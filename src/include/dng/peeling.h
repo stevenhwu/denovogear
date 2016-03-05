@@ -36,6 +36,12 @@
 
 
 
+#define WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, index) \
+    (workspace.upper[index] * workspace.lower[index])
+
+#define WORKSPACE_T_KRONECKER_PRODUCT_PARENTS(workspace, dad, mom) \
+    kroneckerProduct(WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix(),  \
+                     WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix() )
 
 
 namespace dng {
@@ -49,27 +55,23 @@ enum {
     NUM // Total number of possible forward operations
 };
 
-std::map<decltype(peel::op::NUM), std::string> map_enum_string {
-        {peel::op::UP, "UP"},
-        {peel::op::DOWN, "DOWN"},
-        {peel::op::TOFATHER, "TOFATHER"},
-        {peel::op::TOMOTHER, "TOMOTHER"},
-        {peel::op::TOCHILD, "TOCHILD"},
-        {peel::op::UPFAST, "UPFAST"},
-        {peel::op::DOWNFAST, "DOWNFAST"},
-        {peel::op::TOFATHERFAST, "TOFATHERFAST"},
-        {peel::op::TOMOTHERFAST, "TOMOTHERFAST"},
-        {peel::op::TOCHILDFAST, "TOCHILDFAST"}
-};
+#ifdef DEBUG_PEDIGREE
+    std::map<decltype(peel::op::NUM), std::string> map_enum_string {
+            {peel::op::UP, "UP"},
+            {peel::op::DOWN, "DOWN"},
+            {peel::op::TOFATHER, "TOFATHER"},
+            {peel::op::TOMOTHER, "TOMOTHER"},
+            {peel::op::TOCHILD, "TOCHILD"},
+            {peel::op::UPFAST, "UPFAST"},
+            {peel::op::DOWNFAST, "DOWNFAST"},
+            {peel::op::TOFATHERFAST, "TOFATHERFAST"},
+            {peel::op::TOMOTHERFAST, "TOMOTHERFAST"},
+            {peel::op::TOCHILDFAST, "TOCHILDFAST"}
+    };
+#endif
+
 } // namespace dng::peel::op
 
-
-#define WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, index) \
-    (workspace.upper[index] * workspace.lower[index])
-
-#define WORKSPACE_T_KRONECKER_PRODUCT_PARENTS(workspace, dad, mom) \
-    kroneckerProduct(WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix(),  \
-                     WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix() )
 
 //XXX: Maybe this should turn into a class, too many functions
 struct workspace_t {
@@ -130,8 +132,9 @@ struct workspace_t {
     }
 
     // calculate genotype likelihoods and store in the lower library vector, maybe/maybe not
-    double set_genotype_likelihood(dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
-                                   const std::vector<depth_t> &depths, int ref_index){
+    double SetGenotypeLikelihood(
+            dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
+            const std::vector<depth_t> &depths, std::size_t ref_index){
         double scale = 0.0, stemp;
         for(std::size_t u = 0; u < depths.size(); ++u) {
             std::tie(lower[library_nodes.first + u], stemp) =

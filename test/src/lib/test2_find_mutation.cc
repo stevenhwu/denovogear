@@ -84,7 +84,6 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 
 
-
 BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
 //BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 //    TrioWorkspace tw{};
@@ -277,7 +276,7 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
 
 }
 
-
+BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 BOOST_AUTO_TEST_CASE(test_calculate_mutation_expected, *utf::fixture(&setup, &teardown)) {
 
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
@@ -346,7 +345,7 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
 
 }
 
-
+BOOST_AUTO_TEST_SUITE_END()
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -166,7 +166,8 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
 bool FindMutations::CalculateMutation(const std::vector<depth_t> &depths,
                                       int ref_index, MutationStats &mutation_stats) {
 
-    double scale = work_nomut_.set_genotype_likelihood(genotype_likelihood_, depths, ref_index);
+    double scale = work_nomut_.SetGenotypeLikelihood(genotype_likelihood_, depths,
+                                                     ref_index);
     // Set the prior probability of the founders given the reference
     work_nomut_.SetFounders(genotype_prior_[ref_index]);
 
@@ -240,12 +241,7 @@ bool FindMutations::old_operator(const std::vector<depth_t> &depths,
     peel::workspace_t work_ = work_nomut_;//HACK!
 
     std::cout << "FM() depth: " << "\t" << depths.size() << std::endl;
-    for (auto d : depths) {
-        auto cc = d.counts;
         std::cout << cc[0] << " "<< cc[1] << " "<< cc[2] << " "<< cc[3] << " "<< std::endl;
-    }
-    MutationStats mutation_stats(min_prob_);
-
     assert(stats != nullptr);
 
     // calculate genotype likelihoods and store in the lower library vector
@@ -289,10 +285,7 @@ bool FindMutations::old_operator(const std::vector<depth_t> &depths,
     std::cout << "Peel Backwards with full-mutation" << std::endl;
     pedigree_.PeelBackwards(work_, full_transition_matrices_);
 
-//    size_t library_start = work_.library_nodes.first; //TODO: Can delete this??
     std::cout << "Copy Genotype likelihood" << std::endl;
-    mutation_stats.SetGenotypeLikelihoods(work_, depths.size());
-    mutation_stats.SetScaledLogLikelihood(scale);
 
     stats->mup = pmut;
     stats->lld = (logdata + scale) / M_LN10;

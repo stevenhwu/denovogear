@@ -116,14 +116,16 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work, const family_mem
     work.paired_buffer.resize(10, 10);
 
     GenotypeArray parent_array;
-    if(to_parent == Parents::Father) {
-        parent_array = (work.paired_buffer.matrix() * work.multiply_upper_lower(mom).matrix() ).array();
+    if (to_parent == Parents::Father) {
+        parent_array = (work.paired_buffer.matrix() *
+                        WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix()).array();
     }
 
-    else if (to_parent == Parents::Mother){
-        parent_array = (work.paired_buffer.matrix().transpose() * work.multiply_upper_lower(dad).matrix() ).array();
+    else if (to_parent == Parents::Mother) {
+        parent_array = (work.paired_buffer.matrix().transpose() *
+                        WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix() ).array();
     }
-    else{
+    else {
         //ERROR: Not possible until we add more enum!!
     }
 
@@ -141,7 +143,8 @@ void dng::peel::down(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
 
-    work.upper[child] = (mat[child].transpose() * WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, parent).matrix()).array();
+    work.upper[child] = (mat[child].transpose() *
+                         WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, parent).matrix()).array();
 }
 
 // Family Order: Parent, Child
@@ -239,7 +242,9 @@ void dng::peel::to_child_fast(workspace_t &work, const family_members_t &family,
     // Parents
 //    work.paired_buffer = kroneckerProductDadMom(work, dad, mom).array();
 
-    work.upper[child] = (mat[child].transpose() * WORKSPACE_T_KRONECKER_PRODUCT_PARENTS(work, dad, mom) ).array();
+    work.upper[child] = (mat[child].transpose() *
+                         WORKSPACE_T_KRONECKER_PRODUCT_PARENTS(work, dad,
+                                                               mom)).array();
 }
 
 // Family Order: Parent, Child

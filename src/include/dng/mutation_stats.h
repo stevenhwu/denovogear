@@ -31,6 +31,7 @@
 #include <dng/mutation.h>
 #include <dng/detail/unit_test.h>
 
+#define CALCULATE_ENTROPY 1
 class MutationStats {
 
 public:
@@ -59,7 +60,6 @@ public:
     void CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
                                  dng::TransitionVector &onemut_transition_matrices,
                                  const dng::Pedigree &pedigree);
-
 
 
     void SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
@@ -96,8 +96,8 @@ public:
 
 
 
-private://TODO: surely these should not be public. maybe these can stay public
-public:
+
+public: //TODO: public or private?
     float mup_;
     float lld_;
     float llh_;
@@ -136,6 +136,13 @@ private:
     void UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat, size_t &index,
                                  double &max_coeff, size_t &dn_row, size_t &dn_col,
                                  size_t &dn_loc);
+#if CALCULATE_ENTROPY == 1
+public:
+    [[deprecated]] void CalculateEntropy(dng::peel::workspace_t &work_nomut,
+                                         dng::TransitionVector &onemut_transition_matrices,
+                                         std::array<double, 5> max_entropies,
+                                         std::size_t ref_index);
+#endif
 
 };
 
