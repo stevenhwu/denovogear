@@ -59,7 +59,7 @@ constexpr int mitotic_diploid_mutation_counts[16][16] = {
 extern const char mitotic_diploid_mutation_labels[10][10][6];
 extern const char meiotic_diploid_mutation_labels[100][10][9];
 
-//TODO: Somewhere we need to explain mutype = -1,0,1 -> full, no, one. Maybe enum class?
+//TODO(SW): Somewhere we need to explain mutype = -1,0,1 -> full, no, one. Maybe enum class?
 
 inline TransitionMatrix mitosis_haploid_matrix(const MutationMatrix &m,
         int mutype = -1) {

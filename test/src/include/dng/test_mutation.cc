@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(test_f81_equal, *utf::fixture(&setup, &teardown)) {
     std::vector<double> expected_diag = {0.999999, 0.999999, 0.999999, 0.999999};
     std::vector<double> expected_off_diag = {3.333331111e-07, 3.333331111e-07, 3.333331111e-07, 3.333331111e-07};
 
-    boost_check_close_vector(expected_diag, diag);
+        BoostCheckCloseVector(expected_diag, diag);
     for (int i = 0; i < 4; ++i) {
         auto actual = equal_mutation_matrix.col(i);
         Eigen::Array4d expected = Eigen::Array4d::Constant(expected_off_diag[i]);
         expected(i) = expected_diag[i];
-        boost_check_close_vector(expected, actual);
+        BoostCheckCloseVector(expected, actual);
     }
 
 }
@@ -86,12 +86,12 @@ BOOST_AUTO_TEST_CASE(test_f81, *utf::fixture(&setup, &teardown)) {
     std::vector<double> expected_off_diag = {1.428570408e-07, 2.857140816e-07, 4.285711225e-07, 5.714281633e-07};
 
 
-    boost_check_close_vector(expected_diag, diag);
+        BoostCheckCloseVector(expected_diag, diag);
     for (int i = 0; i < 4; ++i) {
         auto actual = unequal_mutation_matrix.col(i);
         Eigen::Array4d expected = Eigen::Array4d::Constant(expected_off_diag[i]);
         expected(i) = expected_diag[i];
-        boost_check_close_vector(expected, actual);
+        BoostCheckCloseVector(expected, actual);
     }
 
 }
@@ -105,12 +105,12 @@ BOOST_AUTO_TEST_CASE(test_f81_random, *utf::fixture(&setup, &teardown)) {
     std::vector<double> expected_off_diag = {0.0000215377905, 0.0002153779050, 0.0004092180195, 0.0015076453352};
 
 
-    boost_check_close_vector(expected_diag, diag);
+        BoostCheckCloseVector(expected_diag, diag);
     for (int i = 0; i < 4; ++i) {
         auto actual = matrix.col(i);
         Eigen::Array4d expected = Eigen::Array4d::Constant(expected_off_diag[i]);
         expected(i) = expected_diag[i];
-        boost_check_close_vector(expected, actual);
+        BoostCheckCloseVector(expected, actual);
     }
 
 }
@@ -147,14 +147,14 @@ BOOST_AUTO_TEST_CASE(test_mitosis_haploid_matrix, *utf::fixture(&setup, &teardow
 
 
     auto actual_negative = mitosis_haploid_matrix(unequal_mutation_matrix, -1);
-    boost_check_matrix(expected_transition_matrix_negative, actual_negative);
-    boost_check_matrix(expected_copy_unequal_mutation_matrix, actual_negative);
+        BoostCheckMatrix(expected_transition_matrix_negative, actual_negative);
+        BoostCheckMatrix(expected_copy_unequal_mutation_matrix, actual_negative);
 
     auto actual_zero = mitosis_haploid_matrix(unequal_mutation_matrix, 0);
-    boost_check_matrix(expected_transition_matrix_zero, actual_zero);
+        BoostCheckMatrix(expected_transition_matrix_zero, actual_zero);
 
     auto actual_one = mitosis_haploid_matrix(unequal_mutation_matrix, 1);
-    boost_check_matrix(expected_transition_matrix_one, actual_one);
+        BoostCheckMatrix(expected_transition_matrix_one, actual_one);
 
 }
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(test_mitosis_diploid_matrix, *utf::fixture(&setup, &teardow
 
 
     auto actual_negative = mitosis_diploid_matrix(unequal_mutation_matrix, -1);
-    boost_check_matrix(expected_transition_matrix_negative, actual_negative);
+        BoostCheckMatrix(expected_transition_matrix_negative, actual_negative);
 
     auto actual_zero = mitosis_diploid_matrix(unequal_mutation_matrix, 0);
 //    BoostCheckMatrix(expected_transition_matrix_zero, actual_zero);

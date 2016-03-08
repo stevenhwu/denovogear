@@ -21,15 +21,15 @@
 #include <dng/find_mutation.h>
 
 
-
 // Build a list of all of the possible contigs to add to the vcf header
 std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr) {
-    if(hdr == nullptr)
+    if (hdr == nullptr) {
         return {};
+    }
     std::vector<std::pair<std::string, uint32_t>> contigs;
     uint32_t n_targets = hdr->n_targets;
-    for(size_t a = 0; a < n_targets; a++) {
-        if(hdr->target_name[a] == nullptr) {
+    for (size_t a = 0; a < n_targets; a++) {
+        if (hdr->target_name[a] == nullptr) {
             continue;
         }
         contigs.emplace_back(hdr->target_name[a], hdr->target_len[a]);
@@ -41,27 +41,30 @@ std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr
 // VCF header lacks a function to get sequence lengths
 // So we will extract the contig lines from the input header
 std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) {
-    if(hdr == nullptr)
+    if (hdr == nullptr) {
         return {};
+    }
     // Read text of header
     int len;
-    std::unique_ptr<char[], void(*)(void *)> str{bcf_hdr_fmt_text(hdr, 0, &len), free};
-    if(!str)
+    std::unique_ptr<char[], void (*)(void *)>
+            str{bcf_hdr_fmt_text(hdr, 0, &len), free};
+    if (!str) {
         return {};
+    }
     std::vector<std::string> contigs;
 
     // parse ##contig lines
     const char *text = str.get();
-    if(strncmp(text, "##contig=", 9) != 0) {
+    if (strncmp(text, "##contig=", 9) != 0) {
         text = strstr(text, "\n##contig=");
     } else {
         text = text - 1;
     }
     const char *end;
-    for(; text != nullptr; text = strstr(end, "\n##contig=")) {
-        for(end = text + 10; *end != '\n' && *end != '\0'; ++end)
+    for (; text != nullptr; text = strstr(end, "\n##contig=")) {
+        for (end = text + 10; *end != '\n' && *end != '\0'; ++end)
             /*noop*/;
-        if(*end != '\n') {
+        if (*end != '\n') {
             return contigs;    // bad header, return what we have.
         }
         contigs.emplace_back(text + 1, end);
@@ -70,12 +73,11 @@ std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) {
     return contigs;
 }
 
-/*TODO: eventually min_prob can be removed from this class*/
-
+//TODO(SW): eventually min_prob can be removed from this class
 FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
                              FindMutationParams params) :
-        pedigree_{pedigree}, min_prob_{ min_prob}, params_(params),
-        genotype_likelihood_{ params.params_a, params.params_b},
+        pedigree_{pedigree}, min_prob_{min_prob}, params_(params),
+        genotype_likelihood_{params.params_a, params.params_b},
         work_nomut_(pedigree.CreateWorkspace()) {
 
     using namespace dng;
@@ -100,7 +102,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     onemut_transition_matrices_.assign(work_nomut_.num_nodes, {});
     mean_matrices_.assign(work_nomut_.num_nodes, {});
 
-    for(size_t child = 0; child < work_nomut_.num_nodes; ++child) {
+    for (size_t child = 0; child < work_nomut_.num_nodes; ++child) {
 
         auto trans = pedigree.transitions()[child];
 
@@ -115,7 +117,7 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
             onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
             mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
         } else if (trans.type == Pedigree::TransitionType::Somatic ||
-            trans.type == Pedigree::TransitionType::Library) {
+                   trans.type == Pedigree::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
@@ -144,13 +146,16 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
         event_.assign(work_nomut_.num_nodes, 0.0);
         double total = 0.0, entropy = 0.0;
         for (std::size_t i = work_nomut_.founder_nodes.second;
-             i < work_nomut_.num_nodes; ++i) {
+                i < work_nomut_.num_nodes; ++i) {
+
             Eigen::ArrayXXd mat = (work_nomut_.super[i].matrix() *
-                work_nomut_.lower[i].matrix().transpose()).array() *
-                onemut_transition_matrices_[i].array();
+                                   work_nomut_.lower[i].matrix().transpose())
+                                          .array() *
+                                  onemut_transition_matrices_[i].array();
+
             total += mat.sum();
             entropy += (mat.array() == 0.0).select(mat.array(),
-                                                   mat.array() * mat.log()).sum();
+                                                   mat.array() * mat.log()) .sum();
         }
         // Calculate entropy of mutation location
         max_entropies_[ref_index] = (-entropy / total + log(total)) / M_LN2;
@@ -218,7 +223,6 @@ void FindMutations::CalculateDenovoMutation(MutationStats &mutation_stats) {
                                            pedigree_);
 
 }
-
 
 
 // Returns true if a mutation was found and the record was modified

@@ -847,7 +847,7 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //            calculate_sample_likelihoods();
             mutation_stats.SetGenotypeRelatedStats(acgt_to_refalt_allele,
                                                    refalt_to_acgt_allele, n_alleles,
-                                                   ref_index, num_nodes, library_start);
+                                                   num_nodes, library_start);
 
 //
 //            void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],

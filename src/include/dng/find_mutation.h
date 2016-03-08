@@ -62,11 +62,11 @@ public:
     FindMutations(double min_prob, const Pedigree &pedigree, FindMutationParams params);
 
 
-    //TODO: either place with this function, or replace operator() with this
+    //TODO(SW): either use this function, or replace operator() with this
     bool CalculateMutation(const std::vector<depth_t> &depths, std::size_t ref_index,
                            MutationStats &mutation_stats);
 
-    //TODO: use mutation_stats.cc
+    //TODO(SW): use mutation_stats.cc
     struct [[deprecated]] stats_t {
         float mup;
         float lld;

@@ -67,9 +67,9 @@ SET_TESTS_PROPERTIES(build_gitkeep PROPERTIES
 
 ################################################################################
 # Compile unit tests
-include_directories(${CMAKE_SOURCE_DIR}/src/include)
-include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(./src/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/include)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES(./src/)
 SET(UNITTEST_LIBRARIES Threads::Threads
         Boost::PROGRAM_OPTIONS
         Boost::FILESYSTEM
@@ -81,16 +81,16 @@ SET(UNITTEST_LIBRARIES Threads::Threads
 
 
 # Make a test for each unit test file located in test/ dir
-file(GLOB_RECURSE TESTS test_*[cc|cpp])
-foreach(test ${TESTS})
-  get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test})
-  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
+FILE(GLOB_RECURSE TESTS test_*[cc|cpp])
+FOREACH(test ${TESTS})
+  GET_FILENAME_COMPONENT(testName ${test} NAME_WE)
+  ADD_EXECUTABLE(${testName} EXCLUDE_FROM_ALL ${test})
+  TARGET_LINK_LIBRARIES(${testName} ${UNITTEST_LIBRARIES})
 
-  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
-  add_test(${testName}_run ${testName})
-  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach(test)
+  ADD_TEST(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
+  ADD_TEST(${testName}_run ${testName})
+  SET_TESTS_PROPERTIES(${testName}_run PROPERTIES DEPENDS ${testName}_build)
+ENDFOREACH(test)
 
 ################################################################################
 
@@ -101,10 +101,10 @@ IF(DEVEL_MODE)
   ADD_DEFINITIONS(-DDNG_DEVEL)
 ENDIF()
 
-file(GLOB_RECURSE TESTS2 "testt_time*[cc|cpp]")
-foreach(test ${TESTS2})
-  get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test}
+FILE(GLOB_RECURSE TESTS2 "testt_time*[cc|cpp]")
+FOREACH(test ${TESTS2})
+  GET_FILENAME_COMPONENT(testName ${test} NAME_WE)
+  ADD_EXECUTABLE(${testName} EXCLUDE_FROM_ALL ${test}
           ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
           ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
           ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
@@ -112,8 +112,7 @@ foreach(test ${TESTS2})
           ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
           ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
           )
-
-  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
+  TARGET_LINK_LIBRARIES(${testName} ${UNITTEST_LIBRARIES})
 
   IF(DEVEL_MODE)
     TARGET_LINK_LIBRARIES(${testName} Boost::TIMER)
@@ -121,36 +120,28 @@ foreach(test ${TESTS2})
 #  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
 #  add_test(${testName}_run ${testName})
 #  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach(test)
+ENDFOREACH(test)
 
 
 
-# Temp Compile unit tests with *.cc
 # TODO: Use a different filename pattern for now (test2_* instead of test_*).
-# TODO: How to add min *.cc files instead of all *.cc later?
+ADD_DEFINITIONS(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
+FILE(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
 
-add_definitions(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
-file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
-foreach (test ${TESTS2})
-  get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test}
-          ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
+FILE(GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/lib/*cc")
+LIST(REMOVE_ITEM SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/lib/call.cc")
 
-          ${CMAKE_SOURCE_DIR}/src/lib/pedigree_v2.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
-          )
-  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
+FOREACH (test ${TESTS2})
+  GET_FILENAME_COMPONENT(testName ${test} NAME_WE)
+  ADD_EXECUTABLE(${testName} EXCLUDE_FROM_ALL ${test}
+          ${SOURCE_FILES})
 
-  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
-  add_test(${testName}_run ${testName})
-  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach (test)
+  TARGET_LINK_LIBRARIES(${testName} ${UNITTEST_LIBRARIES})
+
+  ADD_TEST(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
+  ADD_TEST(${testName}_run ${testName})
+  SET_TESTS_PROPERTIES(${testName}_run PROPERTIES DEPENDS ${testName}_build)
+ENDFOREACH (test)
 
 
 

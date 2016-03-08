@@ -33,7 +33,7 @@ const double BOOST_SMALL_THRESHOLD = sqrt(std::numeric_limits<double>::epsilon()
 
 
 template<typename V, typename V2>
-void boost_check_equal_vector(V &expected, V2 &result) {
+void BoostCheckEqualVector(V &expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {
@@ -42,7 +42,7 @@ void boost_check_equal_vector(V &expected, V2 &result) {
 }
 
 template<typename V, typename V2>
-void boost_check_close_vector(V &expected, V2 &result) {
+void BoostCheckCloseVector(V &expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {
@@ -56,7 +56,7 @@ void boost_check_close_vector(V &expected, V2 &result) {
 }
 
 template<typename V, typename V2>
-void boost_check_close_vector(V &&expected, V2 &result) {
+void BoostCheckCloseVector(V &&expected, V2 &result) {
 
     BOOST_CHECK_EQUAL(expected.size(), result.size());
     for (int i = 0; i < expected.size(); ++i) {
@@ -70,16 +70,16 @@ void boost_check_close_vector(V &&expected, V2 &result) {
 }
 
 template<typename V, typename V2>
-void boost_check_close_vector(V &expected, V2 &result, int expected_size) {
+void BoostCheckCloseVector(V &expected, V2 &result, int expected_size) {
     
     BOOST_CHECK_EQUAL(expected_size, expected.size());
-    boost_check_close_vector(expected, result);
+    BoostCheckCloseVector(expected, result);
 }
 
 
 
 template<typename M>
-void boost_check_matrix(M &expected, M &result) {
+void BoostCheckMatrix(M &expected, M &result) {
     BOOST_CHECK_EQUAL(expected.rows(), result.rows());
     BOOST_CHECK_EQUAL(expected.cols(), result.cols());
 
@@ -101,7 +101,7 @@ void BoostCheckMatrix(M &expected, M &result, int expected_rows, int expected_co
     BOOST_CHECK_EQUAL(expected_rows, expected.rows());
     BOOST_CHECK_EQUAL(expected_cols, expected.cols());
 
-    boost_check_matrix(expected, result);
+    BoostCheckMatrix(expected, result);
 }
 
 

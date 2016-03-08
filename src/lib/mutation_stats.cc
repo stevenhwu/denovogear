@@ -17,7 +17,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+//#include <iostream>
 
 #include <dng/mutation_stats.h>
 
@@ -30,14 +30,14 @@ bool MutationStats::CalculateMutationProb(const dng::peel::workspace_t &work_nom
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
     logdata_nomut_ = work_nomut.forward_result;
     logdata_ = work_full.forward_result;
-    mup_ = -std::expm1(logdata_nomut_ - logdata_) ;
+    mup_ = static_cast<float>(-std::expm1(logdata_nomut_ - logdata_));
     return mup_ < min_prob_;
 }
 
 
 void MutationStats::SetScaledLogLikelihood(double scale) {
-    lld_ = (logdata_ + scale) / M_LN10;
-    llh_ = logdata_ / M_LN10;
+    lld_ = static_cast<float>( (logdata_ + scale) / M_LN10);
+    llh_ = static_cast<float>( logdata_ / M_LN10);
 
 }
 
@@ -48,7 +48,7 @@ void MutationStats::SetGenotypeLikelihoods(const dng::peel::workspace_t &workspa
     for(std::size_t u = 0; u < depth_size; ++u) {
         std::size_t pos = workspace.library_nodes.first + u;
         genotype_likelihoods_[pos] = workspace.lower[pos].log() / M_LN10;
-        //TODO: Eigen 3.3 might have log10()
+        //TODO(SW): Eigen 3.3 might have log10()
     }
 }
 
@@ -94,14 +94,14 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
                                             const dng::Pedigree &pedigree) {
     std::vector<double> event (work_nomut.num_nodes, 0.0);
     double total = 0.0, max_coeff = -1.0;
-    size_t dn_loc = 0, dn_col = 0, dn_row = 0;
+    size_t dn_row = 0, dn_col = 0, dn_location = 0;
 
     for (std::size_t i = work_nomut.founder_nodes.second; i < work_nomut.num_nodes; ++i) {
         Eigen::ArrayXXd mat = (work_nomut.super[i].matrix() *
                                work_nomut.lower[i].matrix().transpose()).array() *
                               onemut_transition_matrices[i].array();
 
-        UpdateMaxDeNovoMutation(mat, i, max_coeff, dn_row, dn_col, dn_loc);
+        UpdateMaxDeNovoMutation(mat, i, max_coeff, dn_row, dn_col, dn_location);
 
         event[i] = mat.sum();
         total += event[i];
@@ -113,8 +113,8 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
         SetNodeMu1p(event, total, work_nomut.founder_nodes.second);
 
         dnq_ = dng::utility::lphred<int32_t>(1.0 - (max_coeff / total), 255);
-        dnl_ = pedigree.labels()[dn_loc];
-        if (pedigree.transitions()[dn_loc].type == dng::Pedigree::TransitionType::Germline) {
+        dnl_ = pedigree.labels()[dn_location];
+        if (pedigree.transitions()[dn_location].type == dng::Pedigree::TransitionType::Germline) {
             dnt_ = &dng::meiotic_diploid_mutation_labels[dn_row][dn_col][0];
         } else {
             dnt_ = &dng::mitotic_diploid_mutation_labels[dn_row][dn_col][0];
@@ -148,7 +148,7 @@ void MutationStats::CalculateEntropy(dng::peel::workspace_t &work_nomut,
 
         entropy = (-entropy / total + log(total)) / M_LN2;
         entropy /= max_entropies[ref_index];
-        dnc_ = std::round(100.0 * (1.0 - entropy));
+        dnc_ = static_cast<float>(std::round(100.0 * (1.0 - entropy)));
 
     }
 
@@ -159,7 +159,6 @@ void MutationStats::CalculateEntropy(dng::peel::workspace_t &work_nomut,
 void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
                                             const int (&refalt_to_acgt_allele)[5],
                                             const uint32_t n_alleles,
-                                            const std::size_t ref_index,
                                             const std::size_t num_nodes,
                                             const std::size_t library_start) {
 
@@ -211,7 +210,8 @@ void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5
         }
         for(int j = 0; j < gt_count; ++j) {
             int n = genotype_index[j];
-            gp_scores_[k++] = (n == -1) ? 0.0 : posterior_probabilities_[i][n];
+            gp_scores_[k++] = (n == -1) ? 0.0
+                                        : static_cast<float>(posterior_probabilities_[i][n]);
         }
     }
 
@@ -223,7 +223,7 @@ void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5
         for(int j = 0; j < gt_count; ++j) {
             int n = genotype_index[j];
             gl_scores_[k++] = (n == -1) ? hts::bcf::float_missing :
-                              genotype_likelihoods_[i][n];
+                              static_cast<float>(genotype_likelihoods_[i][n]);
         }
     }
 
@@ -291,14 +291,14 @@ void MutationStats::SetNodeCore(std::vector<float> &stats,
 
 
 void MutationStats::SetExactlyOneMutation(double total){
-    mu1p_ = total * (1.0 - mup_);
-    has_single_mut_ = (mu1p_ / mup_) >= min_prob_;
+    mu1p_ = static_cast<float>(total * (1.0 - mup_));
+    has_single_mut_ = ((mu1p_ / mup_) >= min_prob_);
 }
 
 void MutationStats::UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat,
                                             size_t &index, double &max_coeff,
                                             size_t &dn_row, size_t &dn_col,
-                                            size_t &dn_loc) {
+                                            size_t &dn_location) {
 
     std::size_t row, col;
     double mat_max = mat.maxCoeff(&row, &col);
@@ -306,7 +306,7 @@ void MutationStats::UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat,
         max_coeff = mat_max;
         dn_row = row;
         dn_col = col;
-        dn_loc = index;
+        dn_location = index;
     }
 
 }

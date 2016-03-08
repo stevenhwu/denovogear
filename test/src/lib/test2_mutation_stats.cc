@@ -27,11 +27,10 @@
 #include <fixture/fixture_trio_workspace.h>
 
 
-
 const int NUM_TEST = 100;
 
 struct Fixture {
-    std::mt19937 random_gen_mt {1}; //seed = 1
+    std::mt19937 random_gen_mt{1}; //seed = 1
 
     std::string fixture;
     std::uniform_real_distribution<double> rand_unif_log;
@@ -41,7 +40,7 @@ struct Fixture {
     Fixture(std::string s = "TestMutationStats") : fixture(s) {
 
         rand_unif_log = std::uniform_real_distribution<double>(std::log(1e-20), 0);
-        rand_unif = std::uniform_real_distribution<double>(0,1);
+        rand_unif = std::uniform_real_distribution<double>(0, 1);
 
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
     }
@@ -111,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test_set_node, *utf::fixture(&setup, &teardown)) {
     int number_of_event = 20;
     int first_non_founder = 5;
 
-    std::vector<double> event (number_of_event, hts::bcf::float_missing);
+    std::vector<double> event(number_of_event, hts::bcf::float_missing);
 
     for (int t = first_non_founder; t < event.size(); ++t) {
         event[t] = t;
@@ -122,17 +121,17 @@ BOOST_AUTO_TEST_CASE(test_set_node, *utf::fixture(&setup, &teardown)) {
         total += event[i];
     }
 
-    std::vector<float> expected_mu1p (number_of_event, hts::bcf::float_missing);
+    std::vector<float> expected_mu1p(number_of_event, hts::bcf::float_missing);
     for (int i = first_non_founder; i < event.size(); ++i) {
-        expected_mu1p[i] = static_cast<float>(event[i]/total);
+        expected_mu1p[i] = static_cast<float>(event[i] / total);
     }
 
     stats.SetNodeMup(event, first_non_founder);
     stats.SetNodeMu1p(event, total, first_non_founder);
 
     for (int i = 0; i < first_non_founder; ++i) {
-        BOOST_CHECK( bcf_float_is_missing(stats.node_mup_[i]) );
-        BOOST_CHECK( bcf_float_is_missing(stats.node_mu1p_[i]));
+        BOOST_CHECK(bcf_float_is_missing(stats.node_mup_[i]));
+        BOOST_CHECK(bcf_float_is_missing(stats.node_mu1p_[i]));
     }
 
     for (int i = first_non_founder; i < event.size(); ++i) {
@@ -153,10 +152,10 @@ BOOST_AUTO_TEST_CASE(test_record, *utf::fixture(&setup, &teardown)) {
 BOOST_AUTO_TEST_SUITE_END()
 
 
-BOOST_FIXTURE_TEST_SUITE(test_mutation_stats_suite2, TrioWorkspace )
+BOOST_FIXTURE_TEST_SUITE(test_mutation_stats_suite2, TrioWorkspace)
 
-BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities, *utf::fixture(&setup, &teardown)) {
-
+BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities,
+                     *utf::fixture(&setup, &teardown)) {
 
 
     dng::IndividualVector expected_probs;
@@ -171,11 +170,11 @@ BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities, *utf::fixture(&setup, &te
         expected_probs[i] /= sum;
     }
 
-    MutationStats stats (min_prob);
+    MutationStats stats(min_prob);
     stats.SetPosteriorProbabilities(workspace);
     for (int i = 0; i < workspace.num_nodes; ++i) {
-        boost_check_close_vector(expected_probs[i], stats.posterior_probabilities_[i]);
-
+        BoostCheckCloseVector(expected_probs[i],
+                              stats.posterior_probabilities_[i]);
     }
 
 }
@@ -206,31 +205,31 @@ BOOST_AUTO_TEST_CASE(test_genotype_stats, *utf::fixture(&setup, &teardown)) {
     std::vector<float> expected_gl_scores{
             NAN, NAN, NAN, NAN, NAN, NAN,
             NAN, NAN, NAN, NAN, NAN, NAN,
-            -6.74046,0,-6.07991,-7.58973,-7.5555,-15.93,
-            0,-6.64246,-17.5301,-6.64246,-17.5301,-17.5301,
-            0,-4.667,-16.0119,-7.10524,-16.3122,-18.7879
+            -6.74046, 0, -6.07991, -7.58973, -7.5555, -15.93,
+            0, -6.64246, -17.5301, -6.64246, -17.5301, -17.5301,
+            0, -4.667, -16.0119, -7.10524, -16.3122, -18.7879
     };
-    std::vector<int> expected_best_genotype {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
-    std::vector<int> expected_genotype_qualities {38, 18, 9, 38, 18};
+    std::vector<int> expected_best_genotype{2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+    std::vector<int> expected_genotype_qualities{38, 18, 9, 38, 18};
 
 
     stats.SetGenotypeRelatedStats(acgt_to_refalt_allele, refalt_to_acgt_allele,
-                                  n_alleles, ref_index, num_nodes, library_start);
+                                  n_alleles, num_nodes, library_start);
 
-    boost_check_close_vector(expected_gp_scores, stats.gp_scores_);
-    boost_check_equal_vector(expected_best_genotype, stats.best_genotypes_);
-    boost_check_equal_vector(expected_genotype_qualities, stats.genotype_qualities_);
+        BoostCheckCloseVector(expected_gp_scores, stats.gp_scores_);
+        BoostCheckEqualVector(expected_best_genotype, stats.best_genotypes_);
+        BoostCheckEqualVector(expected_genotype_qualities, stats.genotype_qualities_);
 
     BOOST_CHECK_EQUAL(expected_gl_scores.size(), stats.gl_scores_.size());
     for (int i = 0; i < expected_gl_scores.size(); ++i) {
-        if( isnan(expected_gl_scores[i]) ){
-            BOOST_CHECK( bcf_float_is_missing(stats.gl_scores_[i]) );
+        if (isnan(expected_gl_scores[i])) {
+            BOOST_CHECK(bcf_float_is_missing(stats.gl_scores_[i]));
         }
-        else{
-            BOOST_CHECK_CLOSE(expected_gl_scores[i], stats.gl_scores_[i], BOOST_CLOSE_THRESHOLD);
+        else {
+            BOOST_CHECK_CLOSE(expected_gl_scores[i], stats.gl_scores_[i],
+                              BOOST_CLOSE_THRESHOLD);
         }
     }
-
 
 }
 

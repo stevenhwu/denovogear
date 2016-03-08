@@ -74,7 +74,7 @@ class PedigreeV2 : public Pedigree {
 //        paternal (transmitter by father to child)
     };
 
-    //TODO: struct FamilyInfo/Family structure.
+    //TODO(SW): struct FamilyInfo/Family structure.
     //Op1: A struct to record info in each family. family_t and ops
     //Op2: Another struct to group families together, include pivots and root?
     enum class FamilyType : int {
@@ -91,7 +91,7 @@ public:
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
                    double mu, double mu_somatic, double mu_library);
 
-    //TODO: Eventually replace with this, or pass inheritance with a different method
+    //TODO(SW): Eventually replace with this, or pass inheritance with a different method
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs, const InheritancePattern &pattern,
                    double mu, double mu_somatic, double mu_library);
 

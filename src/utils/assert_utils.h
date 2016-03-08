@@ -26,7 +26,7 @@
 
 const double ASSERT_CLOSE_THRESHOLD = 1e-6;
 
-//TODO: HACK: FIXME:
+//TODO(SW): HACK: FIXME:
 template<typename A, typename B>
 void AssertEqual(A expected, B actual) {
     assert(expected == actual);

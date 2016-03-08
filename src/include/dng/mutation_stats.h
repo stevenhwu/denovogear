@@ -32,6 +32,8 @@
 #include <dng/detail/unit_test.h>
 
 #define CALCULATE_ENTROPY 1
+
+
 class MutationStats {
 
 public:
@@ -65,9 +67,9 @@ public:
     void SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5],
                                  const int (&refalt_to_acgt_allele)[5],
                                  const uint32_t n_alleles,
-                                 const std::size_t ref_index,
                                  const std::size_t num_nodes,
                                  const std::size_t library_start);
+
 
 
     void RecordBasicStats(hts::bcf::Variant &record);
@@ -80,7 +82,7 @@ public:
     enum class OutputLevel {
         Basic, Complete, Singcle
     };
-    //TODO: Record different sets of variables,
+    //TODO(SW): Record different sets of variables,
     // [basic, complete, everytihng/single], something like the following
     //basic [ mup, lld, llh, genotype_likelihood]?
     //complete [basic, mux, posterior, node_mup]
@@ -95,9 +97,7 @@ public:
 
 
 
-
-
-public: //TODO: public or private?
+public: //TODO(SW): think about whether these should be public or private?
     float mup_;
     float lld_;
     float llh_;
@@ -124,7 +124,6 @@ public: //TODO: public or private?
 private:
 
     double min_prob_;
-    //TODO: Maybe hack these away, using lld, llh
     double logdata_;
     double logdata_nomut_;
 

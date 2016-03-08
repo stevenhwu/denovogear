@@ -240,19 +240,19 @@ BOOST_AUTO_TEST_CASE(test_pedigree_v2, *utf::fixture(&setup, &teardown)) {
     };
 
     for (int f = 0; f < expected_family.size(); ++f) {
-        boost_check_equal_vector(expected_family, family);
+        BoostCheckEqualVector(expected_family, family);
     }
 
     std::vector<decltype(peel::op::NUM)> ops = pedigree_v2.inspect_peeling_ops();
     std::vector<decltype(peel::op::NUM)> expected_ops = {peel::op::UP, peel::op::TOFATHER, peel::op::UP};
-    boost_check_equal_vector(expected_ops, ops);
+        BoostCheckEqualVector(expected_ops, ops);
 
 
 
     std::vector<decltype(peel::op::NUM)> functions_ops = pedigree_v2.inspect_peeling_functions_ops();
     std::vector<decltype(peel::op::NUM)> expected_functions_ops = {peel::op::UPFAST, peel::op::TOFATHERFAST,
                                                                   peel::op::UP};
-    boost_check_equal_vector(expected_functions_ops, functions_ops);
+        BoostCheckEqualVector(expected_functions_ops, functions_ops);
 
 
 }

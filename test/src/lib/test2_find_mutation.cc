@@ -72,26 +72,22 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 //BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 
 
-
 //BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
-BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
+BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace,
+                        *utf::fixture(&setup, &teardown)) {
 
-    FindMutations find_mutation {min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, test_param_1};
 
-    BOOST_CHECK_EQUAL(find_mutation.min_prob_ , 0.01);
-
-
-    BOOST_CHECK_EQUAL(find_mutation.params_.theta, 0.001);//test_param_1.theta);
-    BOOST_CHECK_EQUAL(find_mutation.params_.ref_weight, 1);//test_param_1.ref_weight);
+    BOOST_CHECK_EQUAL(find_mutation.min_prob_, 0.01);
+    BOOST_CHECK_EQUAL(find_mutation.params_.theta, 0.001);
+    BOOST_CHECK_EQUAL(find_mutation.params_.ref_weight, 1);
 
     std::array<double, 4> expect_freqs{0.3, 0.2, 0.2, 0.3};
     auto freqs1 = find_mutation.params_.nuc_freq;
-    boost_check_close_vector(expect_freqs, freqs1, 4);
-//    for (int j = 0; j < 4; ++j) {
-//        BOOST_CHECK_EQUAL(freqs1[j], expect_freqs[j]);
-//    }
+    BoostCheckCloseVector(expect_freqs, freqs1, 4);
+
     std::vector<std::array<double, 4>> expect_gamma{{0.98, 0.0005, 0.0005, 1.04},
-                                                    {0.02, 0.075,  0.005,  1.18}};
+                                                    {0.02, 0.075, 0.005, 1.18}};
     auto gamma_a = find_mutation.params_.params_a;
     BOOST_CHECK_EQUAL(gamma_a.pi, expect_gamma[0][0]);
     BOOST_CHECK_EQUAL(gamma_a.phi, expect_gamma[0][1]);
@@ -130,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(test_prior, TrioWorkspace, *utf::fixture(&setup, &teardo
 
     for (int i = 0; i < 5; ++i) {
         auto prior_array = pArray[i];
-        boost_check_close_vector(expected_prior[i], prior_array);
+        BoostCheckCloseVector(expected_prior[i], prior_array);
     }
 
 
@@ -170,11 +166,11 @@ BOOST_FIXTURE_TEST_CASE(test_full_transition, TrioWorkspace, *utf::fixture(&setu
     auto onemut_matrices = find_mutation.onemut_transition_matrices_;
     auto mean_matrices = find_mutation.mean_matrices_;
     for (int i = 0; i < 5; ++i) {
-        boost_check_matrix(exp_full[i],   full_matrices[i]);
-        boost_check_matrix(exp_nomut[i],  nomut_matrices[i]);
-        boost_check_matrix(exp_posmut[i], posmut_matrices[i]);
-        boost_check_matrix(exp_onemut[i], onemut_matrices[i]);
-        boost_check_matrix(exp_mean[i],   mean_matrices[i]);
+        BoostCheckMatrix(exp_full[i], full_matrices[i]);
+        BoostCheckMatrix(exp_nomut[i], nomut_matrices[i]);
+        BoostCheckMatrix(exp_posmut[i], posmut_matrices[i]);
+        BoostCheckMatrix(exp_onemut[i], onemut_matrices[i]);
+        BoostCheckMatrix(exp_mean[i], mean_matrices[i]);
     }
 }
 
@@ -232,11 +228,11 @@ BOOST_FIXTURE_TEST_CASE(test_operator, TrioWorkspace, *utf::fixture(&setup, &tea
     dng::peel::up_reverse(workspace, family[0], full_matrices );
 
     dng::GenotypeArray expected_posterior;
-    for(std::size_t i = 0; i < workspace.num_nodes; ++i) {
+    for (std::size_t i = 0; i < workspace.num_nodes; ++i) {
         expected_posterior = WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, i);
         expected_posterior /= expected_posterior.sum();
 
-        boost_check_close_vector(expected_posterior, stats.posterior_probabilities_[i]);
+        BoostCheckCloseVector(expected_posterior, stats.posterior_probabilities_[i]);
     }
 
 
@@ -289,12 +285,12 @@ BOOST_FIXTURE_TEST_CASE(test_calculate_mutation, TrioWorkspace, *utf::fixture(&s
     BOOST_CHECK_EQUAL(stats.dnq, mutation_stats.dnq_);
 
     for (int i = 0; i < stats.posterior_probabilities.size(); ++i) {
-        boost_check_close_vector(stats.posterior_probabilities[i],
-                                 mutation_stats.posterior_probabilities_[i]);
+        BoostCheckCloseVector(stats.posterior_probabilities[i],
+                              mutation_stats.posterior_probabilities_[i]);
     }
     for (int i = 2; i < stats.genotype_likelihoods.size(); ++i) {
-        boost_check_close_vector(stats.genotype_likelihoods[i],
-                                 mutation_stats.genotype_likelihoods_[i]);
+        BoostCheckCloseVector(stats.genotype_likelihoods[i],
+                              mutation_stats.genotype_likelihoods_[i]);
     }
     for (int i = 2; i < stats.node_mup.size(); ++i) {
         BOOST_CHECK_CLOSE(stats.node_mup[i], mutation_stats.node_mup_[i],
