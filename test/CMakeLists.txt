@@ -152,79 +152,8 @@ foreach (test ${TESTS2})
   set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
 endforeach (test)
 
-#ExternalProject_Add(testTime
-#        DEPENDS dng-phaser dng-dnm dng-call
-#        PREFIX "testTime"
-#        EXCLUDE_FROM_ALL 1
-##        DOWNLOAD_DIR "${TEST_DATA_DIR}"
-##        URL "https://github.com/kaeldai/testdata/archive/${DATA_PACKAGE}"
-##        SOURCE_DIR "${TEST_DATA_DIR}"
-#        CONFIGURE_COMMAND ""
-#        BUILD_COMMAND ""
-#        INSTALL_COMMAND "")
-################################################################################
 
 
-
-
-################################################################################
-# temp Compile unit tests with *.cc
-IF(DEVEL_MODE)
-  ADD_DEFINITIONS(-DDNG_DEVEL)
-ENDIF()
-
-file(GLOB_RECURSE TESTS2 "testt_time*[cc|cpp]")
-foreach(test ${TESTS2})
-  get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test}
-          ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
-          )
-
-  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
-
-  IF(DEVEL_MODE)
-    TARGET_LINK_LIBRARIES(${testName} Boost::TIMER)
-  ENDIF()
-#  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
-#  add_test(${testName}_run ${testName})
-#  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach(test)
-
-
-
-# Temp Compile unit tests with *.cc
-# TODO: Use a different filename pattern for now (test2_* instead of test_*).
-# TODO: How to add min *.cc files instead of all *.cc later?
-include_directories(./)
-#include_directories(./lib/)
-
-add_definitions(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
-file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
-foreach (test ${TESTS2})
-  get_filename_component(testName ${test} NAME_WE)
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test}
-          ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
-
-          ${CMAKE_SOURCE_DIR}/src/lib/pedigree_v2.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
-          ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
-          )
-  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
-
-  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
-  add_test(${testName}_run ${testName})
-  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach (test)
 
 ################################################################################
 

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 
 #include <dng/find_mutation.h>
 
@@ -70,12 +70,12 @@ std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) {
     return contigs;
 }
 
+/*TODO: eventually min_prob can be removed from this class*/
 
-//TODO: eventually min_prob can be removed from this class
 FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
-                             params_t params) :
-        pedigree_{pedigree}, min_prob_{min_prob},
-        params_(params), genotype_likelihood_{params.params_a, params.params_b},
+                             FindMutationParams params) :
+        pedigree_{pedigree}, min_prob_{ min_prob}, params_(params),
+        genotype_likelihood_{ params.params_a, params.params_b},
         work_nomut_(pedigree.CreateWorkspace()) {
 
     using namespace dng;
@@ -90,7 +90,8 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
                                           {0, 0, params_.ref_weight, 0});
     genotype_prior_[3] = population_prior(params_.theta, params_.nuc_freq,
                                           {0, 0, 0, params_.ref_weight});
-    genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, 0});
+    genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq,
+                                          {0, 0, 0, 0});
 
     // Calculate mutation expectation matrices
     full_transition_matrices_.assign(work_nomut_.num_nodes, {});
@@ -102,10 +103,8 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     for(size_t child = 0; child < work_nomut_.num_nodes; ++child) {
 
         auto trans = pedigree.transitions()[child];
-//        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2 <<
-//                "\tType:" << (int) trans.type << std::endl;
 
-        if(trans.type == Pedigree::TransitionType::Germline) {
+        if (trans.type == Pedigree::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
@@ -115,8 +114,8 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
                                                  nomut_transition_matrices_[child];
             onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
             mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
-        } else if(trans.type == Pedigree::TransitionType::Somatic ||
-                  trans.type == Pedigree::TransitionType::Library) {
+        } else if (trans.type == Pedigree::TransitionType::Somatic ||
+            trans.type == Pedigree::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
@@ -137,17 +136,18 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
 
 #if CALCULATE_ENTROPY == 1
     //Calculate max_entropy based on having no data
-    for(int ref_index = 0; ref_index < 5; ++ref_index) {
+    for (int ref_index = 0; ref_index < 5; ++ref_index) {
         work_nomut_.SetFounders(genotype_prior_[ref_index]);
 
         pedigree_.PeelForwards(work_nomut_, nomut_transition_matrices_);
         pedigree_.PeelBackwards(work_nomut_, nomut_transition_matrices_);
         event_.assign(work_nomut_.num_nodes, 0.0);
         double total = 0.0, entropy = 0.0;
-        for(std::size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
+        for (std::size_t i = work_nomut_.founder_nodes.second;
+             i < work_nomut_.num_nodes; ++i) {
             Eigen::ArrayXXd mat = (work_nomut_.super[i].matrix() *
-                    work_nomut_.lower[i].matrix().transpose()).array() *
-                                  onemut_transition_matrices_[i].array();
+                work_nomut_.lower[i].matrix().transpose()).array() *
+                onemut_transition_matrices_[i].array();
             total += mat.sum();
             entropy += (mat.array() == 0.0).select(mat.array(),
                                                    mat.array() * mat.log()).sum();
@@ -157,8 +157,6 @@ FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
     }
 #endif
 
-//    std::cout << "END FM const" << std::endl;
-
 
 }
 
@@ -167,33 +165,29 @@ bool FindMutations::CalculateMutation(const std::vector<depth_t> &depths,
                                       const std::size_t ref_index,
                                       MutationStats &mutation_stats) {
 
-    double scale = work_nomut_.set_genotype_likelihood(genotype_likelihood_, depths,
-                                                       ref_index);
+    double scale = work_nomut_.SetGenotypeLikelihood(genotype_likelihood_, depths,
+                                                     ref_index);
     // Set the prior probability of the founders given the reference
     work_nomut_.SetFounders(genotype_prior_[ref_index]);
     work_full_ = work_nomut_; //TODO: full test on copy assignment operator
 
-
-    bool is_mup_lt_threshold = CalculateMutationProb(mutation_stats);
-    if(is_mup_lt_threshold ){
+    bool is_mup_less_threshold = CalculateMutationProb(mutation_stats);
+    if (is_mup_less_threshold) {
         return false;
     }
     pedigree_.PeelBackwards(work_full_, full_transition_matrices_);
 
     mutation_stats.SetScaledLogLikelihood(scale);
     mutation_stats.SetGenotypeLikelihoods(work_full_, depths.size());
-
     mutation_stats.SetPosteriorProbabilities(work_full_);
 
     mutation_stats.CalculateExpectedMutation(work_full_, mean_matrices_);
-
     mutation_stats.CalculateNodeMutation(work_full_, posmut_transition_matrices_);
-
     CalculateDenovoMutation(mutation_stats);
 
 #if CALCULATE_ENTROPY == 1
     mutation_stats.CalculateEntropy(work_full_, posmut_transition_matrices_,
-                                      max_entropies_, ref_index);
+                                    max_entropies_, ref_index);
 #endif
 
     return true;
@@ -201,6 +195,7 @@ bool FindMutations::CalculateMutation(const std::vector<depth_t> &depths,
 }
 
 bool FindMutations::CalculateMutationProb(MutationStats &mutation_stats) {
+
     // Calculate log P(Data, nomut ; model)
     pedigree_.PeelForwards(work_nomut_, nomut_transition_matrices_);
 
@@ -209,20 +204,11 @@ bool FindMutations::CalculateMutationProb(MutationStats &mutation_stats) {
     pedigree_.PeelForwards(work_full_, full_transition_matrices_);
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-    bool is_mup_lt_threshold = mutation_stats.CalculateMutationProb(work_nomut_,
-                                                                    work_full_);
+    bool is_mup_less_threshold = mutation_stats.CalculateMutationProb(work_nomut_,
+                                                                      work_full_);
 
-    return is_mup_lt_threshold;
+    return is_mup_less_threshold;
 }
-
-
-//void FindMutations::CalculatePosteriorProbabilities(MutationStats &mutation_stats) {
-//    //TODO: PeelBackwards can NOT call twice, maybe not a good idea to put here
-//    pedigree_.PeelBackwards(work_, full_transition_matrices_);
-//    mutation_stats.SetPosteriorProbabilities(work_);
-//
-//}
-
 
 
 void FindMutations::CalculateDenovoMutation(MutationStats &mutation_stats) {
@@ -240,14 +226,10 @@ bool FindMutations::old_operator(const std::vector<depth_t> &depths,
                                  int ref_index, stats_t *stats) {
     using namespace std;
     using namespace hts::bcf;
-    using dng::util::lphred;
-    using dng::util::phred;
+    using dng::utility::lphred;
+    using dng::utility::phred;
     peel::workspace_t work_ = work_nomut_;//HACK!
 
-    for (auto d : depths) {
-        auto cc = d.counts;
-    }
-    MutationStats mutation_stats(min_prob_);
 
     assert(stats != nullptr);
 
@@ -291,9 +273,6 @@ bool FindMutations::old_operator(const std::vector<depth_t> &depths,
     // Peel Backwards with full-mutation
     pedigree_.PeelBackwards(work_, full_transition_matrices_);
 
-//    size_t library_start = work_.library_nodes.first; //TODO: Can delete this??
-    mutation_stats.SetGenotypeLikelihoods(work_, depths.size());
-    mutation_stats.SetScaledLogLikelihood(scale);
 
     stats->mup = pmut;
     stats->lld = (logdata + scale) / M_LN10;

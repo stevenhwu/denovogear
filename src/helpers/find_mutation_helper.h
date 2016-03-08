@@ -18,9 +18,10 @@ class [[deprecated]] FindMutationsGetter : public FindMutations {
 
 
 public:
-    FindMutationsGetter(double min_prob, const Pedigree &pedigree, const params_t &params) : FindMutations(min_prob,
-                                                                                                           pedigree,
-                                                                                                           params) { }
+    FindMutationsGetter(double min_prob, const Pedigree &pedigree,
+                        const FindMutationParams &params) : FindMutations(min_prob,
+                                                                          pedigree,
+                                                                          params) { }
 public:
     //TODO, three (more) ways to expose these for testing
 //    double min_prob_ = FindMutations::min_prob_; //HACK: 1
@@ -34,7 +35,7 @@ public:
         return pedigree_;
     }
 
-    const params_t &getParams_() const {
+    const FindMutationParams &getParams_() const {
         return params_;
     }
 

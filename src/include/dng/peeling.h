@@ -73,12 +73,6 @@ enum {
 } // namespace dng::peel::op
 
 
-//XXX: Maybe this should turn into a class, too many functions
-    (workspace.upper[index] * workspace.lower[index])
-
-#define WORKSPACE_T_KRONECKER_PRODUCT_PARENTS(workspace, dad, mom) \
-    kroneckerProduct(WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix(),  \
-                     WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix() )
 
 //XXX: Maybe this should turn into a class, too many functions
 struct workspace_t {

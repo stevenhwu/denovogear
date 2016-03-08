@@ -38,7 +38,7 @@ using namespace dng;
 
 std::vector<std::pair<std::string, uint32_t>> parse_contigs(const bam_hdr_t *hdr);
 
-std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr) ;
+std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr);
 
 
 class FindMutations {
@@ -48,11 +48,9 @@ public:
     DNG_UNIT_TEST(test_prior);
     DNG_UNIT_TEST(test_full_transition);
     DNG_UNIT_TEST(test_operator);
-//    DNG_UNIT_TEST(test_calculate_mutation_expected);
-//    DNG_UNIT_TEST(test_calculate_mutation);
 
 
-    struct params_t {
+    struct FindMutationParams {
         double theta;
         std::array<double, 4> nuc_freq;
         double ref_weight;
@@ -61,7 +59,7 @@ public:
         dng::genotype::DirichletMultinomialMixture::params_t params_b;
     };
 
-    FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
+    FindMutations(double min_prob, const Pedigree &pedigree, FindMutationParams params);
 
 
     //TODO: either place with this function, or replace operator() with this
@@ -88,15 +86,14 @@ public:
         std::vector<float> node_mu1p;
     };
 
-    [[deprecated]] bool old_operator(const std::vector<depth_t> &depths, int ref_index,
-                                    stats_t *stats);
+    [[deprecated]] bool old_operator(const std::vector<depth_t> &depths,
+                                     int ref_index, stats_t *stats);
 
 
 protected:
 
     const dng::Pedigree &pedigree_;
-    params_t params_;
-
+    FindMutationParams params_;
 
     dng::peel::workspace_t work_full_;
     dng::peel::workspace_t work_nomut_;
@@ -110,7 +107,6 @@ protected:
     // Model genotype likelihoods as a mixture of two dirichlet multinomials
     // TODO: control these with parameters
     dng::genotype::DirichletMultinomialMixture genotype_likelihood_;
-
     dng::GenotypeArray genotype_prior_[5]; // Holds P(G | theta)
 
     [[deprecated]] double min_prob_;
@@ -118,7 +114,6 @@ protected:
 
     [[deprecated]] std::array<double, 5> max_entropies_;
     [[deprecated]] std::vector<double> event_;
-
 
 
     bool CalculateMutationProb(MutationStats &stats);

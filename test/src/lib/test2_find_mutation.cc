@@ -32,7 +32,6 @@
 #include <boost_test_helper.h>
 #include <fixture/fixture_trio_workspace.h>
 
-#include <helpers/find_mutation_helper.h>
 
 
 namespace utf = boost::unit_test;

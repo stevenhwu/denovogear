@@ -17,7 +17,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#pragma once
 #ifndef DENOVOGEAR_ASSERT_UTILS_H
 #define DENOVOGEAR_ASSERT_UTILS_H
 

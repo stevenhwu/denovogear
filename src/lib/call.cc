@@ -294,6 +294,16 @@ int Call::operator()(Call::argument_type &arg) {
     using dng::utility::lphred;
     using dng::utility::phred;
 
+    double total = 0;
+    int count = 1e9;
+    for (int l = 0; l < count; ++l) {
+        for (int j = 0; j < count; ++j) {
+//            total += (j*l);
+        }
+    }
+    std::cout << total<< std::endl;
+    std::exit(10);
+
     // Parse pedigree from file
     dng::io::Pedigree ped;
     if(!arg.ped.empty()) {

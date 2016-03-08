@@ -28,7 +28,7 @@
 #include <dng/read_group.h>
 #include <dng/likelihood.h>
 #include <dng/seq.h>
-#include <dng/utilities.h>
+#include <dng/utility.h>
 #include <dng/hts/bcf.h>
 #include <dng/hts/extra.h>
 #include <dng/vcfpileup.h>
@@ -356,8 +356,8 @@ void test_operator(FindMutationsGetter &find_mutation) {
 int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     using namespace std;
     using namespace hts::bcf;
-    using dng::util::lphred;
-    using dng::util::phred;
+    using dng::utility::lphred;
+    using dng::utility::phred;
 
     std::cout << arg.mu << "\t" << arg.mu_somatic << "\t" << arg.mu_library << std::endl;
 
@@ -399,7 +399,7 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     // TODO: include the size into the pattern, but this makes it harder to catch the second error.
     // TODO: turn all of this into a template function that returns array<double,4>?
     {
-        auto f = util::parse_double_list(arg.nuc_freqs, ',', 4);
+        auto f = utility::parse_double_list(arg.nuc_freqs, ',', 4);
         if (!f.second) {
             throw std::runtime_error("Unable to parse nuc-freq option. "
                                              "It must be a comma separated list of floating-point numbers.");
@@ -539,7 +539,8 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 //                            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]}};
 
 
-    FindMutations::params_t test_param_1{arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
+    FindMutations::FindMutationParams test_param_1
+            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
     // Pileup data
     FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
 //    test_basic_parameterts(find_mutation);

@@ -112,7 +112,7 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
     if (has_single_mut_) {
         SetNodeMu1p(event, total, work_nomut.founder_nodes.second);
 
-        dnq_ = dng::util::lphred<int32_t>(1.0 - (max_coeff / total), 255);
+        dnq_ = dng::utility::lphred<int32_t>(1.0 - (max_coeff / total), 255);
         dnl_ = pedigree.labels()[dn_loc];
         if (pedigree.transitions()[dn_loc].type == dng::Pedigree::TransitionType::Germline) {
             dnt_ = &dng::meiotic_diploid_mutation_labels[dn_row][dn_col][0];
@@ -163,7 +163,7 @@ void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5
                                             const std::size_t num_nodes,
                                             const std::size_t library_start) {
 
-// Construct numeric genotypes
+    // Construct numeric genotypes
     int numeric_genotype[10][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
                                    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}
     };
@@ -203,7 +203,7 @@ void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5
         double d = posterior_probabilities_[i].maxCoeff(&pos);
         best_genotypes_[2 * i] = numeric_genotype[pos][0];
         best_genotypes_[2 * i + 1] = numeric_genotype[pos][1];
-        genotype_qualities_[i] = dng::util::lphred<int32_t>(1.0 - d, 255);
+        genotype_qualities_[i] = dng::utility::lphred<int32_t>(1.0 - d, 255);
         // If either of the alleles is missing set quality to 0
         if(hts::bcf::allele_is_missing({best_genotypes_[2 * i]}) ||
            hts::bcf::allele_is_missing({best_genotypes_[2 * i + 1]})) {

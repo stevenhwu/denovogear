@@ -1,11 +1,3 @@
-//
-// Created by steven on 1/11/16.
-//
-
-#ifndef DENOVOGEAR_VCF_HELPER_H
-#define DENOVOGEAR_VCF_HELPER_H
-
-
 /*
  * Copyright (c) 2014-2015 Reed A. Cartwright
  * Copyright (c) 2015 Kael Dai
@@ -27,6 +19,12 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
+#ifndef DENOVOGEAR_VCF_UTILS_H
+#define DENOVOGEAR_VCF_UTILS_H
+
+
+
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
@@ -42,7 +40,6 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/range/algorithm/replace.hpp>
 #include <boost/range/algorithm/max_element.hpp>
-
 #include <boost/algorithm/string.hpp>
 
 #include <dng/task/call.h>
@@ -52,7 +49,7 @@
 #include <dng/read_group.h>
 #include <dng/likelihood.h>
 #include <dng/seq.h>
-#include <dng/utilities.h>
+#include <dng/utility.h>
 #include <dng/hts/bcf.h>
 #include <dng/hts/extra.h>
 #include <dng/vcfpileup.h>
@@ -77,7 +74,7 @@ std::pair<std::string, std::string> vcf_get_output_mode(
 
     if(arg.output.empty() || arg.output == "-")
         return {"-", "w"};
-    auto ret = hts::extra::extract_file_type(arg.output);
+    auto ret = dng::utility::extract_file_type(arg.output);
     if(iequals(ret.first, "bcf")) {
         return {ret.second, "wb"};
     } else if(iequals(ret.first, "vcf")) {
@@ -109,7 +106,7 @@ std::string vcf_command_line_text(const char *arg,
                                   const std::vector<V, A> &val) {
     std::string str;
     for(auto && a : val) {
-        str += std::string("--") + arg + '=' + dng::util::to_pretty(a) + ' ';
+        str += std::string("--") + arg + '=' + dng::utility::to_pretty(a) + ' ';
     }
     str.pop_back();
     return str;
@@ -118,7 +115,7 @@ std::string vcf_command_line_text(const char *arg,
 
 template<typename VAL>
 std::string vcf_command_line_text(const char *arg, VAL val) {
-    return std::string("--") + arg + '=' + dng::util::to_pretty(val);
+    return std::string("--") + arg + '=' + dng::utility::to_pretty(val);
 }
 
 std::string vcf_command_line_text(const char *arg, std::string val) {
@@ -174,4 +171,4 @@ void vcf_add_header_text(hts::bcf::File &vcfout, Call::argument_type &arg) {
     vcfout.AddHeaderMetadata("##FORMAT=<ID=MU1P,Number=1,Type=Float,Description=\"Conditional probability that this node contains a de novo mutation given only 1 de novo mutation\">");
 }
 
-#endif //DENOVOGEAR_VCF_HELPER_H
+#endif //DENOVOGEAR_VCF_UTILS_H

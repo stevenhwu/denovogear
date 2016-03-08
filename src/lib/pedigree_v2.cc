@@ -381,7 +381,7 @@ void dng::PedigreeV2::UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng::ReadG
         if (!labels[u].empty()) {
             labels_.push_back(labels[u]);
         } else {
-            labels_.push_back(DNG_SM_PREFIX "unnamed_node_" + util::to_pretty(vid));
+            labels_.push_back(DNG_SM_PREFIX "unnamed_node_" + utility::to_pretty(vid));
         }
         node_ids[u] = vid++;
     }

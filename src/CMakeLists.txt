@@ -118,4 +118,4 @@ INSTALL(PROGRAMS "${CMAKE_CURRENT_BINARY_DIR}/treecall2.py"
 install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/treecall/setup.py install --install-purelib \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBEXECDIR})")
 install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/py-editdist/setup.py install --install-lib \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBEXECDIR})")
 
-include(SwCMakeLists.txt)
+include(SwCMakeLists.cmake)

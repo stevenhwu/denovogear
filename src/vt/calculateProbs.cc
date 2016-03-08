@@ -44,7 +44,7 @@
 #include <dng/read_group.h>
 #include <dng/likelihood.h>
 #include <dng/seq.h>
-#include <dng/utilities.h>
+#include <dng/utility.h>
 #include <dng/hts/bcf.h>
 #include <dng/hts/extra.h>
 #include <dng/vcfpileup.h>
@@ -297,8 +297,8 @@ using namespace dng;
 int Call::operator()(Call::argument_type &arg) {
     using namespace std;
     using namespace hts::bcf;
-    using dng::util::lphred;
-    using dng::util::phred;
+    using dng::utility::lphred;
+    using dng::utility::phred;
 
     // Parse pedigree from file
     dng::io::Pedigree ped;
@@ -330,7 +330,7 @@ int Call::operator()(Call::argument_type &arg) {
     // TODO: include the size into the pattern, but this makes it harder to catch the second error.
     // TODO: turn all of this into a template function that returns array<double,4>?
     {
-        auto f = util::parse_double_list(arg.nuc_freqs, ',', 4);
+        auto f = utility::parse_double_list(arg.nuc_freqs, ',', 4);
         if(!f.second) {
             throw std::runtime_error("Unable to parse nuc-freq option. "
                                              "It must be a comma separated list of floating-point numbers.");
