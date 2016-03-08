@@ -196,13 +196,13 @@ BOOST_AUTO_TEST_CASE(test_mitosis_diploid_matrix, *utf::fixture(&setup, &teardow
     boost_check_matrix(expected_transition_matrix_negative, actual_negative);
 
     auto actual_zero = mitosis_diploid_matrix(unequal_mutation_matrix, 0);
-//    boost_check_matrix(expected_transition_matrix_zero, actual_zero);
+//    BoostCheckMatrix(expected_transition_matrix_zero, actual_zero);
 
     auto actual_one = mitosis_diploid_matrix(unequal_mutation_matrix, 1);
-//    boost_check_matrix(expected_transition_matrix_one, actual_one);
+//    BoostCheckMatrix(expected_transition_matrix_one, actual_one);
 
     auto actual_two = mitosis_diploid_matrix(unequal_mutation_matrix, 2);
-//    boost_check_matrix(expected_transition_matrix_two, actual_two);
+//    BoostCheckMatrix(expected_transition_matrix_two, actual_two);
 
 
 }
@@ -231,13 +231,13 @@ BOOST_AUTO_TEST_CASE(test_meiosis_haploid_matrix, *utf::fixture(&setup, &teardow
 
 
     auto actual_negative = meiosis_haploid_matrix(unequal_mutation_matrix, -1);
-//    boost_check_matrix(expected_transition_matrix_negative, actual_negative);
+//    BoostCheckMatrix(expected_transition_matrix_negative, actual_negative);
 
     auto actual_zero = meiosis_haploid_matrix(unequal_mutation_matrix, 0);
-//    boost_check_matrix(expected_transition_matrix_zero, actual_zero);
+//    BoostCheckMatrix(expected_transition_matrix_zero, actual_zero);
 
     auto actual_one = meiosis_haploid_matrix(unequal_mutation_matrix, 1);
-//    boost_check_matrix(expected_transition_matrix_one, actual_one);
+//    BoostCheckMatrix(expected_transition_matrix_one, actual_one);
 
 }
 

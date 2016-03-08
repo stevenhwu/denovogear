@@ -530,7 +530,7 @@ int Call::operator()(Call::argument_type &arg) {
                 }
             }
             size_t ref_index = seq::char_index(ref_base);
-            if(!calculate(read_depths, ref_index, &stats)) {
+            if(!calculate.old_operator(read_depths, ref_index, &stats)) {
                 return;
             }
 
@@ -806,24 +806,18 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
             }
 
             size_t ref_index = seq::char_index(ref_base);
-std::cout << "======START FM::calculate: ref: " << ref_base << "\t" << ref_index << std::endl;
-            if(!calculate(read_depths, ref_index, &stats)) {
+
+            if(!calculate.CalculateMutation(read_depths, ref_index, mutation_stats)) {
                 return;
             }
-            MutationStats mutation_stats (min_prob);
-            calculate.CalculateMutation(read_depths, ref_index, mutation_stats);
-std::cout << "======END FM::calculate" << std::endl;
 
-std::cout << mutation_stats.mup << "==" << stats.mup << std::endl;
 
             // reformatted AD fields for output. The first few fields are the GL and SM fields and "AD" is missing. The
             // remaining fields are just copied from the input file
 
             std::vector<int32_t> ad_counts( n_alleles*library_start, hts::bcf::int32_missing);
             ad_counts.insert(ad_counts.end(), ad, ad + n_samples*n_alleles);
-for (auto item : ad_counts) {
-    std::cout << "ad_count: " << item << std::endl;
-}
+
             // sum up all the counts
             std::vector<int32_t> ad_info(n_alleles, 0);
             for(size_t a = 0; a < n_ad; a++)
@@ -862,67 +856,67 @@ for (auto item : ad_counts) {
 //                                                           const std::size_t ref_index,
 //                                                           const std::size_t num_nodes,
 //                                                           const std::size_t library_start
-
-                    // Construct numeric genotypes
-            int numeric_genotype[10][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
-                                           {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}
-            };
-            for(int i = 0; i < 10; ++i) {
-                int n1 = acgt_to_refalt_allele[folded_diploid_nucleotides[i][0]];
-                int n2 = acgt_to_refalt_allele[folded_diploid_nucleotides[i][1]];
-                if(n1 > n2) {
-                    numeric_genotype[i][0] = encode_allele_unphased(n2);
-                    numeric_genotype[i][1] = encode_allele_unphased(n1);
-                } else {
-                    numeric_genotype[i][0] = encode_allele_unphased(n1);
-                    numeric_genotype[i][1] = encode_allele_unphased(n2);
-                }
-            }
-            // Link VCF genotypes to our order
-            int genotype_index[15];
-            for(int i = 0, k = 0; i < n_alleles; ++i) {
-                int n1 = refalt_to_acgt_allele[i];
-                for(int j = 0; j <= i; ++j, ++k) {
-                    int n2 = refalt_to_acgt_allele[j];
-                    genotype_index[k] = (j == 0 && ref_index == 4) ?
-                                        -1 : folded_diploid_genotypes_matrix[n1][n2];
-                }
-            }
-
-            // Calculate sample genotypes
-            vector<int32_t> best_genotypes(2 * num_nodes);
-            vector<int32_t> genotype_qualities(num_nodes);
-            int gt_count = n_alleles * (n_alleles + 1) / 2;
-            vector<float> gp_scores(gt_count*num_nodes );
-
-            for(size_t i = 0, k = 0; i < num_nodes; ++i) {
-                size_t pos;
-                double d = stats.posterior_probabilities[i].maxCoeff(&pos);
-                std::cout << pos << "\t" << d << std::endl;
-                best_genotypes[2 * i] = numeric_genotype[pos][0];
-                best_genotypes[2 * i + 1] = numeric_genotype[pos][1];
-                genotype_qualities[i] = lphred<int32_t>(1.0 - d, 255);
-                // If either of the alleles is missing set quality to 0
-                if(allele_is_missing({best_genotypes[2 * i]}) ||
-                   allele_is_missing({best_genotypes[2 * i + 1]})) {
-                    genotype_qualities[i] = 0;
-                }
-                for(int j = 0; j < gt_count; ++j) {
-                    int n = genotype_index[j];
-                    gp_scores[k++] = (n == -1) ? 0.0 : stats.posterior_probabilities[i][n];
-                }
-            }
-
-            // Sample Likelihoods
-            vector<float> gl_scores(gt_count *num_nodes, hts::bcf::float_missing);
-            for(size_t i = library_start, k = library_start * gt_count; i < num_nodes;
-                ++i) {
-                for(int j = 0; j < gt_count; ++j) {
-                    int n = genotype_index[j];
-                    gl_scores[k++] = (n == -1) ? hts::bcf::float_missing :
-                                     stats.genotype_likelihoods[i][n];
-                }
-            }
+//
+//                    // Construct numeric genotypes
+//            int numeric_genotype[10][2] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+//                                           {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}
+//            };
+//            for(int i = 0; i < 10; ++i) {
+//                int n1 = acgt_to_refalt_allele[folded_diploid_nucleotides[i][0]];
+//                int n2 = acgt_to_refalt_allele[folded_diploid_nucleotides[i][1]];
+//                if(n1 > n2) {
+//                    numeric_genotype[i][0] = encode_allele_unphased(n2);
+//                    numeric_genotype[i][1] = encode_allele_unphased(n1);
+//                } else {
+//                    numeric_genotype[i][0] = encode_allele_unphased(n1);
+//                    numeric_genotype[i][1] = encode_allele_unphased(n2);
+//                }
+//            }
+//            // Link VCF genotypes to our order
+//            int genotype_index[15];
+//            for(int i = 0, k = 0; i < n_alleles; ++i) {
+//                int n1 = refalt_to_acgt_allele[i];
+//                for(int j = 0; j <= i; ++j, ++k) {
+//                    int n2 = refalt_to_acgt_allele[j];
+//                    genotype_index[k] = (j == 0 && ref_index == 4) ?
+//                                        -1 : folded_diploid_genotypes_matrix[n1][n2];
+//                }
+//            }
+//
+//            // Calculate sample genotypes
+//            vector<int32_t> best_genotypes(2 * num_nodes);
+//            vector<int32_t> genotype_qualities(num_nodes);
+//            int gt_count = n_alleles * (n_alleles + 1) / 2;
+//            vector<float> gp_scores(gt_count*num_nodes );
+//
+//            for(size_t i = 0, k = 0; i < num_nodes; ++i) {
+//                size_t pos;
+//                double d = stats.posterior_probabilities[i].maxCoeff(&pos);
+//                std::cout << pos << "\t" << d << std::endl;
+//                best_genotypes[2 * i] = numeric_genotype[pos][0];
+//                best_genotypes[2 * i + 1] = numeric_genotype[pos][1];
+//                genotype_qualities[i] = lphred<int32_t>(1.0 - d, 255);
+//                // If either of the alleles is missing set quality to 0
+//                if(allele_is_missing({best_genotypes[2 * i]}) ||
+//                   allele_is_missing({best_genotypes[2 * i + 1]})) {
+//                    genotype_qualities[i] = 0;
+//                }
+//                for(int j = 0; j < gt_count; ++j) {
+//                    int n = genotype_index[j];
+//                    gp_scores[k++] = (n == -1) ? 0.0 : stats.posterior_probabilities[i][n];
+//                }
+//            }
+//
+//            // Sample Likelihoods
+//            vector<float> gl_scores(gt_count *num_nodes, hts::bcf::float_missing);
+//            for(size_t i = library_start, k = library_start * gt_count; i < num_nodes;
+//                ++i) {
+//                for(int j = 0; j < gt_count; ++j) {
+//                    int n = genotype_index[j];
+//                    gl_scores[k++] = (n == -1) ? hts::bcf::float_missing :
+//                                     stats.genotype_likelihoods[i][n];
+//                }
+//            }
 
 
 

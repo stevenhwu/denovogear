@@ -96,9 +96,6 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
     double total = 0.0, max_coeff = -1.0;
     size_t dn_loc = 0, dn_col = 0, dn_row = 0;
 
-#if CALCULATE_ENTROPY == true
-    double entropy = 0.0;
-#endif
     for (std::size_t i = work_nomut.founder_nodes.second; i < work_nomut.num_nodes; ++i) {
         Eigen::ArrayXXd mat = (work_nomut.super[i].matrix() *
                                work_nomut.lower[i].matrix().transpose()).array() *
@@ -109,10 +106,6 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
         event[i] = mat.sum();
         total += event[i];
 
-#if CALCULATE_ENTROPY == true
-        entropy += (mat.array() == 0.0).select(mat.array(),
-                                                      mat.array() * mat.log()).sum();
-#endif
     }
     SetExactlyOneMutation(total);
 
@@ -127,8 +120,39 @@ void MutationStats::CalculateDenovoMutation(dng::peel::workspace_t &work_nomut,
             dnt_ = &dng::mitotic_diploid_mutation_labels[dn_row][dn_col][0];
         }
 
-#if CALCULATE_ENTROPY == true
-        // Calculate entropy of mutation location
+    }
+}
+
+
+#if CALCULATE_ENTROPY == 1
+void MutationStats::CalculateEntropy(dng::peel::workspace_t &work_nomut,
+                                     dng::TransitionVector &onemut_transition_matrices,
+                                     std::array<double, 5> max_entropies,
+                                     std::size_t ref_index) {
+
+
+    double total = 0.0;
+    double entropy = 0.0;
+
+    if (has_single_mut_) {
+
+        for (std::size_t i = work_nomut.founder_nodes.second; i < work_nomut.num_nodes; ++i) {
+            Eigen::ArrayXXd mat = (work_nomut.super[i].matrix() *
+                                   work_nomut.lower[i].matrix().transpose()).array() *
+                                  onemut_transition_matrices[i].array();
+            total += mat.sum();
+
+            entropy += (mat.array() == 0.0).select(mat.array(),
+                                                   mat.array() * mat.log()).sum();
+        }
+
+        entropy = (-entropy / total + log(total)) / M_LN2;
+        entropy /= max_entropies[ref_index];
+        dnc_ = std::round(100.0 * (1.0 - entropy));
+
+    }
+
+}
 #endif
 
 
@@ -160,7 +184,7 @@ void MutationStats::SetGenotypeRelatedStats(const int (&acgt_to_refalt_allele)[5
         int n1 = refalt_to_acgt_allele[i];
         for(int j = 0; j <= i; ++j, ++k) {
             int n2 = refalt_to_acgt_allele[j];
-            genotype_index[k] = (j == 0 && ref_index == 4) ?
+            genotype_index[k] = (n1 == 4 || n2 == 4) ?
                                 -1 : dng::folded_diploid_genotypes_matrix[n1][n2];
         }
     }
@@ -214,7 +238,7 @@ void MutationStats::RecordBasicStats(hts::bcf::Variant &record){
     record.info("LLD", lld_);
     record.info("LLH", llh_);
     record.info("MUX", mux_); //OutputLevel::Complete
-    record.info("MU1P", mu1p_); //OutputLevel::single
+    record.info("MU1P", mu1p_); //OutputLevel
 
 
 };
@@ -225,7 +249,9 @@ void MutationStats::RecordSingleMutationStats(hts::bcf::Variant &record){
         record.info("DNT", dnt_);
         record.info("DNL", dnl_);
         record.info("DNQ", dnq_);
-//        record.info("DNC", dnc_);
+#if CALCULATE_ENTROPY == 1
+        record.info("DNC", dnc_);
+#endif
         record.samples("MU1P", node_mu1p_);
     }
 
@@ -284,35 +310,3 @@ void MutationStats::UpdateMaxDeNovoMutation(const Eigen::ArrayXXd &mat,
     }
 
 }
-
-
-#if CALCULATE_ENTROPY == 1
-void MutationStats::CalculateEntropy(dng::peel::workspace_t &work_nomut,
-                                     dng::TransitionVector &onemut_transition_matrices,
-                                     std::array<double, 5> max_entropies,
-                                     std::size_t ref_index) {
-
-
-    double total = 0.0;
-    double entropy = 0.0;
-
-    if (has_single_mut_) {
-
-        for (std::size_t i = work_nomut.founder_nodes.second; i < work_nomut.num_nodes; ++i) {
-            Eigen::ArrayXXd mat = (work_nomut.super[i].matrix() *
-                                   work_nomut.lower[i].matrix().transpose()).array() *
-                                  onemut_transition_matrices[i].array();
-            total += mat.sum();
-
-            entropy += (mat.array() == 0.0).select(mat.array(),
-                                                   mat.array() * mat.log()).sum();
-        }
-
-        entropy = (-entropy / total + log(total)) / M_LN2;
-        entropy /= max_entropies[ref_index];
-        dnc_ = std::round(100.0 * (1.0 - entropy));
-
-    }
-
-}
-#endif

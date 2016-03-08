@@ -70,9 +70,7 @@ SET_TESTS_PROPERTIES(build_gitkeep PROPERTIES
 include_directories(${CMAKE_SOURCE_DIR}/src/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(./src/)
-
 SET(UNITTEST_LIBRARIES Threads::Threads
-  add_executable(${testName} EXCLUDE_FROM_ALL ${test})
         Boost::PROGRAM_OPTIONS
         Boost::FILESYSTEM
         Boost::SYSTEM
@@ -169,15 +167,45 @@ endforeach (test)
 
 
 
-
 ################################################################################
+# temp Compile unit tests with *.cc
+IF(DEVEL_MODE)
+  ADD_DEFINITIONS(-DDNG_DEVEL)
+ENDIF()
+
+file(GLOB_RECURSE TESTS2 "testt_time*[cc|cpp]")
+foreach(test ${TESTS2})
+  get_filename_component(testName ${test} NAME_WE)
+  add_executable(${testName} EXCLUDE_FROM_ALL ${test}
+          ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/likelihood.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/newick.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/pedigree.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/mutation.cc
+          ${CMAKE_SOURCE_DIR}/src/lib/stats.cc
+          )
+
+  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
+
+  IF(DEVEL_MODE)
+    TARGET_LINK_LIBRARIES(${testName} Boost::TIMER)
+  ENDIF()
+#  add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
+#  add_test(${testName}_run ${testName})
+#  set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
+endforeach(test)
+
+
+
+# Temp Compile unit tests with *.cc
 # TODO: Use a different filename pattern for now (test2_* instead of test_*).
 # TODO: How to add min *.cc files instead of all *.cc later?
 include_directories(./)
 #include_directories(./lib/)
 
+add_definitions(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
 file(GLOB_RECURSE TESTS2 "test2_*[cc|cpp]")
-foreach(test ${TESTS2})
+foreach (test ${TESTS2})
   get_filename_component(testName ${test} NAME_WE)
   add_executable(${testName} EXCLUDE_FROM_ALL ${test}
           ${CMAKE_SOURCE_DIR}/src/lib/peeling.cc
@@ -191,19 +219,12 @@ foreach(test ${TESTS2})
           ${CMAKE_SOURCE_DIR}/src/lib/find_mutation.cc
           ${CMAKE_SOURCE_DIR}/src/lib/mutation_stats.cc
           )
-  target_link_libraries(${testName}
-          Threads::Threads
-          Boost::PROGRAM_OPTIONS
-          Boost::FILESYSTEM
-          Boost::SYSTEM
-          Boost::UNIT_TEST_FRAMEWORK
-          EIGEN3::EIGEN3
-          HTSLIB::HTSLIB
-          )
+  target_link_libraries(${testName} ${UNITTEST_LIBRARIES})
+
   add_test(${testName}_build "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target ${testName})
   add_test(${testName}_run ${testName})
   set_tests_properties(${testName}_run PROPERTIES DEPENDS ${testName}_build)
-endforeach(test)
+endforeach (test)
 
 ################################################################################
 
@@ -286,6 +307,7 @@ SET_TESTS_PROPERTIES(CALL_Sample5.3_SAM_SEP_HDR PROPERTIES
 
 ###########################################################################################
 # DNG-DNM Tests
+
 ADD_TEST(DNM_Help ${DNG_DNM_EXE} --h)
 SET_TESTS_PROPERTIES(DNM_Help PROPERTIES DEPENDS build_dng_dnm)
 SET_TESTS_PROPERTIES(DNM_Help PROPERTIES PASS_REGULAR_EXPRESSION "Usage:")
@@ -385,4 +407,3 @@ SET_TESTS_PROPERTIES(Phaser_Sample PROPERTIES PASS_REGULAR_EXPRESSION "DNM_pos 1
 SET_TESTS_PROPERTIES(Phaser_Sample PROPERTIES PASS_REGULAR_EXPRESSION "DNM_pos 1:182974758	INHERITED G	VARIANT A")
 SET_TESTS_PROPERTIES(Phaser_Sample PROPERTIES PASS_REGULAR_EXPRESSION "HAP POS 182974760 p1: GT p2: CA")
 SET_TESTS_PROPERTIES(Phaser_Sample PROPERTIES PASS_REGULAR_EXPRESSION "Base at DNM position: G Base at phasing position: G	 INFERRED PARENT OF ORIGIN for DNM: p2 SUPPORTING READ COUNT: 1")
-

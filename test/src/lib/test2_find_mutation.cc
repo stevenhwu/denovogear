@@ -51,17 +51,10 @@ const int NUM_TEST = 100;
 //  * utf::fixture<Fx>(std::string("FX"))
 //  * utf::fixture<Fx>(std::string("FX2")))
 //
-//  BOOST_AUTO_TEST_CASE(test1, * utf::fixture(&setup, &teardown))
-//  {
-//    BOOST_TEST_MESSAGE("running test1");
+//  BOOST_AUTO_TEST_CASE(test1, * utf::fixture(&setup, &teardown){
 //    BOOST_TEST(true);
 //  }
-//
-//  BOOST_AUTO_TEST_CASE(test2)
-//  {
-//    BOOST_TEST_MESSAGE("running test2");
-//    BOOST_TEST(true);
-//  }
+
 //
 //BOOST_DATA_TEST_CASE( test_case_arity1, data::xrange(5), my_var )
 //{
@@ -71,65 +64,49 @@ const int NUM_TEST = 100;
 //BOOST_PARAM_TEST_CASE(test_function, params_begin, params_end);
 //BOOST_AUTO_TEST_SUITE_END()
 
-
-//BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
-
-
-
 void setup() { BOOST_TEST_MESSAGE("set up fun"); }
 
 void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
 
-BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
+//BOOST_AUTO_TEST_SUITE(test_peeling_suite,  * utf::fixture<Fx>(std::string("FX")) )
+//BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
 
 
-BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
-//BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
-//    TrioWorkspace tw{};
 
-//    FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
-//    FindMutations find_mutation2 {min_prob, pedigree, test_param_1};
+//BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
+BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 
-    FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
+    FindMutations find_mutation {min_prob, pedigree, test_param_1};
 
-    FindMutations find_mutation2 {min_prob, pedigree, test_param_1};
+    BOOST_CHECK_EQUAL(find_mutation.min_prob_ , 0.01);
 
-//    FindMutations f2{find_mutation2};
-//    find_mutation2.min_prob_;
 
-//    ff.fm.min_prob_;
-//    find_mutation2.min_prob_;
-//    ff.get(find_mutation2);
-
-    BOOST_CHECK_EQUAL(find_mutation.getMin_prob_() , 0.01);
-
-    //getParams_()
-    BOOST_CHECK_EQUAL(find_mutation.getParams_().theta, 0.001);//test_param_1.theta);
-    BOOST_CHECK_EQUAL(find_mutation.getParams_().ref_weight, 1);//test_param_1.ref_weight);
+    BOOST_CHECK_EQUAL(find_mutation.params_.theta, 0.001);//test_param_1.theta);
+    BOOST_CHECK_EQUAL(find_mutation.params_.ref_weight, 1);//test_param_1.ref_weight);
 
     std::array<double, 4> expect_freqs{0.3, 0.2, 0.2, 0.3};
-    auto freqs1 = find_mutation.getParams_().nuc_freq;
+    auto freqs1 = find_mutation.params_.nuc_freq;
     boost_check_close_vector(expect_freqs, freqs1, 4);
 //    for (int j = 0; j < 4; ++j) {
 //        BOOST_CHECK_EQUAL(freqs1[j], expect_freqs[j]);
 //    }
     std::vector<std::array<double, 4>> expect_gamma{{0.98, 0.0005, 0.0005, 1.04},
                                                     {0.02, 0.075,  0.005,  1.18}};
-    auto gamma_a = find_mutation.getParams_().params_a;
+    auto gamma_a = find_mutation.params_.params_a;
     BOOST_CHECK_EQUAL(gamma_a.pi, expect_gamma[0][0]);
     BOOST_CHECK_EQUAL(gamma_a.phi, expect_gamma[0][1]);
     BOOST_CHECK_EQUAL(gamma_a.epsilon, expect_gamma[0][2]);
     BOOST_CHECK_EQUAL(gamma_a.omega, expect_gamma[0][3]);
 
-    auto gamma_b = find_mutation.getParams_().params_b;
+    auto gamma_b = find_mutation.params_.params_b;
     BOOST_CHECK_EQUAL(gamma_b.pi, expect_gamma[1][0]);
     BOOST_CHECK_EQUAL(gamma_b.phi, expect_gamma[1][1]);
     BOOST_CHECK_EQUAL(gamma_b.epsilon, expect_gamma[1][2]);
     BOOST_CHECK_EQUAL(gamma_b.omega, expect_gamma[1][3]);
 
-#if CALCULATE_ENTROPY == true
-    auto event = find_mutation.getEvent_();
+#if CALCULATE_ENTROPY == 1
+    auto event = find_mutation.event_;
     BOOST_CHECK_EQUAL(event.size(), 5);
     for (int k = 0; k < 5; ++k) {
         BOOST_CHECK_EQUAL(event[k], 0);
@@ -139,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_constructor, *utf::fixture(&setup, &teardown)) {
 
 
 
-BOOST_AUTO_TEST_CASE(test_prior, *utf::fixture(&setup, &teardown)) {
+BOOST_FIXTURE_TEST_CASE(test_prior, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 
     std::vector<std::array<double, 10>> expected_prior {
         {0.998951118846171, 0.000199760259730275, 0.000199760259730275, 0.000299640389595412, 9.98701448476561e-05, 3.99400699250774e-08, 5.99101048876161e-08, 9.98701448476561e-05, 5.99101048876161e-08, 0.000149820194797706},
@@ -149,8 +126,8 @@ BOOST_AUTO_TEST_CASE(test_prior, *utf::fixture(&setup, &teardown)) {
         {0.29979020979021, 0.00011988011988012, 0.00011988011988012, 0.00017982017982018, 0.19984015984016, 7.99200799200799e-05, 0.00011988011988012, 0.19984015984016, 0.00011988011988012, 0.29979020979021 }
     };
 
-    FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
-    auto *pArray = find_mutation.getGenotype_prior_();
+    FindMutations find_mutation {min_prob, pedigree, test_param_1};
+    auto *pArray = find_mutation.genotype_prior_;
 
     for (int i = 0; i < 5; ++i) {
         auto prior_array = pArray[i];
@@ -160,7 +137,7 @@ BOOST_AUTO_TEST_CASE(test_prior, *utf::fixture(&setup, &teardown)) {
 
 }
 
-BOOST_AUTO_TEST_CASE(test_full_transition, *utf::fixture(&setup, &teardown)) {
+BOOST_FIXTURE_TEST_CASE(test_full_transition, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 
     std::array<double, 4> freqs{0.3, 0.2, 0.2, 0.3};
     double mu = 1e-8;
@@ -181,19 +158,18 @@ BOOST_AUTO_TEST_CASE(test_full_transition, *utf::fixture(&setup, &teardown)) {
     auto exp_somatic_onemut = mitosis_diploid_matrix(orig, 1);
     auto exp_somatic_mean = mitosis_diploid_mean_matrix(orig);
 
-
-    FindMutationsGetter find_mutation {min_prob, pedigree, test_param_1};
-    auto full_matrices = find_mutation.getFull_transition_matrices_();
-    auto nomut_matrices = find_mutation.getNomut_transition_matrices_();
-    auto posmut_matrices = find_mutation.getPosmut_transition_matrices_();
-    auto onemut_matrices = find_mutation.getOnemut_transition_matrices_();
-    auto mean_matrices = find_mutation.getMean_matrices_();
-
     std::vector<TransitionMatrix> exp_full {{},{},exp_germline_full, exp_somatic_full, exp_somatic_full};
     std::vector<TransitionMatrix> exp_nomut {{},{},exp_germline_nomut, exp_somatic_nomut, exp_somatic_nomut};
     std::vector<TransitionMatrix> exp_posmut {{},{},exp_germline_posmut, exp_somatic_posmut, exp_somatic_posmut};
     std::vector<TransitionMatrix> exp_onemut {{},{},exp_germline_onemut, exp_somatic_onemut, exp_somatic_onemut};
     std::vector<TransitionMatrix> exp_mean {{},{},exp_germline_mean, exp_somatic_mean, exp_somatic_mean};
+
+    FindMutations find_mutation {min_prob, pedigree, test_param_1};
+    auto full_matrices = find_mutation.full_transition_matrices_;
+    auto nomut_matrices = find_mutation.nomut_transition_matrices_;
+    auto posmut_matrices = find_mutation.posmut_transition_matrices_;
+    auto onemut_matrices = find_mutation.onemut_transition_matrices_;
+    auto mean_matrices = find_mutation.mean_matrices_;
     for (int i = 0; i < 5; ++i) {
         boost_check_matrix(exp_full[i],   full_matrices[i]);
         boost_check_matrix(exp_nomut[i],  nomut_matrices[i]);
@@ -204,8 +180,7 @@ BOOST_AUTO_TEST_CASE(test_full_transition, *utf::fixture(&setup, &teardown)) {
 }
 
 
-BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
-
+BOOST_FIXTURE_TEST_CASE(test_operator, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 
 
     std::vector<peel::family_members_t> family {
@@ -213,16 +188,15 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
             {0,1,2},
             {0,3}
     };
-    min_prob = 0;
-    FindMutations::stats_t stats;
-    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
-    find_mutation.old_operator(read_depths, ref_index, &stats);
+    MutationStats stats(min_prob);
+    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    find_mutation.CalculateMutation(read_depths, ref_index, stats);
 
 
     double scale = setup_workspace(ref_index, read_depths);
 
     //Test basic stats
-    auto nomut_matrices = find_mutation.getNomut_transition_matrices_();
+    auto nomut_matrices = find_mutation.nomut_transition_matrices_;
     workspace.CleanupFast();
     dng::peel::up(workspace, family[0], nomut_matrices);
     dng::peel::to_father_fast(workspace, family[1], nomut_matrices);
@@ -230,14 +204,12 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
     double result_nomut = log((workspace.lower[0] * workspace.upper[0]).sum());
 
 
-    auto full_matrices = find_mutation.getFull_transition_matrices_();
+    auto full_matrices = find_mutation.full_transition_matrices_;
     workspace.CleanupFast();
     dng::peel::up(workspace, family[0], full_matrices );
     dng::peel::to_father(workspace, family[1], full_matrices );
     dng::peel::up(workspace, family[2], full_matrices );
     double result_full = log((workspace.lower[0] * workspace.upper[0]).sum());
-//    std::cout << "Expected: " << result_nomut << std::endl;
-//    std::cout << "Expected full: " << result_full << std::endl;
 
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
@@ -245,16 +217,12 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
     const double expected_lld = (result_full +scale) / M_LN10;
     const double expected_llh = result_full / M_LN10;
 
-    BOOST_CHECK_CLOSE(expected_mup, stats.mup, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(expected_lld, stats.lld, BOOST_CLOSE_THRESHOLD);
-    BOOST_CHECK_CLOSE(expected_llh, stats.llh, BOOST_CLOSE_THRESHOLD);
-
-
-    std::cout << stats.mup << "\t" << stats.llh << std::endl;
-    std::cout << "EXP: " << expected_mup << "\t" << expected_llh << std::endl;
+    BOOST_CHECK_CLOSE(expected_mup, stats.mup_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(expected_lld, stats.lld_, BOOST_CLOSE_THRESHOLD);
+    BOOST_CHECK_CLOSE(expected_llh, stats.llh_, BOOST_CLOSE_THRESHOLD);
 
     //Test posterior
-    full_matrices = find_mutation.getFull_transition_matrices_();
+    full_matrices = find_mutation.full_transition_matrices_;
     workspace.CleanupFast();
     dng::peel::up(workspace, family[0], full_matrices );
     dng::peel::to_father(workspace, family[1], full_matrices );
@@ -269,17 +237,17 @@ BOOST_AUTO_TEST_CASE(test_operator, *utf::fixture(&setup, &teardown)) {
         expected_posterior = WORKSPACE_T_MULTIPLE_UPPER_LOWER(workspace, i);
         expected_posterior /= expected_posterior.sum();
 
-        boost_check_close_vector(expected_posterior, stats.posterior_probabilities[i]);
+        boost_check_close_vector(expected_posterior, stats.posterior_probabilities_[i]);
     }
 
 
 
 }
 
-BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
-BOOST_AUTO_TEST_CASE(test_calculate_mutation_expected, *utf::fixture(&setup, &teardown)) {
 
-    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+BOOST_FIXTURE_TEST_CASE(test_calculate_mutation_expected, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
+
+    FindMutations find_mutation{min_prob, pedigree, test_param_1};
 
     MutationStats mutation_stats(min_prob);
     find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
@@ -298,13 +266,13 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation_expected, *utf::fixture(&setup, &te
 }
 
 
-BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) {
+BOOST_FIXTURE_TEST_CASE(test_calculate_mutation, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
     //TODO: Compare operator() with CalculateMutation ONLY, NOT a real test
 
 
     min_prob = 0; //Pass everything
     FindMutations::stats_t stats;
-    FindMutationsGetter find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, test_param_1};
     find_mutation.old_operator(read_depths, ref_index, &stats);
 
     MutationStats mutation_stats(min_prob);
@@ -339,14 +307,35 @@ BOOST_AUTO_TEST_CASE(test_calculate_mutation, *utf::fixture(&setup, &teardown)) 
                           BOOST_CLOSE_THRESHOLD);
     }
 
-#if CALCULATE_ENTROPY == true
-    BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc);
+#if CALCULATE_ENTROPY == 1
+    BOOST_CHECK_EQUAL(stats.dnc, mutation_stats.dnc_);
 #endif
 
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 
 
-BOOST_AUTO_TEST_SUITE_END()
+//BOOST_FIXTURE_TEST_SUITE(test_find_mutation_suite, TrioWorkspace )
+//BOOST_AUTO_TEST_CASE(test_find_mutation,  *utf::fixture(&setup, &teardown)) {}
+//BOOST_AUTO_TEST_SUITE_END()
+//With suite
+//Test module "dng::lib::find_mutation" has passed with:
+//6 test cases out of 6 passed
+//6298 assertions out of 6298 passed
+//
+//        Test suite "test_find_mutation_suite" has passed with:
+//6 test cases out of 6 passed
+//6298 assertions out of 6298 passed
+//
+//        Test case "test_find_mutation_suite/test_constructor" has passed with:
+//23 assertions out of 23 passed
+
+
+//Without suite
+//    Test module "dng::lib::find_mutation" has passed with:
+//  6 test cases out of 6 passed
+//  6298 assertions out of 6298 passed
+//
+//  Test case "test_constructor" has passed with:
+//    23 assertions out of 23 passed
 
