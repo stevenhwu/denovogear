@@ -47,11 +47,11 @@
 
 #include <utils/vcf_utils.h>
 #include <utils/assert_utils.h>
+#include <utils/boost_utils.h>
 #include <dng/find_mutation.h>
-#include <helpers/find_mutation_helper.h>
 #include <include/dng/workspace.h>
 
-#include "boost_utils.h"
+
 //#include <boost/test/unit_test.hpp>
 
 #include <dng/find_mutation_x.h>
