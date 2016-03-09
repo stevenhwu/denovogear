@@ -3,8 +3,8 @@
 ####### STEVEN CUSTOM CMAKE
 INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/utils")
 INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}")
-ADD_EXECUTABLE(dng-call_test
-        dng-call_test.cc
+ADD_EXECUTABLE(sw_dng_call
+        sw_dng_call.cc
         lib/likelihood.cc lib/newick.cc lib/pedigree.cc lib/peeling.cc
         lib/mutation.cc lib/stats.cc
 
@@ -16,14 +16,15 @@ ADD_EXECUTABLE(dng-call_test
         lib/workspace.cc
         )
 
-TARGET_LINK_LIBRARIES(dng-call_test
+TARGET_LINK_LIBRARIES(sw_dng_call
         HTSLIB::HTSLIB Threads::Threads
         EIGEN3::EIGEN3
         Boost::PROGRAM_OPTIONS Boost::FILESYSTEM Boost::SYSTEM
         )
 
 
-ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cc
+ADD_EXECUTABLE(sw_test_find_mutation 
+        vt/find_mutation_test.cc
         lib/pedigree.cc lib/peeling.cc lib/likelihood.cc lib/newick.cc lib/mutation.cc lib/stats.cc
         lib/pedigree_v2.cc
 
@@ -34,7 +35,7 @@ ADD_EXECUTABLE(dng_vt vt/find_mutation_test.cc
         lib/workspace.cc
         )
 
-TARGET_LINK_LIBRARIES(dng_vt
+TARGET_LINK_LIBRARIES(sw_test_find_mutation
         Threads::Threads
         Boost::PROGRAM_OPTIONS
         Boost::FILESYSTEM
@@ -48,7 +49,7 @@ TARGET_LINK_LIBRARIES(dng_vt
 
 
 IF(DEVEL_MODE)
-  TARGET_LINK_LIBRARIES(dng_vt Boost::TIMER)
+  TARGET_LINK_LIBRARIES(sw_test_find_mutation Boost::TIMER)
 ENDIF()
 
 #################################################################################
