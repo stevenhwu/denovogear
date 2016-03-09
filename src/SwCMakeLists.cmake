@@ -1,56 +1,36 @@
-
 #####################################################
 ####### STEVEN CUSTOM CMAKE
-INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/utils")
 INCLUDE_DIRECTORIES(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}")
-ADD_EXECUTABLE(sw_dng_call
-        sw_dng_call.cc
-        lib/likelihood.cc lib/newick.cc lib/pedigree.cc lib/peeling.cc
-        lib/mutation.cc lib/stats.cc
 
-        vt/calculateProbs.cc
-        utils/vcf_utils.h
-        utils/assert_utils.h
-        lib/find_mutation.cc
-        lib/mutation_stats.cc
-        lib/workspace.cc
-        )
-
-TARGET_LINK_LIBRARIES(sw_dng_call
-        HTSLIB::HTSLIB Threads::Threads
-        EIGEN3::EIGEN3
-        Boost::PROGRAM_OPTIONS Boost::FILESYSTEM Boost::SYSTEM
-        )
-
-
-ADD_EXECUTABLE(sw_test_find_mutation 
-        vt/find_mutation_test.cc
-        lib/pedigree.cc lib/peeling.cc lib/likelihood.cc lib/newick.cc lib/mutation.cc lib/stats.cc
-        lib/pedigree_v2.cc
-
-        utils/vcf_utils.h
-        utils/assert_utils.h
-        lib/find_mutation.cc
-        lib/mutation_stats.cc
-        lib/workspace.cc
-        )
-
-TARGET_LINK_LIBRARIES(sw_test_find_mutation
+SET(DNG_LIBRARIES
         Threads::Threads
         Boost::PROGRAM_OPTIONS
         Boost::FILESYSTEM
         Boost::SYSTEM
-        Boost::UNIT_TEST_FRAMEWORK
-
         EIGEN3::EIGEN3
-        HTSLIB::HTSLIB
-
-        )
+        HTSLIB::HTSLIB)
 
 
-IF(DEVEL_MODE)
-  TARGET_LINK_LIBRARIES(sw_test_find_mutation Boost::TIMER)
-ENDIF()
+## A lazy hack! which might be against whatever CMAKE recommend
+FILE(GLOB SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/lib/*cc")
+LIST(REMOVE_ITEM SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/lib/call.cc")
+
+ADD_EXECUTABLE(sw_dng_call
+        dng-call_test.cc
+        vt/calculateProbs.cc
+        ${SOURCE_FILES})
+
+TARGET_LINK_LIBRARIES(sw_dng_call ${DNG_LIBRARIES})
+
+ADD_EXECUTABLE(sw_test_find_mutation
+        vt/find_mutation_test.cc
+        ${SOURCE_FILES})
+
+TARGET_LINK_LIBRARIES(sw_test_find_mutation  ${DNG_LIBRARIES})
+
+IF (DEVEL_MODE)
+    TARGET_LINK_LIBRARIES(sw_test_find_mutation Boost::TIMER)
+ENDIF ()
 
 #################################################################################
 ## Compile unit tests

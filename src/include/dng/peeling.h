@@ -75,108 +75,101 @@ enum {
 
 
 //XXX: Maybe this should turn into a class, too many functions
-struct workspace_t {
-    IndividualVector upper; // Holds P(~Descendent_Data & G=g)
-    IndividualVector lower; // Holds P( Descendent_Data | G=g)
-    ParentVector super; // Holds P(~Descendent_Data & G=g) for parent nodes
+    struct workspace_t {
+        IndividualVector upper; // Holds P(~Descendent_Data & G=g)
+        IndividualVector lower; // Holds P( Descendent_Data | G=g)
+        ParentVector super; // Holds P(~Descendent_Data & G=g) for parent nodes
 
-    bool dirty_lower = false;
+        bool dirty_lower = false;
 
-    double forward_result;
+        double forward_result;
 
-    // Temporary data used by some peeling ops
-    PairedGenotypeArray paired_buffer;
+        // Temporary data used by some peeling ops
+        PairedGenotypeArray paired_buffer;
 
-    // Information about the pedigree
-    std::size_t num_nodes = 0;
-    std::pair<std::size_t, std::size_t> founder_nodes;
-    std::pair<std::size_t, std::size_t> germline_nodes;
-    std::pair<std::size_t, std::size_t> somatic_nodes;
-    std::pair<std::size_t, std::size_t> library_nodes;
+        // Information about the pedigree
+        std::size_t num_nodes = 0;
+        std::pair<std::size_t, std::size_t> founder_nodes;
+        std::pair<std::size_t, std::size_t> germline_nodes;
+        std::pair<std::size_t, std::size_t> somatic_nodes;
+        std::pair<std::size_t, std::size_t> library_nodes;
 
-    // Resize the workspace to fit a pedigree with sz nodes
-    void Resize(std::size_t sz) {
-        num_nodes = sz;
-        upper.resize(num_nodes);
-        super.resize(num_nodes);
-        lower.assign(num_nodes, DNG_INDIVIDUAL_BUFFER_ONES);
-        paired_buffer.resize(100, 1);
-        dirty_lower = false;
-    }
-
-    // Cleanup after a backwards peeling algorithm
-    void Cleanup() {
-        boost::fill(lower, DNG_INDIVIDUAL_BUFFER_ONES);
-        dirty_lower = false;
-    }
-
-    // Cleanup after a backwards peeling algorithm
-    // Do not update libraries since they might be set in another operation
-    void CleanupFast() {
-        // TODO: create a check that sees if this has been done before the
-        // forward algorithm.
-
-        boost::fill_n(lower, somatic_nodes.second, DNG_INDIVIDUAL_BUFFER_ONES);
-        dirty_lower = false;
-    }
-
-    void SetFounders(const GenotypeArray &prior) {
-        assert(founder_nodes.first <= founder_nodes.second);
-        std::fill(upper.begin() + founder_nodes.first,
-                  upper.begin() + founder_nodes.second, prior);
-    }
-
-    template<typename T>
-    void SetLibraries(const T &range) {
-        assert(boost::size(range) == library_nodes.second - library_nodes.first);
-        boost::copy(range, lower.begin() + library_nodes.first);
-    }
-
-    // calculate genotype likelihoods and store in the lower library vector, maybe/maybe not
-    double SetGenotypeLikelihood(
-            dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
-            const std::vector<depth_t> &depths, std::size_t ref_index){
-        double scale = 0.0, stemp;
-        for(std::size_t u = 0; u < depths.size(); ++u) {
-            std::tie(lower[library_nodes.first + u], stemp) =
-                    genotype_likelihood(depths[u], ref_index);
-            scale += stemp;
+        // Resize the workspace to fit a pedigree with sz nodes
+        void Resize(std::size_t sz) {
+            num_nodes = sz;
+            upper.resize(num_nodes);
+            super.resize(num_nodes);
+            lower.assign(num_nodes, DNG_INDIVIDUAL_BUFFER_ONES);
+            paired_buffer.resize(100, 1);
+            dirty_lower = false;
         }
-        return scale;
 
-    }
+        // Cleanup after a backwards peeling algorithm
+        void Cleanup() {
+            boost::fill(lower, DNG_INDIVIDUAL_BUFFER_ONES);
+            dirty_lower = false;
+        }
+
+        // Cleanup after a backwards peeling algorithm
+        // Do not update libraries since they might be set in another operation
+        void CleanupFast() {
+            // TODO: create a check that sees if this has been done before the
+            // forward algorithm.
+
+            boost::fill_n(lower, somatic_nodes.second, DNG_INDIVIDUAL_BUFFER_ONES);
+            dirty_lower = false;
+        }
+
+        void SetFounders(const GenotypeArray &prior) {
+            assert(founder_nodes.first <= founder_nodes.second);
+            std::fill(upper.begin() + founder_nodes.first,
+                      upper.begin() + founder_nodes.second, prior);
+        }
+
+        template<typename T>
+        void SetLibraries(const T &range) {
+            assert(boost::size(range) == library_nodes.second - library_nodes.first);
+            boost::copy(range, lower.begin() + library_nodes.first);
+        }
+
+        // calculate genotype likelihoods and store in the lower library vector, maybe/maybe not
+        double SetGenotypeLikelihood(
+                dng::genotype::DirichletMultinomialMixture &genotype_likelihood,
+                const std::vector<depth_t> &depths, std::size_t ref_index) {
+            double scale = 0.0, stemp;
+            for (std::size_t u = 0; u < depths.size(); ++u) {
+                std::tie(lower[library_nodes.first + u], stemp) =
+                        genotype_likelihood(depths[u], ref_index);
+                scale += stemp;
+            }
+            return scale;
+
+        }
 
 
-    inline dng::GenotypeArray multiply_upper_lower(std::size_t index){
+        inline dng::GenotypeArray multiply_upper_lower(std::size_t index) {
 
-        return (upper[index] * lower[index]);
-    }
+            return (upper[index] * lower[index]);
+        }
 
-
-};
+    };
 
 
 typedef std::vector<std::size_t> family_members_t;
 
-enum class Parents : bool {Father=false, Mother=true};
+enum Parents : std::size_t {Father=0, Mother=1};
 //enum class Parents : std::size_t {Father=0, Mother=1};
-//TODO: HOW TO?? auto dad = family[Parents::Father]; Dad always 0, Mom always 1
+
 
 // utility
-dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
+dng::PairedGenotypeArray sum_over_children(workspace_t &work,
+                                           const family_members_t &family,
                                            const TransitionVector &mat);
 
-dng::PairedGenotypeArray sum_over_children(workspace_t &work, const family_members_t &family,
-                                           const TransitionVector &mat, int first_child_index);
-
-[[deprecated]] dng::GenotypeArray multiply_upper_lower(workspace_t &work, size_t index);
-
-
-[[deprecated]] dng::GenotypeArray multiply_lower_upper(workspace_t &work, size_t index);
-
-[[deprecated]]
-dng::PairedGenotypeArray kroneckerProductDadMom(workspace_t &work,
-                                                std::size_t dad, std::size_t mom);
+dng::PairedGenotypeArray sum_over_children(workspace_t &work,
+                                           const family_members_t &family,
+                                           const TransitionVector &mat,
+                                           int first_child_index);
 
 
 // Core operations
@@ -185,15 +178,8 @@ dng::GenotypeArray up_core(workspace_t &work, const family_members_t &family,
 
 
 dng::GenotypeArray to_parent_core(workspace_t &work, const family_members_t &family,
-                                  const TransitionVector &mat, const Parents to_parent);
-
-[[deprecated]]
-dng::GenotypeArray to_father_core(workspace_t &work, const family_members_t &family,
-                                  const TransitionVector &mat);
-
-[[deprecated]]
-dng::GenotypeArray to_mother_core(workspace_t &work, const family_members_t &family,
-                                  const TransitionVector &mat);
+                                  const TransitionVector &mat,
+                                  const Parents other_parent);
 
 
         // Basic peeling operations
