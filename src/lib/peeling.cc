@@ -48,28 +48,6 @@ if (PEELING_VERBOSE_LEVEL > 0) {std::cerr << std::endl;}
 
 
 
-[[deprecated]] dng::GenotypeArray dng::peel::multiply_upper_lower(workspace_t &work, std::size_t index){
-
-    return (work.upper[index] * work.lower[index]);
-}
-
-[[deprecated]]
-dng::GenotypeArray dng::peel::multiply_lower_upper(workspace_t &work, std::size_t index){
-    return multiply_upper_lower(work, index);
-}
-
-[[deprecated]]
-dng::PairedGenotypeArray dng::peel::kroneckerProductDadMom(workspace_t &work, std::size_t dad, std::size_t mom){
-
-    dng::PairedGenotypeArray result = kroneckerProduct(
-            WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix(),
-            WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix()
-    );
-    return result;
-
-}
-
-
 // Family Order: Father, Mother, Child1, Child2, ...
 dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
                                                       const TransitionVector &mat) {
@@ -80,9 +58,9 @@ dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const f
 // Family Order: Father, Mother, Child1, Child2, ...
 dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
                                                       const TransitionVector &mat, int first_child_index) {
-//    assert(family.size() >= 3);
-//    assert(family.size() >= first_child_index);
-//    PairedGenotypeArray buffer = PairedGenotypeArray::Ones(100,1);
+    assert(family.size() >= 3);
+    assert(family.size() >= first_child_index);
+
     PairedGenotypeArray buffer = (mat[family[first_child_index]] * work.lower[family[first_child_index]].matrix()).array();
     for(std::size_t i = first_child_index+1; i < family.size(); ++i) {
         buffer *= (mat[family[i]] * work.lower[family[i]].matrix()).array();
@@ -105,30 +83,22 @@ dng::GenotypeArray dng::peel::up_core(workspace_t &work, const family_members_t 
 
 
 // Family Order: Father, Mother, Child1, Child2, ...
-dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work, const family_members_t &family,
-                                             const TransitionVector &mat, const Parents to_parent) {
+dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work,
+                                             const family_members_t &family,
+                                             const TransitionVector &mat,
+                                             const Parents other_parent) {
 
     assert(family.size() >= 3);
-    auto dad = family[0];
-    auto mom = family[1];
+    auto parent_index = family[other_parent];
 
     work.paired_buffer = sum_over_children(work, family, mat, 2);
     work.paired_buffer.resize(10, 10);
-
-    GenotypeArray parent_array;
-    if (to_parent == Parents::Father) {
-        parent_array = (work.paired_buffer.matrix() *
-                        WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, mom).matrix()).array();
+    if (other_parent == Parents::Father) {
+        work.paired_buffer.transposeInPlace();
     }
-
-    else if (to_parent == Parents::Mother) {
-        parent_array = (work.paired_buffer.matrix().transpose() *
-                        WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, dad).matrix() ).array();
-    }
-    else {
-        //ERROR: Not possible until we add more enum!!
-    }
-
+    GenotypeArray parent_array = (work.paired_buffer.matrix() *
+                                  WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, parent_index)
+                                          .matrix()).array();
 
     return parent_array;
 }
@@ -182,8 +152,8 @@ void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
 void dng::peel::to_father(workspace_t &work, const family_members_t &family,
                           const TransitionVector &mat) {
     PEELING_VERBOSE;
-    auto dad = family[0];
-    work.lower[dad] *= to_parent_core(work, family, mat, Parents::Father);
+    auto dad = family[Parents::Father];
+    work.lower[dad] *= to_parent_core(work, family, mat, Parents::Mother);
 
 }
 
@@ -191,8 +161,8 @@ void dng::peel::to_father(workspace_t &work, const family_members_t &family,
 void dng::peel::to_father_fast(workspace_t &work, const family_members_t &family,
                                const TransitionVector &mat) {
     PEELING_VERBOSE;
-    auto dad = family[0];
-    work.lower[dad] =  to_parent_core(work, family, mat, Parents::Father);
+    auto dad = family[Parents::Father];
+    work.lower[dad] =  to_parent_core(work, family, mat, Parents::Mother);
 
 }
 
@@ -200,16 +170,16 @@ void dng::peel::to_father_fast(workspace_t &work, const family_members_t &family
 void dng::peel::to_mother(workspace_t &work, const family_members_t &family,
                           const TransitionVector &mat) {
     PEELING_VERBOSE;
-    auto mom = family[1];
-    work.lower[mom] *= to_parent_core(work, family, mat, Parents::Mother);
+    auto mom = family[Parents::Mother];
+    work.lower[mom] *= to_parent_core(work, family, mat, Parents::Father);
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
 void dng::peel::to_mother_fast(workspace_t &work,
                                const family_members_t &family, const TransitionVector &mat) {
     PEELING_VERBOSE;
-    auto mom = family[1];
-    work.lower[mom] = to_parent_core(work, family, mat, Parents::Mother);
+    auto mom = family[Parents::Mother];
+    work.lower[mom] = to_parent_core(work, family, mat, Parents::Father);
 }
 
 
@@ -381,43 +351,6 @@ void dng::peel::to_child_reverse(workspace_t &work,
 
 
 
-
-
-// Family Order: Father, Mother, Child1, Child2, ...
-//[[deprecated]]
-dng::GenotypeArray dng::peel::to_father_core(workspace_t &work, const family_members_t &family,
-                                             const TransitionVector &mat) {
-
-    assert(family.size() >= 3);
-    auto dad = family[0];
-    auto mom = family[1];
-
-//    work.paired_buffer = sum_over_children(work, family, mat);
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-//    PairedGenotypeArray other_parent = multiply_upper_lower(work, mom);
-//    GenotypeArray dad_array = (work.paired_buffer.matrix() * other_parent.matrix() ).array();
-    GenotypeArray dad_array = to_parent_core(work, family, mat, Parents::Father);
-
-    return dad_array;
-}
-// Family Order: Father, Mother, Child1, Child2, ...
-[[deprecated]]
-dng::GenotypeArray dng::peel::to_mother_core(workspace_t &work, const family_members_t &family,
-                                             const TransitionVector &mat) {
-
-    assert(family.size() >= 3);
-    auto dad = family[0];
-    auto mom = family[1];
-
-//    work.paired_buffer = sum_over_children(work, family, mat);
-//    // Include Mom
-//    work.paired_buffer.resize(10, 10);
-//    PairedGenotypeArray other_parent = multiply_upper_lower(work, dad);
-//    GenotypeArray mom_array = (work.paired_buffer.matrix().transpose() * other_parent.matrix() ).array();
-    GenotypeArray  mom_array = to_parent_core(work, family, mat, Parents::Mother);
-    return mom_array;
-}
 
 
 

@@ -123,6 +123,7 @@ FOREACH(test ${TESTS2})
 ENDFOREACH(test)
 
 
+ADD_TEST(build_testdata "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target testdata)
 
 # TODO: Use a different filename pattern for now (test2_* instead of test_*).
 ADD_DEFINITIONS(-DTESTDATA_DIR=\"${TESTDATA_DIR}\")
@@ -150,7 +151,7 @@ ENDFOREACH (test)
 
 
 # Full executable tests
-ADD_TEST(build_testdata "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target testdata)
+
 ADD_TEST(build_dng_call "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target dng-call)
 ADD_TEST(build_dng_dnm "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target dng-dnm)
 ADD_TEST(build_dng_phaser "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target dng-phaser)

@@ -1,6 +1,9 @@
 /*
  * Copyright (c) 2014-2015 Reed A. Cartwright
+ * Copyright (c) 2016 Steven H. Wu
  * Authors:  Reed A. Cartwright <reed@cartwrig.ht>
+ *           Steven H. Wu <stevenwu@asu.edu>
+ *
  *
  * This file is part of DeNovoGear.
  *
@@ -16,8 +19,6 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-//#include <iostream>
 
 #include <dng/mutation_stats.h>
 
