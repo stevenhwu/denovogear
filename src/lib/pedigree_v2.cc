@@ -935,3 +935,295 @@ void dng::PedigreeV2::CreatePeelingOps(dng::Graph &pedigree_graph, const std::ve
 //
 //
 //}
+
+
+void dng::PedigreeV2::ConstructPeelingMachine() {
+    using namespace dng::peel;
+    peeling_functions_.clear();
+    peeling_functions_.reserve(peeling_ops_.size());
+    peeling_functions_ops_.reserve(peeling_ops_.size());
+    peeling_reverse_functions_.reserve(peeling_ops_.size());
+    std::vector<std::size_t> lower_written(num_nodes_, -1);
+    for(std::size_t i = 0 ; i < peeling_ops_.size(); ++i) {
+        auto a = peeling_ops_[i];
+        const auto &fam = family_members_[i];
+        auto w = fam[info[a].writes_to];
+        int b = a;
+        switch(a) {
+            case op::DOWN:
+                // If the lower of the parent has never been written to, we can use the fast version
+                b = (lower_written[fam[0]] == -1) ? op::UPFAST + b : b;
+                break;
+            case op::TOCHILD:
+                // If the we only have one child, we can use the fast version
+                b = (fam.size() == 3) ? op::UPFAST + b : b;
+                break;
+            case op::TOMOTHER:
+            case op::TOFATHER:
+            case op::UP:
+                // If the lower of the destination has never been written to, we can use the fast version
+                b = (lower_written[w] == -1) ? op::UPFAST + b : b;
+                break;
+            default:
+                assert(false); // should never get here
+                break;
+        }
+        peeling_functions_ops_.push_back(static_cast<decltype(op::NUM)>(b));
+        peeling_functions_.push_back(functions[b]);
+        peeling_reverse_functions_.push_back(reverse_functions[b]);
+
+        // If the operation writes to a lower value, make note of it
+        if(info[a].writes_lower) {
+            lower_written[w] = i;
+        }
+    }
+}
+
+
+void dng::PedigreeV2::PrintMachine(std::ostream &os) {
+    os << "Init Op\n";
+    for(int i = first_founder_; i < first_nonfounder_; ++i) {
+        os << "\tw\tupper[" << i << "] // " << labels_[i] << "\n";
+    }
+    for(int i = first_library_; i < num_nodes_; ++i) {
+        os << "\tw\tlower[" << i << "] // "
+        << labels_[i]
+        << "\n";
+    }
+    for(int i = 0; i < peeling_functions_ops_.size(); ++i) {
+        const auto &fam = family_members_[i];
+        os << "Peeling Op " << i + 1;
+        switch(peeling_functions_ops_[i]) {
+            case peel::op::DOWNFAST:
+                os << " (DownFast)\n";
+                os << "\tw\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tupper[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                break;
+            case peel::op::DOWN:
+                os << " (Down)\n";
+                os << "\tw\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tupper[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                break;
+            case peel::op::UPFAST:
+                os << " (UpFast)\n";
+                os << "\tw\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                break;
+            case peel::op::UP:
+                os << " (Up)\n";
+                os << "\trw\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                break;
+            case peel::op::TOFATHERFAST:
+                os << " (ToFatherFast)\n";
+                os << "\tw\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                for(int j = 2; j < fam.size(); ++j) {
+                    os << "\tr\tlower[" << fam[j] << "] // " << labels_[fam[j]] << "\n";
+                }
+                break;
+            case peel::op::TOFATHER:
+                os << " (ToFather)\n";
+                os << "\trw\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                for(int j = 2; j < fam.size(); ++j) {
+                    os << "\tr\tlower[" << fam[j] << "] // " << labels_[fam[j]] << "\n";
+                }
+                break;
+            case peel::op::TOMOTHERFAST:
+                os << " (ToMotherFast)\n";
+                os << "\tw\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tupper[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                for(int j = 2; j < fam.size(); ++j) {
+                    os << "\tr\tlower[" << fam[j] << "] // " << labels_[fam[j]] << "\n";
+                }
+                break;
+            case peel::op::TOMOTHER:
+                os << " (ToMother)\n";
+                os << "\trw\tlower[" << fam[0] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tupper[" << fam[1] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[0]] << "\n";
+                for(int j = 2; j < fam.size(); ++j) {
+                    os << "\tr\tlower[" << fam[j] << "] // " << labels_[fam[j]] << "\n";
+                }
+                break;
+            case peel::op::TOCHILDFAST:
+                os << " (ToChildFast)\n";
+                os << "\tw\tupper[" << fam[2] << "] // " << labels_[fam[2]] << "\n";
+                os << "\tr\tupper[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                break;
+            case peel::op::TOCHILD:
+                os << " (ToChild)\n";
+                os << "\tw\tupper[" << fam[2] << "] // " << labels_[fam[2]] << "\n";
+                os << "\tr\tupper[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tlower[" << fam[0] << "] // " << labels_[fam[0]] << "\n";
+                os << "\tr\tupper[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                os << "\tr\tlower[" << fam[1] << "] // " << labels_[fam[1]] << "\n";
+                for(int j = 3; j < fam.size(); ++j) {
+                    os << "\tr\tlower[" << fam[j] << "] // " << labels_[fam[j]] << "\n";
+                }
+                break;
+            default:
+                os << " (Unknown " << peeling_functions_ops_[i] << ")\n";
+        }
+    }
+
+    os << "Root Op\n";
+    for(int i = 0; i < roots_.size(); ++i) {
+        os << "\tr\tupper[" << roots_[i] << "] // " << labels_[roots_[i]] << "\n";
+        os << "\tr\tlower[" << roots_[i] << "] // " << labels_[roots_[i]] << "\n";
+    }
+}
+
+void dng::PedigreeV2::PrintTable(std::ostream &os) {
+    std::vector<int> write_low(num_nodes_, -1);
+    std::vector<int> write_up(num_nodes_, -1);
+
+    for(int i = first_founder_; i < first_nonfounder_; ++i) {
+        write_up[i] = 0;
+    }
+    for(int i = first_library_; i < num_nodes_; ++i) {
+        write_low[i] = 0;
+    }
+    for(int i = 0; i < peeling_ops_.size(); ++i) {
+        const auto &fam = family_members_[i];
+        switch(peeling_ops_[i]) {
+            case peel::op::DOWN:
+            case peel::op::DOWNFAST:
+                write_up[fam[0]] = i + 1;
+                break;
+            case peel::op::TOCHILD:
+            case peel::op::TOCHILDFAST:
+                write_up[fam[2]] = i + 1;
+                break;
+            case peel::op::UP:
+            case peel::op::UPFAST:
+            case peel::op::TOFATHER:
+            case peel::op::TOFATHERFAST:
+                write_low[fam[0]] = i + 1;
+                break;
+            case peel::op::TOMOTHER:
+            case peel::op::TOMOTHERFAST:
+                write_low[fam[1]] = i + 1;
+            default:
+                break;
+        }
+    }
+    os << "Node\tLower\tUpper\n";
+    for(int i = 0; i < num_nodes_; ++i) {
+        os << i << "\t" << write_low[i] << "\t" << write_up[i] << "\n";
+    }
+}
+
+// void dng::PedigreeV2::PrintStates(std::ostream &os, double scale) {
+//     for(int i = 0; i < lower_.size(); ++i) {
+//         os << "Node " << i << " // " << labels_[i] << "\n";
+//         os << "  Upper\t" << upper_[i].transpose() << "\n";
+//         os << "  Lower\t" << lower_[i].transpose() << "\n";
+//         auto p = upper_[i] * lower_[i];
+//         auto s = p.sum();
+//         os << "  Prod\t" << p.transpose() << "\n";
+//         os << "  Cond\t" << p.transpose() / s << "\n";
+//         os << "  LogSum\t" << log(s) + scale << "\n";
+//         os << "\n";
+//     }
+// }
+
+std::vector<std::string> dng::PedigreeV2::BCFHeaderLines() const {
+    using namespace std;
+    vector<string> ret = { "##META=<ID=FatherMR,Type=Float,Number=1,Description=\"Paternal mutation rate parameter\">",
+                           "##META=<ID=MotherMR,Type=Float,Number=1,Description=\"Maternal mutation rate parameter\">",
+                           "##META=<ID=OriginalMR,Type=Float,Number=1,Description=\"Somatic or library mutation rate parameter\">"
+    };
+
+    string head{"##PEDIGREE=<ID="};
+    for(size_t child = first_nonfounder_; child < num_nodes_; ++child) {
+        auto parents = transitions_[child];
+        if(parents.parent2 != -1) {
+            ret.push_back(head + labels_[child]
+                          + ",Father=" + labels_[parents.parent1]
+                          + ",Mother=" + labels_[parents.parent2]
+                          + ",FatherMR=" + utility::to_pretty(parents.length1)
+                          + ",MotherMR=" + utility::to_pretty(parents.length2)
+                          + ">"
+            );
+        } else {
+            ret.push_back(head + labels_[child]
+                          + ",Original=" + labels_[parents.parent1]
+                          + ",OriginalMR=" + utility::to_pretty(parents.length1)
+                          + ">"
+            );
+        }
+    }
+    return ret;
+}
+//
+//
+//bool dng::Pedigree::Equal(dng::Pedigree &other_ped) {
+//
+//    AssertEqual(num_nodes_, other_ped.num_nodes());
+//    AssertEqual(first_founder_, other_ped.first_founder_);
+//    AssertEqual(first_nonfounder_, other_ped.first_nonfounder_);
+//    AssertEqual(first_somatic_, other_ped.first_somatic_);
+//    AssertEqual(first_library_, other_ped.first_library_);
+//
+//    auto other_labels = other_ped.labels();
+//    AssertVectorEqual(labels_, other_labels);
+//
+//    //TODO: How to iterate through struct? without create another function in struct?
+//    auto other_transitions = other_ped.transitions();
+//    for (int j = 0; j < transitions_.size(); ++j) {
+//        assert(transitions_[j].type == other_transitions[j].type);
+//        assert(transitions_[j].parent1 == other_transitions[j].parent1);
+//        assert(transitions_[j].parent2 == other_transitions[j].parent2);
+//        assert(transitions_[j].length1 == other_transitions[j].length1);
+//        assert(transitions_[j].length2 == other_transitions[j].length2);
+//    }
+//
+//    auto other_roots = other_ped.roots_;
+//    AssertVectorEqual(roots_, other_roots);
+//
+//    auto other_peeling_ops = other_ped.peeling_ops_;
+//    AssertVectorEqual(peeling_ops_, other_peeling_ops);
+//
+//    auto other_peeling_function_ops = other_ped.peeling_functions_ops_;
+//    AssertVectorEqual(peeling_functions_ops_, other_peeling_function_ops);
+//
+//
+//    auto other_peeling_functions = other_ped.peeling_functions_;
+//    for (int j = 0; j < peeling_functions_.size() - 1; ++j) {
+//        int op_index = peeling_functions_ops_[j];
+//
+//        assert(dng::peel::functions[op_index] ==
+//               other_peeling_functions[j]); //Check against expected dng::peel::functions
+//        assert(peeling_functions_[j] == other_peeling_functions[j]); //Check against others
+//
+//    }
+//
+//    auto other_peeling_reverse_functions = other_ped.peeling_reverse_functions_;
+//    for (int j = 0; j < peeling_reverse_functions_.size() - 1; ++j) {
+//        int op_index = peeling_functions_ops_[j];
+//        assert(dng::peel::reverse_functions[op_index] ==
+//               other_peeling_reverse_functions[j]); //Check against expected dng::peel::functions
+//        assert(peeling_reverse_functions_[j] == other_peeling_reverse_functions[j]); //Check against others
+//
+//    }
+//
+//
+//    auto other_family_members_ = other_ped.family_members_;
+//    AssertEqual(family_members_.size(), other_family_members_.size());
+//    for (int k = 0; k < family_members_.size(); ++k) {
+//        AssertVectorEqual(family_members_[k], other_family_members_[k]);
+//    }
+//
+//    return true;
+//
+//
+//}

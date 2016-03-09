@@ -80,6 +80,13 @@ struct ReadTrioFromFile {
                           .options(int_desc_).positional(pos_desc_).run(), vm_);
         po::notify(vm_);
 
+        const char example_data[] = "data:@HD\tVN:1.4\n"
+"@RG\tID:H03N7.1\t PL:illumina\tPU:H03N7ADXX130107.1.ACTTGAAT\tLB:Solexa-135851\tSM:NA12891\tCN:BI"
+"@RG\tID:H03N7.2\t PL:illumina\tPU:H03N7ADXX130107.2.ACTTGAAT\tLB:Solexa-135851\tSM:NA12891\tCN:BI";
+        
+        
+        hts::bam::File bam_file {example_data ,"r"};
+
         // Parse pedigree from file
 
         std::ifstream ped_file(arg.ped);
