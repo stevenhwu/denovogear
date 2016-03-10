@@ -23,7 +23,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <dng/pedigree_v2.h>
+#include <dng/relationship_graph.h>
 #include <dng/pedigree.h>
 
 #include <fixture/fixture_read_trio_from_file.h>

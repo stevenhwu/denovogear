@@ -26,7 +26,20 @@
 #include <functional>
 #include <cmath>
 #include <array>
+#include <algorithm>
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/biconnected_components.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <boost/graph/undirected_dfs.hpp>
+#include <boost/property_map/vector_property_map.hpp>
+#include <boost/range/algorithm/find.hpp>
+#include <boost/range/algorithm/replace.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include <boost/algorithm/cxx11/any_of.hpp>
+
+#include <dng/graph.h>
+#include <dng/mutation.h>
 #include <dng/matrix.h>
 #include <dng/io/ped.h>
 #include <dng/newick.h>
@@ -202,6 +215,7 @@ protected:
         PAIR = 2,
         TRIO = 3
     };
+
     struct FamilyInfo {
         FamilyType family_type;
         family_labels_t family_labels;//(num_families);

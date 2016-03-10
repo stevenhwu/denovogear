@@ -19,24 +19,10 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dng/pedigree_v2.h>
-#include <dng/graph.h>
-#include <dng/mutation.h>
 
-#include <algorithm>
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/biconnected_components.hpp>
-#include <boost/graph/connected_components.hpp>
-#include <boost/graph/undirected_dfs.hpp>
-#include <boost/property_map/vector_property_map.hpp>
-#include <boost/range/algorithm/find.hpp>
-#include <boost/range/algorithm/replace.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
-#include <boost/timer/timer.hpp>
-#include <utils/assert_utils.h>
-#include <gdbm.h>
+
+#include <dng/relationship_graph.h>
 
 
 #define DNG_GL_PREFIX "GL-"
