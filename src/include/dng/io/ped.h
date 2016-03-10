@@ -49,8 +49,8 @@ public:
             boost::multi_index::identity<std::string>>
             >> NameContainer;
     //TODO: Move enum class Gender to somewhere else?? used in graph property, should not inclued io:Pedigree
-    enum class Gender : char {
-        Unknown = 0, Male = 1, Female = 2
+    enum class Gender : size_t {
+        Unknown = 0, Male = 1, Female = 2, Both = 3
     };
 
     struct Member {

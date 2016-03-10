@@ -37,13 +37,14 @@ struct FixturePedigree: public ReadTrioFromFile {
 
 
     dng::Pedigree pedigree;
-    dng::PedigreeV2 pedigree_v2;
+    dng::RelationshipGraph relationship_graph;
+
 
     FixturePedigree(std::string s = "FixturePedigree") : ReadTrioFromFile(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
         pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-        pedigree_v2.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+        relationship_graph.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
 
     }
 
@@ -173,9 +174,9 @@ BOOST_AUTO_TEST_CASE(test_pedigree_equal, *utf::fixture(&setup, &teardown)) {
 
 BOOST_AUTO_TEST_CASE(test_constructor_2, *utf::fixture(&setup, &teardown)) {
 
-    BOOST_CHECK_EQUAL(5, pedigree_v2.num_nodes());
+    BOOST_CHECK_EQUAL(5, relationship_graph.num_nodes());
 
-    auto workspace = pedigree_v2.CreateWorkspace();
+    auto workspace = relationship_graph.CreateWorkspace();
     BOOST_CHECK_EQUAL(0, workspace.founder_nodes.first);
     BOOST_CHECK_EQUAL(2, workspace.founder_nodes.second);
     BOOST_CHECK_EQUAL(0, workspace.germline_nodes.first);
@@ -186,7 +187,7 @@ BOOST_AUTO_TEST_CASE(test_constructor_2, *utf::fixture(&setup, &teardown)) {
     BOOST_CHECK_EQUAL(5, workspace.library_nodes.second);
 
 
-    auto labels = pedigree_v2.labels();
+    auto labels = relationship_graph.labels();
 
     const std::vector<std::string> expected_labels = {
             "GL-1", // founder 1
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(test_constructor_2, *utf::fixture(&setup, &teardown)) {
             {Pedigree::TransitionType::Somatic, 1, size_t_negative_one, arg.mu_somatic + arg.mu_library,0}
     };
 
-    auto transitions = pedigree_v2.transitions();
+    auto transitions = relationship_graph.transitions();
     for (int k = 0; k < 5; ++k) {
         auto expected = expected_transitions[k];
         auto actual = transitions[k];
@@ -228,10 +229,10 @@ BOOST_AUTO_TEST_CASE(test_constructor_2, *utf::fixture(&setup, &teardown)) {
 
 BOOST_AUTO_TEST_CASE(test_pedigree_v2, *utf::fixture(&setup, &teardown)) {
 
-    BOOST_CHECK_EQUAL(5, pedigree_v2.num_nodes());
+    BOOST_CHECK_EQUAL(5, relationship_graph.num_nodes());
 
     std::vector<peel::family_members_t>
-            family = pedigree_v2.inspect_family_members();
+            family = relationship_graph.inspect_family_members();
     std::vector<peel::family_members_t> expected_family = {
             {1, 4},
             {0, 1, 2},
@@ -242,14 +243,14 @@ BOOST_AUTO_TEST_CASE(test_pedigree_v2, *utf::fixture(&setup, &teardown)) {
         BoostCheckEqualVector(expected_family, family);
     }
 
-    std::vector<decltype(peel::op::NUM)> ops = pedigree_v2.inspect_peeling_ops();
+    std::vector<decltype(peel::op::NUM)> ops = relationship_graph.inspect_peeling_ops();
     std::vector<decltype(peel::op::NUM)>
             expected_ops = {peel::op::UP, peel::op::TOFATHER, peel::op::UP};
     BoostCheckEqualVector(expected_ops, ops);
 
 
     std::vector<decltype(peel::op::NUM)>
-            functions_ops = pedigree_v2.inspect_peeling_functions_ops();
+            functions_ops = relationship_graph.inspect_peeling_functions_ops();
     std::vector<decltype(peel::op::NUM)>
             expected_functions_ops = {peel::op::UPFAST, peel::op::TOFATHERFAST,
                                       peel::op::UP};

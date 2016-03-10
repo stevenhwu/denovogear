@@ -36,7 +36,7 @@ struct TrioWorkspace : public  ReadTrioFromFile {
     int ref_index = 2;
     std::vector<depth_t> read_depths{3};
 
-    FindMutations::FindMutationParams test_param_1 {0, {0, 0, 0, 0}, 0,
+    FindMutations::FindMutationParams default_params {0, {0, 0, 0, 0}, 0,
                                                     std::string("0,0,0,0"),
                                                     std::string("0,0,0,0")};
 
@@ -49,7 +49,7 @@ struct TrioWorkspace : public  ReadTrioFromFile {
         auto f = utility::parse_double_list(arg.nuc_freqs, ',', 4);
         std::copy(f.first.begin(), f.first.end(), &freqs[0]);
 
-        test_param_1 = FindMutations::FindMutationParams {arg.theta, freqs,
+        default_params = FindMutations::FindMutationParams {arg.theta, freqs,
                                                           arg.ref_weight,
                                                           arg.gamma[0],
                                                           arg.gamma[1]};
@@ -79,8 +79,8 @@ struct TrioWorkspace : public  ReadTrioFromFile {
 
         std::array<double, 4> prior {};
         prior.fill(0);
-        prior[ref_index] = test_param_1.ref_weight;
-        auto genotype_prior_prior = population_prior(test_param_1.theta, test_param_1.nuc_freq, prior);
+        prior[ref_index] = default_params.ref_weight;
+        auto genotype_prior_prior = population_prior(default_params.theta, default_params.nuc_freq, prior);
         workspace.SetFounders(genotype_prior_prior);
 
         std::vector<std::string> expect_gamma{"0.98, 0.0005, 0.0005, 1.04",

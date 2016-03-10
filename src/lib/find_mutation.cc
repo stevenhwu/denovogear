@@ -20,8 +20,6 @@
 
 #include <dng/find_mutation.h>
 
-
-
 #include <chrono>
 #include <dng/matrix.h>
 

@@ -53,11 +53,10 @@ enum struct EdgeType : std::size_t {
     Spousal, Meiotic, Mitotic, Library
 };
 //TODO: Refactor/Move dng::io::Pedigree::Gender to somewhere else
-typedef boost::property<boost::vertex_sex_t, dng::io::Pedigree::Gender> VertexSexProp;
-
+typedef boost::property<boost::vertex_sex_t, dng::io::Pedigree::Gender>
+        VertexSexProp;
 typedef boost::property<boost::vertex_group_t, std::size_t, VertexSexProp>
         VertexGroupProp;
-
 typedef boost::property<boost::vertex_label_t, std::string, VertexGroupProp>
         VertexLabelProp;
 

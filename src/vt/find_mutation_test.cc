@@ -43,13 +43,16 @@
 
 
 
-#include <dng/relationship_graph.h>
-
 #include <utils/vcf_utils.h>
 #include <utils/assert_utils.h>
 #include <utils/boost_utils.h>
 #include <dng/find_mutation.h>
-#include <include/dng/workspace.h>
+#include <dng/workspace.h>
+#include <dng/pedigree.h>
+
+#include <dng/relationship_graph.h>
+
+
 
 
 //#include <boost/test/unit_test.hpp>
@@ -192,10 +195,10 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 //    }
 //    pedigree.PrintStates(std::cout);
 
-    dng::PedigreeV2 pedigree2;
-    pedigree2.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-//    auto compare = pedigree.Equal(pedigree2);
-//    std::cout << "Pedigree == PedigreeV2? " <<  std::boolalpha << compare << std::endl;
+    dng::RelationshipGraph ship_graph;
+    ship_graph.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+//    auto compare = pedigree.Equal(ship_graph);
+//    std::cout << "Pedigree == RelationshipGraph? " <<  std::boolalpha << compare << std::endl;
 
 
 
@@ -242,43 +245,35 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
             {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
     // Pileup data
     FindMutations find_mutation{min_prob, pedigree, test_param_1};
-//    test_basic_parameterts(find_mutation);
-//    test_prior(find_mutation);
-////
-//    test_full_transition(find_mutation);
-////
-//    test_operator(find_mutation);
 
+    MutationStats mutation_stats(min_prob);
+    find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
+
+
+
+    FindMutationsXLinked::FindMutationParams par_x
+            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]};
+    // Pileup data
+    FindMutationsXLinked find_x{ship_graph, par_x};
+
+    MutationStats stats_x(min_prob);
+    find_x.run(read_depths, ref_index, stats_x);
+
+
+    std::cout << "mup_equal: " << (mutation_stats.mup_ == stats_x.mup_) <<
+            "\t" << mutation_stats.mup_ << "\t" << stats_x.mup_ << "\t"
+            << std::endl;
+    std::cout << (mutation_stats.mu1p_ == stats_x.mu1p_) << "\t" <<
+            (mutation_stats.mux_ == stats_x.mux_) << "\t" << std::endl;
+
+    std::exit(130);
     workspace_t tt;// = pedigree.CreateWorkspace();
     tt.Resize(10);
     tt.Cleanup();
 
 
 
-    for(std::size_t u = 0; u < 10; ++u) {
-        tt.lower[tt.library_nodes.first + u] = GenotypeArray::Random();
-    }
-    workspace_t t2;
-    t2 = tt;
 
-    std::cout << tt.lower[0]<< std::endl;
-    std::cout << "\n"<< std::endl;
-    std::cout << t2.lower[0]<< std::endl;
-
-    std::cout << "\n"<< std::endl;
-    tt.lower[0] = GenotypeArray::Random();
-    std::cout << tt.lower[0]<< std::endl;
-    std::cout << "\n"<< std::endl;
-    std::cout << t2.lower[0]<< std::endl;
-
-    FindMutations fm_x{0.01, pedigree, {arg.theta, freqs, arg.ref_weight,
-                                        arg.gamma[0], arg.gamma[1]}};
-//    FindMutationsXLinked fm_x{pedigree, find_mutation_params};
-//
-//    fm_x.init();
-//    MutationStats stats = {0.001};
-//    fm_x.run(read_depths, ref_index, stats);
-//
     std::cout << "ready to exit: " << EXIT_SUCCESS << std::endl;
     return EXIT_SUCCESS;
 
@@ -289,10 +284,6 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 
 
 int main(int argc, char *argv[]) {
-
-
-//BOOST_AUTO_TEST_CASE(Test_FM){
-
 
     try {
 //        return CallApp(argc, argv)();
@@ -317,35 +308,3 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
 
 }
-
-//
-// get unknow error message
-//unknown location(0): fatal error in "Test_FM": signal: illegal operand; address of failing instruction: 0x0061ef82
-//
-//*** 1 failure detected in test suite "VT_TEST"
-
-//BOOST_AUTO_TEST_CASE(Test_FM){
-//    try {
-////        return CallApp(argc, argv)();
-////        dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
-//
-////        char *argv[] = {"test", "-p", "arg2", NULL};
-////        int argc = sizeof(argv) / sizeof(char*) - 1;
-//        int argc=4;
-//        char *argv[argc+1];
-//        char const *p = "abc";
-//        argv[0] = (char*) "test";
-//        argv[1] = (char*) "-p";
-//        argv[2] = "testdata/sample_5_3/ceu.ped"; //"pedFile";
-//        argv[3] = "testdata/sample_5_3/test1.vcf"; //test1.bam
-//        dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
-//        std::cout << "DIV" << std::endl;
-//        BOOST_CHECK_EQUAL(0.01, 0.011);
-//        a();
-//    } catch(std::exception &e) {
-//        std::cerr << e.what() << std::endl;
-//    }
-////    return EXIT_FAILURE;
-//
-//}
-//

@@ -50,7 +50,7 @@
 //#include <dng/pedigree.h>
 namespace dng {
 
-class PedigreeV2 {
+class RelationshipGraph {
 public:
 
     enum class TransitionType {
@@ -63,7 +63,7 @@ public:
         std::size_t parent2;
         double length1;
         double length2;
-        dng::io::Pedigree::Gender sex;
+        dng::io::Pedigree::Gender gender;
     };
 
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
@@ -230,6 +230,7 @@ public:
 
 //    bool Equal(Pedigree &other_ped);
 
+
     //TODO: remove these and use friends
     const std::vector<peel::family_members_t> &inspect_family_members() const {
         return family_members_;
@@ -281,6 +282,7 @@ private:
     void PrintDebugEdges(const std::string &prefix,
                          const dng::Graph &pedigree_graph);
 
+    void ResetFamilyInfo();
 
     const vertex_t DUMMY_INDEX = 0;
 };

@@ -218,7 +218,7 @@ using namespace dng;
 //                    stats_t *stats);
 //
 //protected:
-//    const dng::Pedigree &pedigree_;
+//    const dng::Pedigree &ship_graph;
 //
 //    params_t params_;
 //
@@ -982,7 +982,7 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //
 //FindMutations::FindMutations(double min_prob, const Pedigree &pedigree,
 //                             params_t params) :
-//        pedigree_{pedigree}, min_prob_{min_prob},
+//        ship_graph{pedigree}, min_prob_{min_prob},
 //        params_(params), genotype_likelihood_{params.params_a, params.params_b},
 //        work_(pedigree.CreateWorkspace()) {
 //
@@ -1052,8 +1052,8 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //    for(int ref_index = 0; ref_index < 5; ++ref_index) {
 //        work_.SetFounders(genotype_prior_[ref_index]);
 //
-//        pedigree_.PeelForwards(work_, nomut_transition_matrices_);
-//        pedigree_.PeelBackwards(work_, nomut_transition_matrices_);
+//        ship_graph.PeelForwards(work_, nomut_transition_matrices_);
+//        ship_graph.PeelBackwards(work_, nomut_transition_matrices_);
 //        event_.assign(work_.num_nodes, 0.0);
 //        double total = 0.0, entropy = 0.0;
 //        for(std::size_t i = work_.founder_nodes.second; i < work_.num_nodes; ++i) {
@@ -1100,13 +1100,13 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //    work_.SetFounders(genotype_prior_[ref_index]);
 //
 //    // Calculate log P(Data, nomut ; model)
-//    const double logdata_nomut = pedigree_.PeelForwards(work_,
+//    const double logdata_nomut = ship_graph.PeelForwards(work_,
 //                                                        nomut_transition_matrices_);
 //
 //    /**** Forward-Backwards with full-mutation ****/
 //
 //    // Calculate log P(Data ; model)
-//    const double logdata = pedigree_.PeelForwards(work_, full_transition_matrices_);
+//    const double logdata = ship_graph.PeelForwards(work_, full_transition_matrices_);
 //
 //    // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
 //    const double pmut = -std::expm1(logdata_nomut - logdata) +100;//TODO: Remove this hack
@@ -1124,7 +1124,7 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //    }
 //
 //    // Peel Backwards with full-mutation
-//    pedigree_.PeelBackwards(work_, full_transition_matrices_);
+//    ship_graph.PeelBackwards(work_, full_transition_matrices_);
 //
 //    size_t library_start = work_.library_nodes.first;
 //
@@ -1157,8 +1157,8 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //    /**** Forward-Backwards with no-mutation ****/
 //
 //    // TODO: Better to use a separate workspace???
-//    pedigree_.PeelForwards(work_, nomut_transition_matrices_);
-//    pedigree_.PeelBackwards(work_, nomut_transition_matrices_);
+//    ship_graph.PeelForwards(work_, nomut_transition_matrices_);
+//    ship_graph.PeelBackwards(work_, nomut_transition_matrices_);
 //    event_.assign(work_.num_nodes, 0.0);
 //    double total = 0.0, entropy = 0.0, max_coeff = -1.0;
 //    size_t dn_loc = 0, dn_col = 0, dn_row = 0;
@@ -1198,8 +1198,8 @@ cout << "vcf: " << "\t" << *chrom << "\t" << position << "\t" << n_alleles << "\
 //        stats->dnc = std::round(100.0 * (1.0 - entropy));
 //
 //        stats->dnq = lphred<int32_t>(1.0 - (max_coeff / total), 255);
-//        stats->dnl = pedigree_.labels()[dn_loc];
-//        if(pedigree_.transitions()[dn_loc].type == Pedigree::TransitionType::Germline) {
+//        stats->dnl = ship_graph.labels()[dn_loc];
+//        if(ship_graph.transitions()[dn_loc].type == Pedigree::TransitionType::Germline) {
 //            stats->dnt = &meiotic_diploid_mutation_labels[dn_row][dn_col][0];
 //        } else {
 //            stats->dnt = &mitotic_diploid_mutation_labels[dn_row][dn_col][0];

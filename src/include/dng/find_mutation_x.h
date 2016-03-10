@@ -11,6 +11,7 @@
 #include <dng/pedigree.h>
 #include <dng/likelihood.h>
 
+#include <dng/relationship_graph.h>
 #include <dng/mutation_other_patterns.h>
 
 #include "mutation_stats.h"
@@ -33,19 +34,13 @@ public:
         dng::genotype::DirichletMultinomialMixture::params_t params_b;
     };
 
-//    FindMutations(double min_prob, const Pedigree &pedigree, params_t params);
-
-//    bool operator()(const std::vector<depth_t> &depths, int ref_index,
-//                    stats_t *stats);
-
-    //TODO: either place with this function, or replace operator() with this
-    bool calculate_mutation(const std::vector<depth_t> &depths, int ref_index,
-                            MutationStats &mutation_stats);
-
-//protected://TODO: HACK:
+    bool CalculateMutation(const std::vector<depth_t> &depths, std::size_t ref_index,
+                           MutationStats &mutation_stats);
 
 
-    const dng::Pedigree &pedigree_;
+protected:
+
+    const dng::RelationshipGraph &ship_graph;
     FindMutationParams params_;
 
     dng::peel::workspace_t work_full_;
@@ -63,11 +58,16 @@ public:
     dng::GenotypeArray genotype_prior_[5]; // Holds P(G | theta)
 
 
-    AbstractFindMutations(const Pedigree &pedigree,
+    bool CalculateMutationProb(MutationStats &stats);
+
+    void CalculateDenovoMutation(MutationStats &mutation_stats);
+
+    //http://www.urbandictionary.com/define.php?term=shipping
+    AbstractFindMutations(const dng::RelationshipGraph &ship_graph,
                           FindMutationParams &params) :
-            pedigree_{pedigree}, params_(params),
+            ship_graph{ship_graph}, params_(params),
             genotype_likelihood_{params.params_a, params.params_b},
-            work_nomut_(pedigree.CreateWorkspace()) {
+            work_nomut_(ship_graph.CreateWorkspace()) {
 
 
 
@@ -94,13 +94,15 @@ public:
 };
 
 
+
 class FindMutationsXLinked : public AbstractFindMutations {
 
 public:
 
     void SomeFunction() { };
 
-    FindMutationsXLinked(const Pedigree &pedigree, FindMutationParams &params);
+    FindMutationsXLinked(const RelationshipGraph &ship_graph,
+                         FindMutationParams &params);
 
     void init();
 

@@ -4,26 +4,25 @@
 
 
 #include <dng/find_mutation_x.h>
+#include <include/dng/relationship_graph.h>
 
-FindMutationsXLinked::FindMutationsXLinked(const Pedigree &pedigree,
+FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
                                            FindMutationParams &params)
-        : AbstractFindMutations(pedigree, params) {
+        : AbstractFindMutations(ship_graph, params) {
 
     using namespace dng;
 
-//    genotype_prior_[0] = population_prior(params_.theta, params_.nuc_freq, {params_.ref_weight, 0, 0, 0});
-//    genotype_prior_[1] = population_prior(params_.theta, params_.nuc_freq, {0, params_.ref_weight, 0, 0});
-//    genotype_prior_[2] = population_prior(params_.theta, params_.nuc_freq, {0, 0, params_.ref_weight, 0});
-//    genotype_prior_[3] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, params_.ref_weight});
-//    genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, 0});
 
-    for(size_t child = 0; child < work_nomut_.num_nodes; ++child) {
 
-        auto trans = pedigree.transitions()[child];
-//        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 << "\t" << trans.length2 <<
-//                "\tType:" << (int) trans.type << std::endl;
+    for (size_t child = 0; child < work_nomut_.num_nodes; ++child) {
+        auto trans = ship_graph.transitions()[child];
+        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 <<
+                "\t" << trans.length2 <<
+                "\tType:" << (int) trans.type <<
+                "\tSex:" << (int) trans.gender <<
+                std::endl;
 
-        if(trans.type == Pedigree::TransitionType::Germline) {
+        if (trans.type == RelationshipGraph::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
@@ -33,8 +32,8 @@ FindMutationsXLinked::FindMutationsXLinked(const Pedigree &pedigree,
                                                  nomut_transition_matrices_[child];
             onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
             mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
-        } else if(trans.type == Pedigree::TransitionType::Somatic ||
-                  trans.type == Pedigree::TransitionType::Library) {
+        } else if (trans.type == RelationshipGraph::TransitionType::Somatic ||
+                   trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
@@ -53,36 +52,58 @@ FindMutationsXLinked::FindMutationsXLinked(const Pedigree &pedigree,
 
     }
 
-
-
 }
 
 
 void FindMutationsXLinked::run(const std::vector<depth_t> &depths,
-         int ref_index, MutationStats &mutation_stats) {
+                               int ref_index, MutationStats &mutation_stats) {
 
-    double scale = work_nomut_.SetGenotypeLikelihood(genotype_likelihood_, depths, ref_index);
-
+    double scale = work_nomut_.SetGenotypeLikelihood(genotype_likelihood_, depths,
+                                                     ref_index);
     // Set the prior probability of the founders given the reference
     work_nomut_.SetFounders(genotype_prior_[ref_index]);
+    work_full_ = work_nomut_; //TODO: full test on copy assignment operator
+
+    bool is_mup_less_threshold = CalculateMutationProb(mutation_stats);
+    if (is_mup_less_threshold) {
+
+    }
+    ship_graph.PeelBackwards(work_full_, full_transition_matrices_);
+
+    mutation_stats.SetScaledLogLikelihood(scale);
+    mutation_stats.SetGenotypeLikelihoods(work_full_, depths.size());
+    mutation_stats.SetPosteriorProbabilities(work_full_);
+
+    mutation_stats.CalculateExpectedMutation(work_full_, mean_matrices_);
+    mutation_stats.CalculateNodeMutation(work_full_, posmut_transition_matrices_);
+    CalculateDenovoMutation(mutation_stats);
+
+}
+
+
+
+bool AbstractFindMutations::CalculateMutationProb(MutationStats &mutation_stats) {
 
     // Calculate log P(Data, nomut ; model)
-//        const double logdata_nomut = pedigree_.PeelForwards(work_, nomut_transition_matrices_);
+    ship_graph.PeelForwards(work_nomut_, nomut_transition_matrices_);
 
     /**** Forward-Backwards with full-mutation ****/
     // Calculate log P(Data ; model)
-    const double logdata = pedigree_.PeelForwards(work_nomut_, full_transition_matrices_);
-
+    ship_graph.PeelForwards(work_full_, full_transition_matrices_);
 
     // P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-//        bool is_mup_lt_threshold = mutation_stats.set_mutation_prob(logdata_nomut, logdata);
+    bool is_mup_less_threshold = mutation_stats.CalculateMutationProb(work_nomut_,
+                                                                      work_full_);
 
-//
-//        bool is_mup_lt_threshold = calculate_mutation_prob(mutation_stats);
-//        if (is_mup_lt_threshold) {
-//            return false;
-//        }
-//
-//        mutation_stats.set_scaled_log_likelihood(scale);
-//        mutation_stats.set_genotype_likelihood(work_, depths.size());
+    return is_mup_less_threshold;
 }
+
+
+void AbstractFindMutations::CalculateDenovoMutation(MutationStats &mutation_stats) {
+
+    ship_graph.PeelBackwards(work_nomut_, nomut_transition_matrices_);
+//    mutation_stats.CalculateDenovoMutation(work_nomut_, onemut_transition_matrices_,
+//                                           ship_graph);
+
+}
+

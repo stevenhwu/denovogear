@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(test_set_posterior_probabilities,
 BOOST_AUTO_TEST_CASE(test_genotype_stats, *utf::fixture(&setup, &teardown)) {
 
 
-    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, default_params};
     MutationStats stats(min_prob);
 
     find_mutation.CalculateMutation(read_depths, ref_index, stats);

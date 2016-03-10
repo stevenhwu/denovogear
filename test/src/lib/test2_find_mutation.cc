@@ -76,7 +76,7 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 BOOST_FIXTURE_TEST_CASE(test_constructor, TrioWorkspace,
                         *utf::fixture(&setup, &teardown)) {
 
-    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, default_params};
 
     BOOST_CHECK_EQUAL(find_mutation.min_prob_, 0.01);
     BOOST_CHECK_EQUAL(find_mutation.params_.theta, 0.001);
@@ -121,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(test_prior, TrioWorkspace, *utf::fixture(&setup, &teardo
         {0.29979020979021, 0.00011988011988012, 0.00011988011988012, 0.00017982017982018, 0.19984015984016, 7.99200799200799e-05, 0.00011988011988012, 0.19984015984016, 0.00011988011988012, 0.29979020979021 }
     };
 
-    FindMutations find_mutation {min_prob, pedigree, test_param_1};
+    FindMutations find_mutation {min_prob, pedigree, default_params};
     auto *pArray = find_mutation.genotype_prior_;
 
     for (int i = 0; i < 5; ++i) {
@@ -159,7 +159,7 @@ BOOST_FIXTURE_TEST_CASE(test_full_transition, TrioWorkspace, *utf::fixture(&setu
     std::vector<TransitionMatrix> exp_onemut {{},{},exp_germline_onemut, exp_somatic_onemut, exp_somatic_onemut};
     std::vector<TransitionMatrix> exp_mean {{},{},exp_germline_mean, exp_somatic_mean, exp_somatic_mean};
 
-    FindMutations find_mutation {min_prob, pedigree, test_param_1};
+    FindMutations find_mutation {min_prob, pedigree, default_params};
     auto full_matrices = find_mutation.full_transition_matrices_;
     auto nomut_matrices = find_mutation.nomut_transition_matrices_;
     auto posmut_matrices = find_mutation.posmut_transition_matrices_;
@@ -184,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(test_operator, TrioWorkspace, *utf::fixture(&setup, &tea
             {0,3}
     };
     MutationStats stats(min_prob);
-    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, default_params};
     find_mutation.CalculateMutation(read_depths, ref_index, stats);
 
 
@@ -242,7 +242,7 @@ BOOST_FIXTURE_TEST_CASE(test_operator, TrioWorkspace, *utf::fixture(&setup, &tea
 
 BOOST_FIXTURE_TEST_CASE(test_calculate_mutation_expected, TrioWorkspace, *utf::fixture(&setup, &teardown)) {
 
-    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, default_params};
 
     MutationStats mutation_stats(min_prob);
     find_mutation.CalculateMutation(read_depths, ref_index, mutation_stats);
@@ -267,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(test_calculate_mutation, TrioWorkspace, *utf::fixture(&s
 
     min_prob = 0; //Pass everything
     FindMutations::stats_t stats;
-    FindMutations find_mutation{min_prob, pedigree, test_param_1};
+    FindMutations find_mutation{min_prob, pedigree, default_params};
     find_mutation.old_operator(read_depths, ref_index, &stats);
 
     MutationStats mutation_stats(min_prob);
