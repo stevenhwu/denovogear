@@ -47,7 +47,7 @@ public:
         std::size_t parent2;
         double length1;
         double length2;
-        dng::io::Pedigree::Gender sex;
+        dng::io::Pedigree::Sex sex;
     };
 
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,

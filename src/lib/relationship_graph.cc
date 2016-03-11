@@ -22,6 +22,7 @@
 
 
 #include <dng/relationship_graph.h>
+#include <gdbm.h>
 
 
 #define DNG_GL_PREFIX "GL-"
@@ -48,7 +49,7 @@ RULES FOR LINKING READ GROUPS TO PEOPLE.
 
 */
 
-//#define DEBUG_VERBOSE 1
+#define DEBUG_VERBOSE 1
 //#define DNG_DEVEL 1
 
 bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
@@ -185,9 +186,9 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
         }
 
 #ifdef DEBUG_VERBOSE
-        int sex2 = static_cast<char>( sex[child] );
+        int sex2 = static_cast<int>( sex[child] );
         std::cout << "==START\n===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom <<
-                "\tsex: " << sex << std::endl;
+                "\tsex: " << sex2 << std::endl;
         std::cout << "===after spousal: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
         std::endl;
 #endif
@@ -204,7 +205,7 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
         // Process newick file
         // TODO: should newick::parse add edge? or do it here?
         int res = newick::parse(row.sample_tree, child, pedigree_graph);
-
+        // TODO: parse sex into newick?
 #ifdef DEBUG_VERBOSE
         std::cout << "===after parse: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
         std::endl;
@@ -213,7 +214,7 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
             // this line has a blank somatic line, so use the name from the pedigree
             vertex_t v = add_vertex(DNG_SM_PREFIX + pedigree.name(child), pedigree_graph);
             add_edge(child, v, {EdgeType::Mitotic, 1.0f}, pedigree_graph);
-
+            sex[v] = sex[child];
 #ifdef DEBUG_VERBOSE
             std::cout << "===add res==0: " << child << "\t" << v << "\t" << pedigree.name(child) << std::endl;
 #endif
@@ -258,6 +259,11 @@ void dng::RelationshipGraph::AddLibrariesFromReadGroups(Graph &pedigree_graph, c
 void dng::RelationshipGraph::ConnectSomaticToLibraries(dng::Graph &pedigree_graph, const ReadGroups &rgs,
                                                 const PropVertexLabel &labels) {
 
+    auto sex  = get(boost::vertex_sex, pedigree_graph);
+    std::cout << (int) sex[0] << "\t" << (int) sex[1] << "\t" <<
+            (int) sex[2] << "\t" <<
+            (int) sex[3] << "\t" <<
+            (int) sex[4] << "\t" <<  std::endl;
     const size_t STRLEN_DNG_SM_PREFIX = strlen(DNG_SM_PREFIX);
 
     for (vertex_t v = (vertex_t) first_somatic_; v < first_library_; ++v) {
@@ -269,6 +275,8 @@ void dng::RelationshipGraph::ConnectSomaticToLibraries(dng::Graph &pedigree_grap
         auto r = rgs.data().get<rg::sm>().equal_range(labels[v].c_str() + STRLEN_DNG_SM_PREFIX);
         for (; r.first != r.second; ++r.first) {
             vertex_t w = first_library_ + rg::index(rgs.libraries(), r.first->library);
+//            sex[v] = sex[w];
+            std::cout <<"Both: "<< v << "\t" << w << "\t" << (int) sex[v] << "\t" << (int) sex[w]<< std::endl;
             if (!edge(v, w, pedigree_graph).second) {
                 add_edge(v, w, {EdgeType::Library, 1.0f}, pedigree_graph);
             }

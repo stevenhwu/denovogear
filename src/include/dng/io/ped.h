@@ -48,8 +48,8 @@ public:
             boost::multi_index::ordered_unique<
             boost::multi_index::identity<std::string>>
             >> NameContainer;
-    //TODO: Move enum class Gender to somewhere else?? used in graph property, should not inclued io:Pedigree
-    enum class Gender : size_t {
+    //TODO: Move enum class Sex to somewhere else?? used in graph property, should not inclued io:Pedigree
+    enum class Sex : size_t {
         Unknown = 0, Male = 1, Female = 2, Both = 3
     };
 
@@ -58,7 +58,7 @@ public:
         std::size_t child;
         std::size_t dad;
         std::size_t mom;
-        Gender sex;
+        Sex sex;
         std::string sample_tree;
     };
 
@@ -199,7 +199,7 @@ public:
         }
         // Construct table in the order of names_
         table_.clear();
-        table_.emplace_back(Member{0, 0, 0, 0, Gender::Unknown, ""});
+        table_.emplace_back(Member{0, 0, 0, 0, Sex::Unknown, ""});
         for(auto && name : names_) {
             auto nrow = child_names[name];
             auto child = id(string_table[nrow][1]);
@@ -222,14 +222,17 @@ public:
     }
 
 protected:
-    static Gender ParseGender(std::string &str) {
-        static std::pair<std::string, Gender> keys[] = {
-            {"0", Gender::Unknown},
-            {"1", Gender::Male},
-            {"2", Gender::Female},
-            {"male", Gender::Male},
-            {"female", Gender::Female},
-            {"unknown", Gender::Unknown}
+    static Sex ParseGender(std::string &str) {
+        static std::pair<std::string, Sex> keys[] = {
+            {"0", Sex::Unknown},
+            {"1", Sex::Male},
+            {"2", Sex::Female},
+            {"3", Sex::Both},
+            {"male", Sex::Male},
+            {"female", Sex::Female},
+            {"unknown", Sex::Unknown},
+            {"other", Sex::Unknown},
+            {"both", Sex::Both}
         };
         return dng::utility::key_switch_tuple(str, keys, keys[0]).second;
     }
