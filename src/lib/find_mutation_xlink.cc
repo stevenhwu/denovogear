@@ -4,15 +4,13 @@
 
 
 #include <dng/find_mutation_x.h>
-#include <include/dng/relationship_graph.h>
+
 
 FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
-                                           FindMutationParams &params)
+                                           const FindMutationParams &params)
         : AbstractFindMutations(ship_graph, params) {
 
     using namespace dng;
-
-
 
     for (size_t child = 0; child < work_nomut_.num_nodes; ++child) {
         auto trans = ship_graph.transitions()[child];

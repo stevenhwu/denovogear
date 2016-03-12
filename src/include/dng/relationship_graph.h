@@ -179,12 +179,16 @@ protected:
     typedef boost::property_map<Graph, boost::edge_type_t>::type PropEdgeType;
     typedef boost::property_map<Graph, boost::edge_length_t>::type
             PropEdgeLength;
+
     typedef boost::property_map<Graph, boost::vertex_label_t>::type
             PropVertexLabel;
     typedef boost::property_map<Graph, boost::vertex_group_t>::type
             PropVertexGroup;
     typedef boost::property_map<Graph, boost::vertex_index_t>::type
             PropVertexIndex;
+    typedef boost::property_map<Graph, boost::vertex_sex_t>::type
+            PropVertexSex;
+
 
     typedef std::vector<std::vector<boost::graph_traits<dng::Graph>::edge_descriptor>>
             family_labels_t;
@@ -279,8 +283,8 @@ protected:
                           std::vector<vertex_t> &pivots);
 
 private:
-    void PrintDebugEdges(const std::string &prefix,
-                         const dng::Graph &pedigree_graph);
+    void PrintDebugVertexEdges(const std::string &prefix, const dng::Graph &pedigree_graph,
+                      int verbose_level = 0);
 
     void ResetFamilyInfo();
 

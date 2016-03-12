@@ -42,8 +42,9 @@ void MutationStats::SetScaledLogLikelihood(double scale) {
 
 }
 
-void MutationStats::SetGenotypeLikelihoods(const dng::peel::workspace_t &workspace,
-                                           const int depth_size) {
+void MutationStats::SetGenotypeLikelihoods(
+        const dng::peel::workspace_t &workspace,
+        const size_t depth_size) {
 
     genotype_likelihoods_.resize(workspace.num_nodes);
     for(std::size_t u = 0; u < depth_size; ++u) {

@@ -76,8 +76,8 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
     // Construct a graph of the pedigree and somatic information
     Graph pedigree_graph(num_members);
 
-    PrintDebugEdges("========== Relationship Graph =========\ninit: ",
-                    pedigree_graph);
+    PrintDebugVertexEdges("========== Relationship Graph =========\ninit: ",
+                          pedigree_graph, 1);
 
     auto edge_types = get(edge_type, pedigree_graph);
     auto lengths = get(edge_length, pedigree_graph);
@@ -94,10 +94,9 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
         labels[i] = DNG_GL_PREFIX + pedigree.name(i);
     }
 
-    PrintDebugEdges("Start", pedigree_graph);
+    PrintDebugVertexEdges("Start", pedigree_graph, 1);
     // Go through rows and construct the pedigree part.
     ParseIoPedigree(pedigree_graph, pedigree);
-
 
 
     AddLibrariesFromReadGroups(pedigree_graph, rgs, labels);
@@ -110,7 +109,7 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
     SimplifyPedigree(pedigree_graph, edge_types, lengths);
     UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
 
-    PrintDebugEdges("After update position()", pedigree_graph);
+    PrintDebugVertexEdges("After update position()", pedigree_graph, 2);
 
 
     family_labels_t family_labels;//(num_families);
@@ -187,29 +186,33 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
 
 #ifdef DEBUG_VERBOSE
         int sex2 = static_cast<int>( sex[child] );
-        std::cout << "==START\n===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom <<
+        std::cout << "\n==START\n===Child_Dad_MoM_sex: " << child << "\t" << dad << "\t" << mom <<
                 "\tsex: " << sex2 << std::endl;
-        std::cout << "===after spousal: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
-        std::endl;
 #endif
+        PrintDebugVertexEdges("After spousal()", pedigree_graph, 0);
+
                 // add the meiotic edges
         add_edge(mom, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
         add_edge(dad, child, {EdgeType::Meiotic, 1.0f}, pedigree_graph);
 
-#ifdef DEBUG_VERBOSE
-        std::cout << "===after add_edge: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
-        std::endl;
-        std::cout << "===Child_Dad_MoM: " << child << "\t" << dad << "\t" << mom << std::endl;
-#endif
+        PrintDebugVertexEdges("After add_edge mom/dad", pedigree_graph, 0);
+
 
         // Process newick file
-        // TODO: should newick::parse add edge? or do it here?
+        // TODO(SW): What should newick::parse do? parse "tree" only? Or add vertex/edge/sex as well?
+        // TODO(SW): Refactor newick::parse and the if_else(res==?) condition. The same operation performed at two different places
+
+        //HACK: add sex without touch newick::parse at this stage
+        int current_index = num_vertices(pedigree_graph);
         int res = newick::parse(row.sample_tree, child, pedigree_graph);
-        // TODO: parse sex into newick?
-#ifdef DEBUG_VERBOSE
-        std::cout << "===after parse: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) <<
-        std::endl;
-#endif
+
+
+        for (int i = current_index; i < num_vertices(pedigree_graph); ++i) {
+            std::cout << i << "\t" << num_vertices(pedigree_graph) << std::endl;
+            sex[i] = sex[child];
+        }
+        PrintDebugVertexEdges("After newick::parse", pedigree_graph, 2);
+//        std::exit(3);
         if (res == 0) {
             // this line has a blank somatic line, so use the name from the pedigree
             vertex_t v = add_vertex(DNG_SM_PREFIX + pedigree.name(child), pedigree_graph);
@@ -217,6 +220,7 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
             sex[v] = sex[child];
 #ifdef DEBUG_VERBOSE
             std::cout << "===add res==0: " << child << "\t" << v << "\t" << pedigree.name(child) << std::endl;
+            PrintDebugVertexEdges("After res==0", pedigree_graph, 0);
 #endif
 
         } else if (res == -1) {
@@ -224,11 +228,11 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
                                      pedigree.name(child) + "'.");
         }
 
-#ifdef DEBUG_VERBOSE
-        std::cout << "Loop END: V E:" << num_vertices(pedigree_graph) << "\t" << num_edges(pedigree_graph) << std::endl;
-#endif
+
+        PrintDebugVertexEdges("LOOP END", pedigree_graph, 0);
     }
-    PrintDebugEdges("Parsed io::pedigree, before cleas_vertex dummy", pedigree_graph);
+    PrintDebugVertexEdges("Parsed io::pedigree, before cleas_vertex dummy",
+                          pedigree_graph, 2);
     clear_vertex(DUMMY_INDEX, pedigree_graph);
 }
 
@@ -236,7 +240,8 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const d
 void dng::RelationshipGraph::AddLibrariesFromReadGroups(Graph &pedigree_graph, const dng::ReadGroups &rgs,
                                                  PropVertexLabel &labels) {
 
-    dng::RelationshipGraph::PrintDebugEdges("After clear_vertex()", pedigree_graph);
+
+    PrintDebugVertexEdges("After clear_vertex()", pedigree_graph, 0);
 
     first_library_ = num_vertices(pedigree_graph);
 
@@ -245,21 +250,22 @@ void dng::RelationshipGraph::AddLibrariesFromReadGroups(Graph &pedigree_graph, c
         dng::vertex_t v = add_vertex(pedigree_graph);
         labels[v] = DNG_LB_PREFIX + a;
 #ifdef DEBUG_VERBOSE
-        std::cout << "Add lib: " << labels[v] << std::endl;
+        std::cout << "Add lib: " << v << "NAME: " << labels[v] << std::endl;
 #endif
     }
-    dng::RelationshipGraph::PrintDebugEdges("After add libs", pedigree_graph);
+    PrintDebugVertexEdges("After add libs", pedigree_graph, 2);
 
-    dng::RelationshipGraph::ConnectSomaticToLibraries(pedigree_graph, rgs, labels);
+    ConnectSomaticToLibraries(pedigree_graph, rgs, labels);
     num_nodes_ = num_vertices(pedigree_graph);
 
-    dng::RelationshipGraph::PrintDebugEdges("After connect somatic", pedigree_graph);
+    PrintDebugVertexEdges("After connect somatic", pedigree_graph, 2);
 }
 
 void dng::RelationshipGraph::ConnectSomaticToLibraries(dng::Graph &pedigree_graph, const ReadGroups &rgs,
                                                 const PropVertexLabel &labels) {
 
     auto sex  = get(boost::vertex_sex, pedigree_graph);
+
     std::cout << (int) sex[0] << "\t" << (int) sex[1] << "\t" <<
             (int) sex[2] << "\t" <<
             (int) sex[3] << "\t" <<
@@ -267,6 +273,7 @@ void dng::RelationshipGraph::ConnectSomaticToLibraries(dng::Graph &pedigree_grap
     const size_t STRLEN_DNG_SM_PREFIX = strlen(DNG_SM_PREFIX);
 
     for (vertex_t v = (vertex_t) first_somatic_; v < first_library_; ++v) {
+
         if (labels[v].empty()) {
             continue;
         }
@@ -275,8 +282,7 @@ void dng::RelationshipGraph::ConnectSomaticToLibraries(dng::Graph &pedigree_grap
         auto r = rgs.data().get<rg::sm>().equal_range(labels[v].c_str() + STRLEN_DNG_SM_PREFIX);
         for (; r.first != r.second; ++r.first) {
             vertex_t w = first_library_ + rg::index(rgs.libraries(), r.first->library);
-//            sex[v] = sex[w];
-            std::cout <<"Both: "<< v << "\t" << w << "\t" << (int) sex[v] << "\t" << (int) sex[w]<< std::endl;
+            sex[w] = sex[v];
             if (!edge(v, w, pedigree_graph).second) {
                 add_edge(v, w, {EdgeType::Library, 1.0f}, pedigree_graph);
             }
@@ -309,9 +315,6 @@ void dng::RelationshipGraph::UpdateEdgeLengths(dng::Graph &pedigree_graph, doubl
 
 void dng::RelationshipGraph::SimplifyPedigree(dng::Graph &pedigree_graph, const PropEdgeType &edge_types,
                                        const PropEdgeLength &lengths) {
-
-//property_map<Graph, edge_type_t>::type edge_types = get(boost::edge_type, pedigree_graph);
-//property_map<Graph, edge_length_t>::type lengths = get(boost::edge_length, pedigree_graph);
 
 //    auto edge_types = get(boost::edge_type, pedigree_graph);
 //    auto lengths = get(edge_length, pedigree_graph);
@@ -371,7 +374,7 @@ void dng::RelationshipGraph::SimplifyPedigree(dng::Graph &pedigree_graph, const 
         }
 
     }
-    PrintDebugEdges("After SimplifyPedigree", pedigree_graph);
+    PrintDebugVertexEdges("After SimplifyPedigree", pedigree_graph, 2);
 
 }
 
@@ -423,7 +426,7 @@ void dng::RelationshipGraph::UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng
     first_somatic_ = update_position(first_somatic_);
     first_library_ = update_position(first_library_);
 
-    PrintDebugEdges("Test", pedigree_graph);
+    PrintDebugVertexEdges("Test", pedigree_graph, 0);
 
 
 }
@@ -834,27 +837,39 @@ void dng::RelationshipGraph::CreatePeelingOps(dng::Graph &pedigree_graph, const 
 
 
 
-void dng::RelationshipGraph::PrintDebugEdges(const std::string &prefix, const dng::Graph &pedigree_graph) {
+void dng::RelationshipGraph::PrintDebugVertexEdges(const std::string &prefix, const dng::Graph &pedigree_graph,
+                                      int verbose_level) {
+
+
 #ifdef DEBUG_VERBOSE
 
-    //    typedef property_map<Graph, vertex_index_t>::type IndexMap;
-    PropVertexIndex index = get(boost::vertex_index, pedigree_graph);
+    auto index = get(boost::vertex_index, pedigree_graph);
+    auto sex = get(boost::vertex_sex, pedigree_graph);
 
-    boost::graph_traits<Graph>::edge_iterator ei2, ei_end2;
-
-
-    std::cout << prefix << ": V: " << num_vertices(pedigree_graph) << "\tE: " << num_edges(pedigree_graph) << std::endl;
-    for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2) {
-        std::cout << "(" << index[source(*ei2, pedigree_graph)]
-        << "," << index[target(*ei2, pedigree_graph)] << ") ";
-    }
-    std::cout << "\t\t==" << std::endl;
+    std::cout << "===== DEBUG: " << prefix << ": V: " << num_vertices(pedigree_graph) << "\tE: " << num_edges(pedigree_graph) << std::endl;
     std::cout << "Founder, Non_F, Lib, Somatic: " << first_founder_ << "\t" << first_nonfounder_ << "\t" <<
-    first_library_ << "\t" << first_somatic_ << std::endl;
-    std::cout << "==END==" << std::endl;
+            first_library_ << "\t" << first_somatic_ << std::endl;
+    if (verbose_level > 0) {
+        boost::graph_traits<Graph>::edge_iterator ei2, ei_end2;
+        for (tie(ei2, ei_end2) = edges(pedigree_graph); ei2 != ei_end2; ++ei2) {
+            std::cout << "(" << index[source(*ei2, pedigree_graph)]
+                    << "," << index[target(*ei2, pedigree_graph)] << ") ";
+        }
+        std::cout << "\t\t==" << std::endl;
+    }
+    if (verbose_level > 1) {
+        boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
+        for (boost::tie(vi, vi_end) = vertices(pedigree_graph); vi != vi_end; ++vi) {
+            std::cout << "V:" << *vi << ":" << (int) sex[*vi] << ". ";
+        }
+        std::cout << "\t\t==" << std::endl;
+    }
+    std::cout << "===== END DEBUG =====" << std::endl;
+
 #endif
 
 }
+
 
 
 

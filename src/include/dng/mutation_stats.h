@@ -47,7 +47,7 @@ public:
     void SetScaledLogLikelihood(double scale);
 
     void SetGenotypeLikelihoods(const dng::peel::workspace_t &workspace,
-                                const int depth_size);
+                                const size_t depth_size);
 
     void SetPosteriorProbabilities(const dng::peel::workspace_t &workspace);
 

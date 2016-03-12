@@ -200,35 +200,6 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
 //    auto compare = pedigree.Equal(ship_graph);
 //    std::cout << "Pedigree == RelationshipGraph? " <<  std::boolalpha << compare << std::endl;
 
-
-
-    /*{
-        std::cout << "Founder, nonfounder, somatic, library, num_nodes" << std::endl;
-        cout << pedigree.first_founder_ << "\t" << //endl;    // start of founder germline
-        pedigree.first_nonfounder_ << "\t" <<  //endl; // start of non-founder germline
-        pedigree.first_somatic_ << "\t" <<  //endl;    // start of somatic nodes
-        pedigree.first_library_ << "\t" <<  //endl;    // start of libraries
-        pedigree.num_nodes_ << endl;        // total number of nodes
-
-        cout << "Roots\t" << pedigree.roots_.size() << endl;
-        // Pedigree Structure
-        cout << "Labels: " << pedigree.labels_.size() << endl;
-        cout << pedigree.transitions_.size() << endl;
-
-
-        // The original, simplified peeling operations
-        cout << pedigree.peeling_ops_.size() << endl;
-        for (int j = 0; j < pedigree.peeling_ops_.size(); ++j) {
-            int op_index = pedigree.peeling_ops_[j];
-            std::cout << "op: " << pedigree.peeling_ops_[j] << "\t" <<
-            pedigree.peeling_functions_ops_[j] << "\t" <<
-            peel::op::map_enum_string[pedigree.peeling_functions_ops_[j]] << std::endl;
-        }
-
-        // The arguments to a peeling operation
-        cout << pedigree.family_members_.size() << endl;
-    }*/
-
 //    FindMutations calculate{min_prob, pedigree,
 //                            {arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1]}};
     int ref_index = 2;
@@ -257,6 +228,7 @@ int dng::task::Call::operator()(dng::task::Call::argument_type &arg) {
     FindMutationsXLinked find_x{ship_graph, par_x};
 
     MutationStats stats_x(min_prob);
+    find_x.run(read_depths, ref_index, stats_x);
     find_x.run(read_depths, ref_index, stats_x);
 
 
@@ -291,7 +263,7 @@ int main(int argc, char *argv[]) {
 
 //        char *argv[] = {"test", "-p", "arg2", NULL};
 //        int argc = sizeof(argv) / sizeof(char*) - 1;
-        int argc=4;
+        const int argc=4;
         char *argv[argc+1];
         argv[0] = (char*) "test";
         argv[1] = (char*) "-p";

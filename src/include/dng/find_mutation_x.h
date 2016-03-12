@@ -64,7 +64,7 @@ protected:
 
     //http://www.urbandictionary.com/define.php?term=shipping
     AbstractFindMutations(const dng::RelationshipGraph &ship_graph,
-                          FindMutationParams &params) :
+                          const FindMutationParams &params) :
             ship_graph{ship_graph}, params_(params),
             genotype_likelihood_{params.params_a, params.params_b},
             work_nomut_(ship_graph.CreateWorkspace()) {
@@ -74,14 +74,14 @@ protected:
         // Use a parent-independent mutation model, which produces a
         // beta-binomial
         genotype_prior_[0] = population_prior(params_.theta, params_.nuc_freq,
-                                              {params_.ref_weight, 0, 0, 0});
+                                              {{params_.ref_weight, 0, 0, 0}});
         genotype_prior_[1] = population_prior(params_.theta, params_.nuc_freq,
-                                              {0, params_.ref_weight, 0, 0});
+                                              {{0, params_.ref_weight, 0, 0}});
         genotype_prior_[2] = population_prior(params_.theta, params_.nuc_freq,
-                                              {0, 0, params_.ref_weight, 0});
+                                              {{0, 0, params_.ref_weight, 0}});
         genotype_prior_[3] = population_prior(params_.theta, params_.nuc_freq,
-                                              {0, 0, 0, params_.ref_weight});
-        genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, 0});
+                                              {{0, 0, 0, params_.ref_weight}});
+        genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq, {{0, 0, 0, 0}});
 
         // Calculate mutation expectation matrices
         full_transition_matrices_.assign(work_nomut_.num_nodes, {});
@@ -102,7 +102,7 @@ public:
     void SomeFunction() { };
 
     FindMutationsXLinked(const RelationshipGraph &ship_graph,
-                         FindMutationParams &params);
+                         const FindMutationParams &params);
 
     void init();
 

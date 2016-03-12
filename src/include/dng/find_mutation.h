@@ -44,10 +44,10 @@ std::vector<std::string> extract_contigs(const bcf_hdr_t *hdr);
 class FindMutations {
 public:
 
-    DNG_UNIT_TEST(test_constructor);
-    DNG_UNIT_TEST(test_prior);
-    DNG_UNIT_TEST(test_full_transition);
-    DNG_UNIT_TEST(test_operator);
+    DNG_UNIT_TEST(test_constructor)
+    DNG_UNIT_TEST(test_prior)
+    DNG_UNIT_TEST(test_full_transition)
+    DNG_UNIT_TEST(test_operator)
 
 
     struct FindMutationParams {

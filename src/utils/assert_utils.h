@@ -56,7 +56,7 @@ void AssertNear(A expected, A actual) {
 template<typename A, typename B>
 void AssertVectorEqual(A expected, B actual) {
     AssertEqual(expected.size(), actual.size());
-    for (int j = 0; j < expected.size(); ++j) {
+    for (size_t j = 0; j < expected.size(); ++j) {
         AssertEqual(expected[j], actual[j]);
     }
 };
@@ -65,7 +65,7 @@ void AssertVectorEqual(A expected, B actual) {
 template<typename A, typename B>
 void AssertVectorNear(A expected, B actual) {
     AssertEqual(expected.size(), actual.size());
-    for (int j = 0; j < expected.size(); ++j) {
+    for (size_t j = 0; j < expected.size(); ++j) {
         AssertNear(expected[j], actual[j]);
     }
 };
@@ -75,8 +75,8 @@ template<typename A>
 void AssertEigenMatrixNear(A expected, A actual) {
     AssertEqual(expected.rows(), actual.rows());
     AssertEqual(expected.cols(), actual.cols());
-    for (int j = 0; j < expected.rows(); ++j) {
-        for (int k = 0; k < expected.cols(); ++k) {
+    for (size_t j = 0; j < expected.rows(); ++j) {
+        for (size_t k = 0; k < expected.cols(); ++k) {
             AssertNear(expected(j, k), actual(j, k));
         }
     }
