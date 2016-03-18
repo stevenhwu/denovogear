@@ -50,8 +50,8 @@ public:
             >> NameContainer;
     //TODO: Move enum class Sex to somewhere else?? used in graph property, should not inclued io:Pedigree
     enum class Sex : size_t {
-        Unknown = 0, Male = 1, Female = 2, Both = 3
-    };
+        Unknown = 0, Male = 1, Female = 2, Both = 3, a0=3,
+        aa=4,ab=5,ac=6,ad=7,ae=8,af=9,ag=10,ah=11,ai=12,aj=13,ak=14    };
 
     struct Member {
         std::size_t fam;
@@ -97,7 +97,7 @@ public:
     // TODO: maybe we can just keep pointers to the delimiters in memory
     // TODO: add comment support
     // TODO: warnings for rows that don't have enough elements?
-    // TODO: gender checking
+    // TODO: sex checking
     template<typename Range>
     bool Parse(const Range &text) {
         using namespace boost;
@@ -232,7 +232,22 @@ protected:
             {"female", Sex::Female},
             {"unknown", Sex::Unknown},
             {"other", Sex::Unknown},
-            {"both", Sex::Both}
+            {"both", Sex::Both},
+            {"3", Sex::a0},
+            {"4",Sex::aa},
+            {"5",Sex::ab},
+            {"6",Sex::ac},
+            {"7",Sex::ad},
+            {"8",Sex::ae},
+            {"9",Sex::af},
+            {"10",Sex::ag},
+            {"11",Sex::ah},
+            {"12",Sex::ai},
+            {"13",Sex::aj},
+            {"14",Sex::ak},
+
+//            {"l",Sex::l},
+
         };
         return dng::utility::key_switch_tuple(str, keys, keys[0]).second;
     }

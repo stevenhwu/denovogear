@@ -14,10 +14,11 @@ FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
 
     for (size_t child = 0; child < work_nomut_.num_nodes; ++child) {
         auto trans = ship_graph.transitions()[child];
-        std::cout << "Node:" << child << "\t" << "\t" << trans.length1 <<
-                "\t" << trans.length2 <<
+        std::cout << "Node:" << child << "\t" <<
                 "\tType:" << (int) trans.type <<
-                "\tSex:" << (int) trans.gender <<
+                "\tSex:" << (int) trans.sex <<
+                //                trans.length1 << "\t" << trans.length2 << "\t" <<
+                "\tP: " <<trans.parent1 << "_" << trans.parent2 << "\t" <<
                 std::endl;
 
         if (trans.type == RelationshipGraph::TransitionType::Germline) {
