@@ -3,7 +3,7 @@
 //
 
 
-#include <dng/find_mutation_x.h>
+#include <dng/find_mutation_xlink.h>
 
 
 FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
@@ -25,22 +25,59 @@ FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
-            full_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom);
-            nomut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 0);
-            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-                                                 nomut_transition_matrices_[child];
-            onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
-            mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
+            if (trans.sex == dng::io::Pedigree::Sex::Male) {
+//Xlinked, only from mom:
+                full_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink(dad, mom);
+                nomut_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink(dad, mom, 0);
+                posmut_transition_matrices_[child] =
+                        full_transition_matrices_[child] -
+                                nomut_transition_matrices_[child];
+                onemut_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink(dad, mom, 1);
+                mean_matrices_[child] = meiosis_diploid_mean_matrix_xlink(dad, mom);
+            }
+            else if (trans.sex == dng::io::Pedigree::Sex::Female) {
+
+                full_transition_matrices_[child] =
+                        meiosis_diploid_matrix(dad, mom);
+                nomut_transition_matrices_[child] =
+                        meiosis_diploid_matrix(dad, mom, 0);
+                posmut_transition_matrices_[child] =
+                        full_transition_matrices_[child] -
+                                nomut_transition_matrices_[child];
+                onemut_transition_matrices_[child] =
+                        meiosis_diploid_matrix(dad, mom, 1);
+                mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
+            }
         } else if (trans.type == RelationshipGraph::TransitionType::Somatic ||
                    trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
-            full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
-            nomut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 0);
-            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-                                                 nomut_transition_matrices_[child];
-            onemut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 1);
-            mean_matrices_[child] = mitosis_diploid_mean_matrix(orig);
+            if (trans.sex == dng::io::Pedigree::Sex::Male) {
+                full_transition_matrices_[child] =
+                        mitosis_diploid_matrix_xlink(orig);
+                nomut_transition_matrices_[child] =
+                        mitosis_diploid_matrix_xlink(orig, 0);
+                posmut_transition_matrices_[child] =
+                        full_transition_matrices_[child] -
+                                nomut_transition_matrices_[child];
+                onemut_transition_matrices_[child] =
+                        mitosis_diploid_matrix_xlink(orig, 1);
+                mean_matrices_[child] = mitosis_diploid_mean_matrix_xlink(orig);
+            }
+            else if (trans.sex == dng::io::Pedigree::Sex::Female) {
+                full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
+                nomut_transition_matrices_[child] =
+                        mitosis_diploid_matrix(orig, 0);
+                posmut_transition_matrices_[child] =
+                        full_transition_matrices_[child] -
+                                nomut_transition_matrices_[child];
+                onemut_transition_matrices_[child] =
+                        mitosis_diploid_matrix(orig, 1);
+                mean_matrices_[child] = mitosis_diploid_mean_matrix(orig);
+            }
         } else {
             full_transition_matrices_[child] = {};
             nomut_transition_matrices_[child] = {};
@@ -50,6 +87,9 @@ FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
         }
 
     }
+    std::cout << (int) RelationshipGraph::TransitionType::Somatic << "\t" <<
+            (int) RelationshipGraph::TransitionType::Library
+                    << "\t" << (int) RelationshipGraph::TransitionType::Germline<< std::endl;
 
 }
 

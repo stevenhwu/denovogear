@@ -57,7 +57,7 @@
 
 //#include <boost/test/unit_test.hpp>
 
-#include <dng/find_mutation_x.h>
+#include <dng/find_mutation_xlink.h>
 #include <gdbm.h>
 
 using namespace dng::task;
