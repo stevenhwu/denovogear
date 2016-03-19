@@ -49,18 +49,15 @@ if (PEELING_VERBOSE_LEVEL > 0) {std::cerr << std::endl;}
 
 
 // Family Order: Father, Mother, Child1, Child2, ...
-dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work,
-                                                      const family_members_t &family,
+dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
                                                       const TransitionVector &mat) {
     PairedGenotypeArray buffer = sum_over_children(work, family, mat, 2);
     return buffer;
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
-dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work,
-                                                      const family_members_t &family,
-                                                      const TransitionVector &mat,
-                                                      int first_child_index) {
+dng::PairedGenotypeArray dng::peel::sum_over_children(workspace_t &work, const family_members_t &family,
+                                                      const TransitionVector &mat, int first_child_index) {
     assert(family.size() >= 3);
     assert(family.size() >= first_child_index);
 
@@ -96,7 +93,11 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work,
     auto parent_index = family[other_parent];
 
     work.paired_buffer = sum_over_children(work, family, mat, 2);
+    work.paired_buffer = Eigen::ArrayXXd::Random(100,1);
+    std::cout << work.paired_buffer << "\n\n" << std::endl;
     work.paired_buffer.resize(10, 10);
+    std::cout << work.paired_buffer << "\n\n" << std::endl;
+    std::exit(300);
     if (other_parent == Parents::Father) {
         work.paired_buffer.transposeInPlace();
     }
@@ -106,6 +107,7 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work,
 
     return parent_array;
 }
+
 
 
 // Family Order: Parent, Child

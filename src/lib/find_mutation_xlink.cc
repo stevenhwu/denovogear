@@ -28,6 +28,19 @@ FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
             if (trans.sex == dng::io::Pedigree::Sex::Male) {
 //Xlinked, only from mom:
                 full_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink_son(dad, mom);
+                nomut_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink_son(dad, mom, 0);
+                posmut_transition_matrices_[child] =
+                        full_transition_matrices_[child] -
+                                nomut_transition_matrices_[child];
+                onemut_transition_matrices_[child] =
+                        meiosis_diploid_matrix_xlink_son(dad, mom, 1);
+                mean_matrices_[child] = meiosis_diploid_mean_matrix_xlink(dad, mom);//TODO: fix this
+            }
+            else if (trans.sex == dng::io::Pedigree::Sex::Female) {
+
+                full_transition_matrices_[child] =
                         meiosis_diploid_matrix_xlink(dad, mom);
                 nomut_transition_matrices_[child] =
                         meiosis_diploid_matrix_xlink(dad, mom, 0);
@@ -37,19 +50,6 @@ FindMutationsXLinked::FindMutationsXLinked(const RelationshipGraph &ship_graph,
                 onemut_transition_matrices_[child] =
                         meiosis_diploid_matrix_xlink(dad, mom, 1);
                 mean_matrices_[child] = meiosis_diploid_mean_matrix_xlink(dad, mom);
-            }
-            else if (trans.sex == dng::io::Pedigree::Sex::Female) {
-
-                full_transition_matrices_[child] =
-                        meiosis_diploid_matrix(dad, mom);
-                nomut_transition_matrices_[child] =
-                        meiosis_diploid_matrix(dad, mom, 0);
-                posmut_transition_matrices_[child] =
-                        full_transition_matrices_[child] -
-                                nomut_transition_matrices_[child];
-                onemut_transition_matrices_[child] =
-                        meiosis_diploid_matrix(dad, mom, 1);
-                mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
             }
         } else if (trans.type == RelationshipGraph::TransitionType::Somatic ||
                    trans.type == RelationshipGraph::TransitionType::Library) {
