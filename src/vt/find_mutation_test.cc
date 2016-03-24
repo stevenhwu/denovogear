@@ -272,8 +272,8 @@ int main(int argc, char *argv[]) {
         argv[1] = (char*) "-p";
         argv[2] = (char*) "testdata/sample_5_3/ceu.ped"; //"pedFile";
         argv[3] = (char*) "testdata/sample_5_3/test1.vcf"; //test1.bam
-        argv[2] = (char*) "testDataSW/ceu_M12.ped"; //"pedFile";
-        argv[3] = (char*) "testDataSW/test_M12.vcf"; //test1.bam
+//        argv[2] = (char*) "testDataSW/ceu_M12.ped"; //"pedFile";
+//        argv[3] = (char*) "testDataSW/test_M12.vcf"; //test1.bam
 
         dng::CommandLineApp<dng::task::Call> a (argc, argv) ;
         a();

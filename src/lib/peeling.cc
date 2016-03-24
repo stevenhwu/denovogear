@@ -24,7 +24,7 @@
 //TODO: HOW? to define PEELING_VERBOSE_LEVEL in CMAKE?
 #define PEELING_DEVEL
 //#define PEELING_VERBOSE_LEVEL 2 //TODO: deal with this in CMAKE later.
-const int PEELING_VERBOSE_LEVEL = 0;
+const int PEELING_VERBOSE_LEVEL = 2;
 
 #if defined(DNG_DEVEL) // || defined(PEELING_VERBOSE_LEVEL)
 #define PEELING_DEVEL
@@ -93,17 +93,29 @@ dng::GenotypeArray dng::peel::to_parent_core(workspace_t &work,
     auto parent_index = family[other_parent];
 
     work.paired_buffer = sum_over_children(work, family, mat, 2);
-    work.paired_buffer = Eigen::ArrayXXd::Random(100,1);
+//    work.paired_buffer = Eigen::ArrayXXd::Random(100,1);
+//    for (int j = 0; j < 10; ++j) {
+//        work.paired_buffer(j+10) = 0;
+//        work.paired_buffer(j+20) = 0;
+//        work.paired_buffer(j+30) = 0;
+//        work.paired_buffer(j+50) = 0;
+//        work.paired_buffer(j+60) = 0;
+//        work.paired_buffer(j+80) = 0;
+//    }
     std::cout << work.paired_buffer << "\n\n" << std::endl;
     work.paired_buffer.resize(10, 10);
-    std::cout << work.paired_buffer << "\n\n" << std::endl;
-    std::exit(300);
+
     if (other_parent == Parents::Father) {
         work.paired_buffer.transposeInPlace();
     }
+
+    std::cout << work.paired_buffer << "\n\n" << std::endl;
     GenotypeArray parent_array = (work.paired_buffer.matrix() *
                                   WORKSPACE_T_MULTIPLE_UPPER_LOWER(work, parent_index)
                                           .matrix()).array();
+    std::cout << parent_array << "\n\n" <<std::endl;
+    std::cout << int(other_parent) << std::endl;
+    std::exit(300);
 
     return parent_array;
 }

@@ -113,8 +113,16 @@ inline TransitionMatrix meiosis_diploid_matrix(const MutationMatrix &mdad,
 
     if(mutype <= 0) {
         auto dad = meiosis_haploid_matrix(mdad, mutype);
+        dad.row(1) = Eigen::Array4d::Zero(4);
+        dad.row(2) = Eigen::Array4d::Zero(4);
+        dad.row(3) = Eigen::Array4d::Zero(4);
+        dad.row(5) = Eigen::Array4d::Zero(4);
+        dad.row(6) = Eigen::Array4d::Zero(4);
+        dad.row(8) = Eigen::Array4d::Zero(4);
+        std::cout << dad << "\n\n" << std::endl;
         auto mom = meiosis_haploid_matrix(mmom, mutype);
         temp = kroneckerProduct(dad, mom);
+        std::cout << temp << "\n\n" << std::endl;
     } else {
         temp = dng::TransitionMatrix::Zero(100, 16);
         for(int i = 0; i <= mutype; ++i) {
