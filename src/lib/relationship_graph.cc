@@ -17,7 +17,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dng/pedigree.h>
+#include <dng/relationship_graph.h>
 #include <dng/graph.h>
 #include <dng/mutation.h>
 #include <dng/utility.h>
@@ -58,9 +58,8 @@ RULES FOR LINKING READ GROUPS TO PEOPLE.
 
 */
 
-bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
-                              dng::ReadGroups &rgs,
-                              double mu, double mu_somatic, double mu_library) {
+bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
+        dng::ReadGroups &rgs, double mu, double mu_somatic, double mu_library) {
     using namespace boost;
     using namespace std;
 
@@ -431,7 +430,7 @@ bool dng::Pedigree::Construct(const io::Pedigree &pedigree,
     return true;
 }
 
-void dng::Pedigree::ConstructPeelingMachine() {
+void dng::RelationshipGraph::ConstructPeelingMachine() {
     using namespace dng::peel;
     peeling_functions_.clear();
     peeling_functions_.reserve(peeling_ops_.size());
@@ -474,7 +473,7 @@ void dng::Pedigree::ConstructPeelingMachine() {
 }
 
 
-void dng::Pedigree::PrintMachine(std::ostream &os) {
+void dng::RelationshipGraph::PrintMachine(std::ostream &os) {
     os << "Init Op\n";
     for(int i = first_founder_; i < first_nonfounder_; ++i) {
         os << "\tw\tupper[" << i << "] // " << labels_[i] << "\n";
@@ -576,7 +575,7 @@ void dng::Pedigree::PrintMachine(std::ostream &os) {
     }
 }
 
-void dng::Pedigree::PrintTable(std::ostream &os) {
+void dng::RelationshipGraph::PrintTable(std::ostream &os) {
     std::vector<int> write_low(num_nodes_, -1);
     std::vector<int> write_up(num_nodes_, -1);
 
@@ -630,7 +629,7 @@ void dng::Pedigree::PrintTable(std::ostream &os) {
 //     }
 // }
 
-std::vector<std::string> dng::Pedigree::BCFHeaderLines() const {
+std::vector<std::string> dng::RelationshipGraph::BCFHeaderLines() const {
     using namespace std;
     vector<string> ret = { "##META=<ID=FatherMR,Type=Float,Number=1,Description=\"Paternal mutation rate parameter\">",
                            "##META=<ID=MotherMR,Type=Float,Number=1,Description=\"Maternal mutation rate parameter\">",

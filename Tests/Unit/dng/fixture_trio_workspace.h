@@ -33,7 +33,7 @@ struct TrioWorkspace : public  ReadTrioFromFile {
 
     double min_prob;
 
-    dng::Pedigree pedigree;
+    dng::RelationshipGraph pedigree;
     dng::peel::workspace_t workspace;
 
     int ref_index = 2;

@@ -36,7 +36,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <dng/task/loglike.h>
-#include <dng/pedigree.h>
+#include <dng/relationship_graph.h>
 #include <dng/fileio.h>
 #include <dng/pileup.h>
 #include <dng/read_group.h>
@@ -131,12 +131,12 @@ public:
         double log_scale;        
     };
 
-    LogProbability(const Pedigree &pedigree, params_t params);
+    LogProbability(const RelationshipGraph &pedigree, params_t params);
 
     stats_t operator()(const std::vector<depth_t> &depths, int ref_index);
 
 protected:
-    const dng::Pedigree &pedigree_;
+    const dng::RelationshipGraph &pedigree_;
 
     params_t params_;
 
@@ -252,7 +252,7 @@ int task::LogLike::operator()(task::LogLike::argument_type &arg) {
     }
 
     // Construct peeling algorithm from parameters and pedigree information
-    dng::Pedigree pedigree;
+    dng::RelationshipGraph pedigree;
     if(!pedigree.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library)) {
         throw std::runtime_error("Unable to construct peeler for pedigree; "
                                  "possible non-zero-loop pedigree.");
@@ -393,7 +393,7 @@ int task::LogLike::operator()(task::LogLike::argument_type &arg) {
     return EXIT_SUCCESS;
 }
 
-LogProbability::LogProbability(const Pedigree &pedigree,
+LogProbability::LogProbability(const RelationshipGraph &pedigree,
                              params_t params) :
     pedigree_(pedigree),
     params_(params), genotype_likelihood_{params.params_a, params.params_b},
@@ -414,13 +414,13 @@ LogProbability::LogProbability(const Pedigree &pedigree,
  
     for(size_t child = 0; child < work_.num_nodes; ++child) {
         auto trans = pedigree.transitions()[child];
-        if(trans.type == Pedigree::TransitionType::Germline) {
+        if(trans.type == RelationshipGraph::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
             full_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom);
-        } else if(trans.type == Pedigree::TransitionType::Somatic ||
-                  trans.type == Pedigree::TransitionType::Library) {
+        } else if(trans.type == RelationshipGraph::TransitionType::Somatic ||
+                  trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
 
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);

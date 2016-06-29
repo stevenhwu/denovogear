@@ -24,7 +24,7 @@
 #include <iostream>
 
 //#include <dng/pedigree_v2.h>
-#include <dng/pedigree.h>
+#include <dng/relationship_graph.h>
 
 #include "../boost_test_helper.h"
 #include "fixture_read_trio_from_file.h"
@@ -35,7 +35,7 @@ namespace utf = boost::unit_test;
 struct FixturePedigree : public ReadTrioFromFile{
 
 
-    dng::Pedigree pedigree;
+    dng::RelationshipGraph pedigree;
 //    dng::PedigreeV2 pedigree_v2;
 
     FixturePedigree(std::string s = "FixturePedigree") : ReadTrioFromFile(s) {
@@ -121,17 +121,17 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigree) {
 
     auto transitions = pedigree.transitions();
     auto size_t_negative_one = static_cast<size_t>(-1);
-    std::vector<Pedigree::transition_t> expected_transitions = {
-            { Pedigree::TransitionType::Founder, size_t_negative_one,
+    std::vector<RelationshipGraph::transition_t> expected_transitions = {
+            { RelationshipGraph::TransitionType::Founder, size_t_negative_one,
 					size_t_negative_one, 0, 0 },
-            { Pedigree::TransitionType::Founder, size_t_negative_one,
+            { RelationshipGraph::TransitionType::Founder, size_t_negative_one,
 					size_t_negative_one, 0, 0 },
-            { Pedigree::TransitionType::Germline, 0, 1, arg.mu
+            { RelationshipGraph::TransitionType::Germline, 0, 1, arg.mu
 					+ arg.mu_somatic + arg.mu_library, arg.mu
 					+ arg.mu_somatic + arg.mu_library },
-            { Pedigree::TransitionType::Somatic, 0, size_t_negative_one,
+            { RelationshipGraph::TransitionType::Somatic, 0, size_t_negative_one,
 					arg.mu_somatic + arg.mu_library, 0 },
-			{ Pedigree::TransitionType::Somatic, 1, size_t_negative_one,
+			{ RelationshipGraph::TransitionType::Somatic, 1, size_t_negative_one,
 					arg.mu_somatic + arg.mu_library, 0 }
     };
     //Transition related code

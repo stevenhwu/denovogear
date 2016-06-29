@@ -34,7 +34,7 @@
 
 namespace dng {
 
-class Pedigree {
+class RelationshipGraph {
 public:
 
     enum class TransitionType {
