@@ -4,7 +4,7 @@ add_library(libdng STATIC
   pileup.cc
   likelihood.cc
   newick.cc
-  pedigree.cc
+  relationship_graph.cc
   peeling.cc
   mutation.cc
   stats.cc

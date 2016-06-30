@@ -18,17 +18,17 @@
  */
 
 
-#define BOOST_TEST_MODULE dng::pedigree
+#define BOOST_TEST_MODULE dng::relationship_graph
 
-//#include <boost/test/unit_test.hpp>
 #include <iostream>
 
-//#include <dng/pedigree_v2.h>
 #include <dng/relationship_graph.h>
 
 #include "../boost_test_helper.h"
+#include <boost/test/unit_test.hpp>
+#include <test/unit_test.hpp>
 #include "fixture_read_trio_from_file.h"
-
+#include <boost/test/unit_test_suite.hpp>
 namespace utf = boost::unit_test;
 
 
@@ -56,9 +56,11 @@ void setup() { BOOST_TEST_MESSAGE("set up fun"); }
 
 void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
-
-
 //BOOST_FIXTURE_TEST_SUITE(test_pedigree_suite, FixturePedigree )
+BOOST_FIXTURE_TEST_CASE_NO_DECOR(aoeu, FixturePedigree){
+
+}
+
 
 /*
 
@@ -69,7 +71,7 @@ void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 3  2  4
 
 */
-BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigree) {
+BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_constructor, FixturePedigree ) {
 
     BOOST_CHECK_EQUAL(5, pedigree.num_nodes() );
 
@@ -174,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigree) {
 //BOOST_AUTO_TEST_SUITE_END()
 
 namespace dng {
-BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigree) {
+BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_pedigree_inspect, FixturePedigree) {
 
     BOOST_CHECK_EQUAL(5, pedigree.num_nodes());
 
@@ -202,5 +204,93 @@ BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigree) {
     boost_check_equal_vector(expected_functions_ops, functions_ops);
 
 }
+typedef std::pair<int, int> PairIndex;
+void boost_check_equal_pair_index(PairIndex expected_index, PairIndex result_index){
+
+    BOOST_CHECK_EQUAL(expected_index.first, result_index.first);
+    BOOST_CHECK_EQUAL(expected_index.second, result_index.second);
+
+}
+
+BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_parse_io_pedigree, ReadTrioFromFile) {
+
+    RelationshipGraph relationship_graph;
+
+    relationship_graph.SetupFirstNodeIndex(ped);
+    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
+    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
+    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
+
+    // Construct a graph of the pedigree and somatic information
+    Graph pedigree_graph(relationship_graph.first_somatic_);
+//
+//        PrintDebugEdges("========== VERISON 2 =========\ninit pedigree", pedigree_graph);
+//
+//        auto edge_types = get(boost::edge_type, pedigree_graph);
+//        auto lengths = get(boost::edge_length, pedigree_graph);
+//        auto labels = get(boost::vertex_label, pedigree_graph);
+//    //    auto groups = get(vertex_group, pedigree_graph);
+//    //    auto families = get(edge_family, pedigree_graph);
+//
+//        // Add the labels for the germline nodes
+//        labels[0] = DNG_GL_PREFIX "unknown";
+//        for (size_t i = 1; i < first_somatic_; ++i) {
+//            labels[i] = DNG_GL_PREFIX + pedigree.name(i);
+//        }
+//
+//
+//        // Go through rows and construct the pedigree part.
+//
+    relationship_graph.ParseIoPedigree(pedigree_graph, ped);
+    BOOST_CHECK_EQUAL(7, num_vertices(pedigree_graph));
+    BOOST_CHECK_EQUAL(6, num_edges(pedigree_graph));
+
+    RelationshipGraph::PropVertexIndex index = get(boost::vertex_index, pedigree_graph);
+
+
+//    typedef std::pair<RelationshipGraph::PropVertexIndex,
+//            RelationshipGraph::PropVertexIndex> PairIndex;
+//    typedef std::pair<std::size_t, std::size_t> PairIndex;
+    typedef std::pair<int, int> PairIndex;
+    std::vector<PairIndex> index_vector;
+
+    boost::graph_traits<Graph>::edge_iterator ei, ei_end;
+    for (tie(ei, ei_end) = edges(pedigree_graph); ei != ei_end; ++ei) {
+
+        PairIndex pi = std::make_pair(index[source(*ei, pedigree_graph)],
+                index[target(*ei, pedigree_graph)]);
+        index_vector.push_back(pi);
+    }
+
+    sort(index_vector.begin(), index_vector.end());
+
+    std::vector<PairIndex> expected_vector {
+            std::make_pair(1,2),
+            std::make_pair(1,3),
+            std::make_pair(1,4),
+            std::make_pair(2,3),
+            std::make_pair(2,5),
+            std::make_pair(3,6) };
+    for (int i = 0; i < expected_vector.size(); ++i) {
+        auto result = std::find(index_vector.begin(), index_vector.end(), expected_vector[i]);
+//        BOOST_CHECK_EQUAL(i, result-index_vector.begin());
+//        std::cout << (expected_vector[i] == index_vector[i]) << std::endl;
+//        BOOST_CHECK(expected_vector[i] == index_vector[i]);
+        boost_check_equal_pair_index(expected_vector[i], index_vector[i]);
+    }
+
+//    a = std::search(index_vector.begin(), index_vector.end(), std::make_pair(2,3));
+//    std::cout << (a==index_vector.end()) << std::endl;
+
+//        std::cout << " ==END==" << std::endl;
+//        std::cout << "Founder, Non_F, Lib, Somatic: " << first_founder_ << "\t"
+//                << first_nonfounder_ << "\t" << first_library_ << "\t"
+//                << first_somatic_ << std::endl;
+//        std::cout << std::endl;
+//}
+
+}
+
 
 } // namespace dng
+

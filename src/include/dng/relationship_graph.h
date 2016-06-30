@@ -32,14 +32,61 @@
 #include <dng/peeling.h>
 #include <dng/detail/unit_test.h>
 
+#define DEBUG_VERBOSE 1
+
 namespace dng {
 
 class RelationshipGraph {
 public:
 
+    typedef boost::property_map<Graph, boost::edge_type_t>::type PropEdgeType;
+    typedef boost::property_map<Graph, boost::edge_length_t>::type PropEdgeLength;
+    typedef boost::property_map<Graph, boost::vertex_label_t>::type PropVertexLabel;
+    typedef boost::property_map<Graph, boost::vertex_group_t>::type PropVertexGroup;
+    typedef boost::property_map<Graph, boost::vertex_index_t>::type PropVertexIndex;
+
+    typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
+
+    typedef std::vector<std::vector<boost::graph_traits<dng::Graph>::edge_descriptor>> family_labels_t;
+
+
+    enum class InheritancePattern : int {
+        AUTOSOMAL = 0,
+        DEFAULT = 0,
+        MATERNAL = 1,
+        PATERNAL = 2,
+        X_LINKED = 3,
+        Y_LINKED = 4,
+        W_LINKED = 5,
+        Z_LINKED = 6,
+
+//        autosomal (the default)
+//        xlinked (females have 2 copies, males have 1; males transmit to daughters, not to sons)
+//        ylinked (males have 1 copy, only transmits it to sons)
+//        wlinked (females have 1 copy, only transmited to daughters)
+//        zlinked (males have 2 copies, females have 1; females transmit to sons, not to daughters)
+//        maternal (transmitted by mother to child)
+//        paternal (transmitter by father to child)
+    };
+
+    //TODO: struct FamilyInfo/Family structure.
+    //Op1: A struct to record info in each family. family_t and ops
+    //Op2: Another struct to group families together, include pivots and root?
+    enum class FamilyType : int {
+        PAIR = 2,
+        TRIO = 3
+    };
+
     enum class TransitionType {
         Founder, Germline, Somatic, Library
     };
+
+    struct FamilyInfo {
+        FamilyType family_type;
+        family_labels_t family_labels;//(num_families);
+        std::vector<vertex_t> pivots;//(num_families, dummy_index);
+    };
+
     struct transition_t {
         TransitionType type;
         std::size_t parent1;
@@ -50,6 +97,12 @@ public:
 
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
                    double mu, double mu_somatic, double mu_library);
+
+    //TODO(SW): Eventually replace with this, or pass inheritance with a different method
+    bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
+            const InheritancePattern &pattern, double mu, double mu_somatic,
+            double mu_library);
+
 
     double PeelForwards(peel::workspace_t &work,
                         const TransitionVector &mat) const {
@@ -112,6 +165,7 @@ public:
 
 
 protected:
+
     // node structure:
     // founder germline, non-founder germline, somatic, library
     std::size_t num_nodes_{0};        // total number of nodes
@@ -138,8 +192,46 @@ protected:
     std::vector<peel::family_members_t> family_members_;
 
     void ConstructPeelingMachine();
-    
+
+//PR_NOTE(SW): New functions here
+    void SetupFirstNodeIndex(const io::Pedigree &pedigree);
+
+    void ParseIoPedigree(dng::Graph &pedigree_graph,
+            const dng::io::Pedigree &pedigree);
+
+    void AddLibrariesFromReadGroups(dng::Graph &pedigree_graph,
+            const dng::ReadGroups &rgs, PropVertexLabel &labels);
+
+    void ConnectSomaticToLibraries(dng::Graph &pedigree_graph,
+            const ReadGroups &rgs, const PropVertexLabel &labels);
+
+    void UpdateEdgeLengths(dng::Graph &pedigree_graph, double mu,
+            double mu_somatic, double mu_library);
+
+    void SimplifyPedigree(dng::Graph &pedigree_graph,
+            const PropEdgeType &edge_types, const PropEdgeLength &lengths);
+
+    void UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng::ReadGroups rgs,
+            std::vector<size_t> &node_ids);
+
+    void EraseRemovedLibraries(dng::ReadGroups &rgs,
+            std::vector<size_t> &node_ids);
+
+    void CreateFamiliesInfo(dng::Graph &pedigree_graph,
+            family_labels_t &family_labels, std::vector<vertex_t> &pivots);
+
+    void CreatePeelingOps(dng::Graph &pedigree_graph,
+            const std::vector<size_t> &node_ids, family_labels_t &family_labels,
+            std::vector<vertex_t> &pivots);
+
+private:
+    void PrintDebugEdges(const std::string &prefix,
+            const dng::Graph &pedigree_graph);
+
+    const vertex_t DUMMY_INDEX = 0;
+
     DNG_UNIT_TEST(test_pedigree_inspect);
+    DNG_UNIT_TEST(test_parse_io_pedigree);
 };
 
 }; // namespace dng

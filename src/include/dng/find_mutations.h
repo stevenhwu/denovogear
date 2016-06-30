@@ -40,7 +40,7 @@
 //#include <boost/algorithm/string.hpp>
 #include <dng/matrix.h>
 #include <dng/task/call.h>
-#include <dngrelationship_graph.h>
+#include <dng/relationship_graph.h>
 #include <dng/fileio.h>
 #include <dng/pileup.h>
 #include <dng/read_group.h>
