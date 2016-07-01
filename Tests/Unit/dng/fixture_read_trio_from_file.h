@@ -42,7 +42,7 @@ struct ReadTrioFromFile {
 
     std::string fixture;
 
-    dng::io::Pedigree ped;
+    dng::io::Pedigree io_pedigree;
     dng::ReadGroups rgs;
 
     typedef dng::task::Call task_type;
@@ -88,7 +88,7 @@ struct ReadTrioFromFile {
         // Parse pedigree from file
 
         std::ifstream ped_file(arg.ped);
-        ped.Parse(istreambuf_range(ped_file));
+        io_pedigree.Parse(istreambuf_range(ped_file));
 
 
         std::vector<hts::File> indata;

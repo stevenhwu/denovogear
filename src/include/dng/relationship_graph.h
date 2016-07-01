@@ -232,6 +232,7 @@ private:
 
     DNG_UNIT_TEST(test_pedigree_inspect);
     DNG_UNIT_TEST(test_parse_io_pedigree);
+    DNG_UNIT_TEST(test_add_lib_from_rgs);
 };
 
 }; // namespace dng

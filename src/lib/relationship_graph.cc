@@ -89,10 +89,10 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
 //    auto families = get(edge_family, pedigree_graph);
 
     // Add the labels for the germline nodes
-    labels[0] = DNG_GL_PREFIX "unknown";
-    for (size_t i = 1; i < first_somatic_; ++i) {
-        labels[i] = DNG_GL_PREFIX + pedigree.name(i);
-    }
+//    labels[0] = DNG_GL_PREFIX "unknown";
+//    for (size_t i = 1; i < first_somatic_; ++i) {
+//        labels[i] = DNG_GL_PREFIX + pedigree.name(i);
+//    }
 
 
     // Go through rows and construct the pedigree part.
@@ -389,7 +389,14 @@ std::vector<std::string> dng::RelationshipGraph::BCFHeaderLines() const {
 
 
 
-void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph, const dng::io::Pedigree &pedigree) {
+void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph,
+        const dng::io::Pedigree &pedigree) {
+
+    auto labels = get(boost::vertex_label, pedigree_graph);
+    labels[0] = DNG_GL_PREFIX "unknown";
+    for (size_t i = 1; i < first_somatic_; ++i) {
+        labels[i] = DNG_GL_PREFIX + pedigree.name(i);
+    }
 
     PrintDebugEdges("Start", pedigree_graph);
     for (auto &row : pedigree.table()) {
