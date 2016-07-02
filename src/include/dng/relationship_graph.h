@@ -214,8 +214,6 @@ protected:
     void UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng::ReadGroups rgs,
             std::vector<size_t> &node_ids);
 
-    void EraseRemovedLibraries(dng::ReadGroups &rgs,
-            std::vector<size_t> &node_ids);
 
     void CreateFamiliesInfo(dng::Graph &pedigree_graph,
             family_labels_t &family_labels, std::vector<vertex_t> &pivots);
@@ -227,6 +225,9 @@ protected:
             std::vector<vertex_t> &pivots);
 
 private:
+
+    void EraseRemovedLibraries(dng::ReadGroups &rgs,
+                std::vector<size_t> &node_ids);
 
     void ResetFamilyInfo();
 

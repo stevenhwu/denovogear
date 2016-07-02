@@ -543,8 +543,11 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
     boost_check_equal_vector(expected_labels, relationship_graph.labels_);
 
 
-    RelationshipGraph::family_labels_t expected_family_labels;//(num_families);
-    std::vector<vertex_t> expected_pivots {0, 1, 2};
+    RelationshipGraph::family_labels_t expected_family_labels{
+
+
+    };
+    std::vector<vertex_t> expected_pivots {2, 1, 0};
 
     for (int l = 0; l < family_labels.size(); ++l) {
             std::cout << "Families : " << l << "\tPivots: " << pivots[l] << "\t";
