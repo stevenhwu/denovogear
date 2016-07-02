@@ -196,20 +196,20 @@ protected:
 //PR_NOTE(SW): New functions here
     void SetupFirstNodeIndex(const io::Pedigree &pedigree);
 
+    //PR_NOTE(SW): Extract all information we needed form io::pedigree, io:pedigree should never be used after this function
     void ParseIoPedigree(dng::Graph &pedigree_graph,
             const dng::io::Pedigree &pedigree);
 
     void AddLibrariesFromReadGroups(dng::Graph &pedigree_graph,
-            const dng::ReadGroups &rgs, PropVertexLabel &labels);
+            const dng::ReadGroups &rgs);
 
     void ConnectSomaticToLibraries(dng::Graph &pedigree_graph,
             const ReadGroups &rgs, const PropVertexLabel &labels);
 
-    void UpdateEdgeLengths(dng::Graph &pedigree_graph, double mu,
+    void UpdateEdgeLengths(dng::Graph &pedigree_graph, double mu_meiotic,
             double mu_somatic, double mu_library);
 
-    void SimplifyPedigree(dng::Graph &pedigree_graph,
-            const PropEdgeType &edge_types, const PropEdgeLength &lengths);
+    void SimplifyPedigree(dng::Graph &pedigree_graph);
 
     void UpdateLabelsNodeIds(dng::Graph &pedigree_graph, dng::ReadGroups rgs,
             std::vector<size_t> &node_ids);
@@ -220,11 +220,16 @@ protected:
     void CreateFamiliesInfo(dng::Graph &pedigree_graph,
             family_labels_t &family_labels, std::vector<vertex_t> &pivots);
 
+
+
     void CreatePeelingOps(dng::Graph &pedigree_graph,
             const std::vector<size_t> &node_ids, family_labels_t &family_labels,
             std::vector<vertex_t> &pivots);
 
 private:
+
+    void ResetFamilyInfo();
+
     void PrintDebugEdges(const std::string &prefix,
             const dng::Graph &pedigree_graph);
 
@@ -233,6 +238,10 @@ private:
     DNG_UNIT_TEST(test_pedigree_inspect);
     DNG_UNIT_TEST(test_parse_io_pedigree);
     DNG_UNIT_TEST(test_add_lib_from_rgs);
+    DNG_UNIT_TEST(test_update_edge_lengths);
+    DNG_UNIT_TEST(test_simplify_pedigree);
+    DNG_UNIT_TEST(test_update_labels_node_ids);
+    DNG_UNIT_TEST(test_create_families_info);
 };
 
 }; // namespace dng
