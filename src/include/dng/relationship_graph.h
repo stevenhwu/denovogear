@@ -21,9 +21,11 @@
 #ifndef DNG_PEDIGREE_H
 #define DNG_PEDIGREE_H
 
-#include <functional>
+
 #include <cmath>
-#include <array>
+#include <string>
+#include <vector>
+
 
 #include <dng/matrix.h>
 #include <dng/io/ped.h>

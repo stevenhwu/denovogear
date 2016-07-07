@@ -24,10 +24,7 @@
 
 #include <iostream>
 
-
-
 #include "../boost_test_helper.h"
-#include <boost/test/unit_test.hpp>
 #include "fixture_read_trio_from_file.h"
 
 namespace utf = boost::unit_test;
@@ -543,29 +540,51 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
     boost_check_equal_vector(expected_labels, relationship_graph.labels_);
 
 
-    RelationshipGraph::family_labels_t expected_family_labels{
+    std::vector<std::vector<EdgeInfo>> expected_family_labels {
+        {std::make_tuple(2, 9, graph::EdgeType::Mitotic, 0.18)},
 
+        {std::make_tuple(1, 2, graph::EdgeType::Spousal, 0.0),
+            std::make_tuple(2, 7, graph::EdgeType::Meiotic, 0.23),
+            std::make_tuple(1, 7, graph::EdgeType::Meiotic, 0.23)},
 
+        {std::make_tuple(1, 8, graph::EdgeType::Mitotic, 0.18)},
     };
     std::vector<vertex_t> expected_pivots {2, 1, 0};
 
-    for (int l = 0; l < family_labels.size(); ++l) {
-            std::cout << "Families : " << l << "\tPivots: " << pivots[l] << "\t";
-            for (auto f : family_labels[l]) {
-                std::cout << f << " ";
+    boost_check_equal_vector(expected_pivots, pivots);
+//    auto families = get(boost::edge_family, pedigree_graph);
+
+    BOOST_CHECK_EQUAL(expected_family_labels.size(), family_labels.size());
+    for (int i = 0; i < expected_family_labels.size(); ++i) {
+            std::cout << "Families : " << i << "\tPivots: " << pivots[i] << "\t";
+            boost::detail::edge_desc_impl<boost::undirected_tag, unsigned long> x;
+            for (int j = 0; j < expected_family_labels[i].size(); ++j) {
+                auto f = family_labels[i][j];
+
+//                auto edge_types = get(boost::edge_type, pedigree_graph);
+//                auto edge_length = get(boost::edge_length, pedigree_graph);
+//                auto node_index = get(boost::vertex_index, pedigree_graph);
+//                EdgeInfo pi = std::make_tuple(node_index[source(f, pedigree_graph)],
+//                            node_index[target(j, pedigree_graph)],
+//                            edge_types[j], edge_length[j]);
+                EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
+                        boost::get(boost::edge_type, pedigree_graph, f),
+                        boost::get(boost::edge_length, pedigree_graph, f) );
+
+                boost_check_equal_edge(expected_family_labels[i][j], actual);
+
             }
-            std::cout << std::endl;
         }
-    std::sort(pivots.begin(), pivots.end());
-    std::sort(family_labels.begin(), family_labels.end());
-    std::cout << "====================" << std::endl;
-    for (int l = 0; l < family_labels.size(); ++l) {
-                std::cout << "Families : " << l << "\tPivots: " << pivots[l] << "\t";
-                for (auto f : family_labels[l]) {
-                    std::cout << f << " ";
-                }
-                std::cout << std::endl;
-            }
+//    std::sort(pivots.begin(), pivots.end());
+//    std::sort(family_labels.begin(), family_labels.end());
+//    std::cout << "====================" << std::endl;
+//    for (int l = 0; l < family_labels.size(); ++l) {
+//                std::cout << "Families : " << l << "\tPivots: " << pivots[l] << "\t";
+//                for (auto f : family_labels[l]) {
+//                    std::cout << f << " ";
+//                }
+//                std::cout << std::endl;
+//            }
 
 }
 
