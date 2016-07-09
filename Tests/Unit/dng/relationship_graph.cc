@@ -51,9 +51,6 @@ struct FixturePedigree : public ReadTrioFromFile{
 
 };
 
-void setup() { BOOST_TEST_MESSAGE("set up fun"); }
-
-void teardown() { BOOST_TEST_MESSAGE("tear down fun"); }
 
 [[deprecated]] typedef std::pair<int, int> PairIndex;
 //TODO(SW): tuple vs struct?
@@ -519,26 +516,6 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
     std::vector<vertex_t> pivots;//(num_families, dummy_index);
     relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
 
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    auto labels = get(boost::vertex_label, pedigree_graph);
-
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_nonfounder_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_somatic_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_library_);
-    BOOST_CHECK_EQUAL(5, relationship_graph.num_nodes_);
-    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
-    BOOST_CHECK_EQUAL(5, num_edges(pedigree_graph));
-
-    std::vector<std::string> expected_labels {
-        "GL-1",
-        "GL-2",
-        "LB-NA12878:Solexa-135852",
-        "LB-NA12891:Solexa-135851",
-        "LB-NA12892:Solexa-135853"
-    };
-    boost_check_equal_vector(expected_labels, relationship_graph.labels_);
-
 
     std::vector<std::vector<EdgeInfo>> expected_family_labels {
         {std::make_tuple(2, 9, graph::EdgeType::Mitotic, 0.18)},
@@ -556,10 +533,10 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
 
     BOOST_CHECK_EQUAL(expected_family_labels.size(), family_labels.size());
     for (int i = 0; i < expected_family_labels.size(); ++i) {
-            std::cout << "Families : " << i << "\tPivots: " << pivots[i] << "\t";
-            boost::detail::edge_desc_impl<boost::undirected_tag, unsigned long> x;
-            for (int j = 0; j < expected_family_labels[i].size(); ++j) {
-                auto f = family_labels[i][j];
+        std::cout << "Families : " << i << "\tPivots: " << pivots[i] << "\t";
+        boost::detail::edge_desc_impl<boost::undirected_tag, unsigned long> x;
+        for (int j = 0; j < expected_family_labels[i].size(); ++j) {
+            auto f = family_labels[i][j];
 
 //                auto edge_types = get(boost::edge_type, pedigree_graph);
 //                auto edge_length = get(boost::edge_length, pedigree_graph);
@@ -567,26 +544,104 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
 //                EdgeInfo pi = std::make_tuple(node_index[source(f, pedigree_graph)],
 //                            node_index[target(j, pedigree_graph)],
 //                            edge_types[j], edge_length[j]);
-                EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
-                        boost::get(boost::edge_type, pedigree_graph, f),
-                        boost::get(boost::edge_length, pedigree_graph, f) );
+            EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
+                    boost::get(boost::edge_type, pedigree_graph, f),
+                    boost::get(boost::edge_length, pedigree_graph, f) );
 
-                boost_check_equal_edge(expected_family_labels[i][j], actual);
+            boost_check_equal_edge(expected_family_labels[i][j], actual);
 
-            }
         }
-//    std::sort(pivots.begin(), pivots.end());
-//    std::sort(family_labels.begin(), family_labels.end());
-//    std::cout << "====================" << std::endl;
-//    for (int l = 0; l < family_labels.size(); ++l) {
-//                std::cout << "Families : " << l << "\tPivots: " << pivots[l] << "\t";
-//                for (auto f : family_labels[l]) {
-//                    std::cout << f << " ";
-//                }
-//                std::cout << std::endl;
-//            }
+    }
 
 }
 
+
+BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_create_peeling_ops, ReadTrioFromFile) {
+
+    Graph pedigree_graph(io_pedigree.member_count());
+
+    RelationshipGraph relationship_graph;
+    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+    double expected_mu = 0.05;
+    double expected_mu_somatic = 0.07;
+    double expected_mu_library = 0.11;
+    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+                                         expected_mu_somatic,
+                                         expected_mu_library);
+    relationship_graph.SimplifyPedigree(pedigree_graph);
+    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
+    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
+
+    RelationshipGraph::family_labels_t family_labels;//(num_families);
+    std::vector<vertex_t> pivots;//(num_families, dummy_index);
+    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
+    relationship_graph.CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
+
+
+//    relationship_graph.peeling_ops_;
+//    relationship_graph.family_members_;
+//    relationship_graph.transitions_;
+//    relationship_graph.roots_;
+
+    std::vector<std::size_t> expected_roots {0};
+
+    std::vector<RelationshipGraph::transition_t> expected_transitions {
+        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
+            static_cast<size_t>(-1), 0, 0},
+        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
+            static_cast<size_t>(-1), 0, 0},
+        {RelationshipGraph::TransitionType::Germline, 0, 1, 0.23, 0.23},
+        {RelationshipGraph::TransitionType::Somatic, 0,
+            static_cast<size_t>(-1), 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 1,
+            static_cast<size_t>(-1), 0.18, 0}
+
+    };
+
+    std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {peel::op::UP,
+        peel::op::TOFATHER, peel::op::UP};
+
+
+    std::vector<peel::family_members_t> expected_family_members {
+        {1,4},
+        {0,1,2},
+        {0,3},
+    };
+
+    boost_check_equal_vector(expected_roots, relationship_graph.roots_);
+
+    BOOST_CHECK_EQUAL(expected_transitions.size(), relationship_graph.transitions_.size());
+    for (int i = 0; i < expected_transitions.size(); ++i) {
+        auto exp = expected_transitions[i];
+        auto acutal = relationship_graph.transitions_[i];
+
+        BOOST_CHECK(exp.type == acutal.type);
+//        BOOST_CHECK_EQUAL(static_cast<int>(exp.type), static_cast<int>(acutal.type));
+        BOOST_CHECK_EQUAL(exp.parent1, acutal.parent1);
+        BOOST_CHECK_EQUAL(exp.parent2, acutal.parent2);
+        BOOST_CHECK_CLOSE(exp.length1, acutal.length1, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+        BOOST_CHECK_CLOSE(exp.length2, acutal.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+    }
+
+    boost_check_equal_vector(expected_peeling_ops, relationship_graph.peeling_ops_);
+
+    BOOST_CHECK_EQUAL(expected_family_members.size(), relationship_graph.family_members_.size());
+    for (int i = 0; i < expected_family_members.size(); ++i) {
+        auto exp = expected_family_members[i];
+        auto actual = relationship_graph.family_members_[i];
+        boost_check_equal_vector(exp, actual);
+    }
+
+
+
+}
+
+
 } // namespace dng
+
+
+
+
 

@@ -220,8 +220,6 @@ protected:
     void CreateFamiliesInfo(dng::Graph &pedigree_graph,
             family_labels_t &family_labels, std::vector<vertex_t> &pivots);
 
-
-
     void CreatePeelingOps(dng::Graph &pedigree_graph,
             const std::vector<size_t> &node_ids, family_labels_t &family_labels,
             std::vector<vertex_t> &pivots);
@@ -245,6 +243,8 @@ private:
     DNG_UNIT_TEST(test_simplify_pedigree);
     DNG_UNIT_TEST(test_update_labels_node_ids);
     DNG_UNIT_TEST(test_create_families_info);
+    DNG_UNIT_TEST(test_create_peeling_ops);
+
 };
 
 }; // namespace dng
