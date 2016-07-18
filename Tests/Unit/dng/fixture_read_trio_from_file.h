@@ -58,9 +58,9 @@ struct ReadTrioFromFile {
     ReadTrioFromFile(std::string s = "ReadTrioFromFile") : fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
-        po::options_description ext_desc_, int_desc_;
-        po::positional_options_description pos_desc_;
-        po::variables_map vm_;
+        po::options_description ext_desc, int_desc;
+        po::positional_options_description pos_desc;
+        po::variables_map vm;
 
         int argc=4;
         char *argv[argc];
@@ -75,15 +75,15 @@ struct ReadTrioFromFile {
         vcf_filename.append("/sample_5_3/test1.vcf");
         argv[3] = (char*) vcf_filename.data();
 
-        add_app_args(ext_desc_, static_cast<typename task_type::argument_type &>(arg));
-        int_desc_.add_options()
+        add_app_args(ext_desc, static_cast<typename task_type::argument_type &>(arg));
+        int_desc.add_options()
                 ("input", po::value< std::vector<std::string> >(&arg.input), "input files")
                 ;
-        int_desc_.add(ext_desc_);
-        pos_desc_.add("input", -1);
+        int_desc.add(ext_desc);
+        pos_desc.add("input", -1);
         po::store(po::command_line_parser(argc, argv)
-                          .options(int_desc_).positional(pos_desc_).run(), vm_);
-        po::notify(vm_);
+                          .options(int_desc).positional(pos_desc).run(), vm);
+        po::notify(vm);
 
         // Parse pedigree from file
 

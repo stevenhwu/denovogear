@@ -88,8 +88,19 @@ void boost_check_equal_vector(V &expected, V2 &result) {
 	BOOST_CHECK_EQUAL(expected.size(), result.size());
 	for (int i = 0; i < expected.size(); ++i) {
 //		BOOST_CHECK_EQUAL(expected[i], result[i]);
+	    std::cout << expected[i] << "\t" << result[i] << std::endl;
 	    BOOST_CHECK(expected[i] == result[i]);
 	}
+}
+
+template<typename V>
+void boost_check_equal_vector(V &expected, V &result) {
+
+    BOOST_CHECK_EQUAL(expected.size(), result.size());
+    for (int i = 0; i < expected.size(); ++i) {
+        std::cout << i << std::endl;
+        BOOST_CHECK_EQUAL(expected[i], result[i]);
+    }
 }
 
 

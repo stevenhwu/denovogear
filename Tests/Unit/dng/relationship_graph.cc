@@ -18,7 +18,7 @@
  */
 
 
-#define BOOST_TEST_MODULE dng::relationship_graph
+#define BOOST_TEST_MODULE dng::relationship_graph2
 
 #include <dng/relationship_graph.h>
 
@@ -216,7 +216,7 @@ BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigree) {
     };
 
     for (int f = 0; f < expected_family.size(); ++f) {
-        boost_check_equal_vector(expected_family, family);
+        boost_check_equal_vector(expected_family[f], family[f]);
     }
 
 	std::vector<decltype(peel::op::NUM)> ops = pedigree.peeling_ops_;
