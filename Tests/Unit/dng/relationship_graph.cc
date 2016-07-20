@@ -33,16 +33,11 @@ namespace utf = boost::unit_test;
 
 struct FixturePedigree : public ReadTrioFromFile{
 
-
     dng::RelationshipGraph pedigree;
-//    dng::PedigreeV2 pedigree_v2;
 
     FixturePedigree(std::string s = "FixturePedigree") : ReadTrioFromFile(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
-
         pedigree.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-//        pedigree_v2.Construct(ped, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-
     }
 
     ~FixturePedigree() {
@@ -52,8 +47,6 @@ struct FixturePedigree : public ReadTrioFromFile{
 };
 
 
-[[deprecated]] typedef std::pair<int, int> PairIndex;
-//TODO(SW): tuple vs struct?
 typedef std::tuple<int, int, graph::EdgeType, float> EdgeInfo;
 
 struct EdgeInfo2{
@@ -83,11 +76,6 @@ std::vector<EdgeInfo> extract_edge_info(Graph &pedigree_graph) {
     sort(edge_info_vector.begin(), edge_info_vector.end());
     return edge_info_vector;
 }
-
-//void boost_check_equal_pair_index(PairIndex expected_index, PairIndex result_index){
-//    BOOST_CHECK_EQUAL(expected_index.first, result_index.first);
-//    BOOST_CHECK_EQUAL(expected_index.second, result_index.second);
-//}
 
 
 void boost_check_equal_edge(EdgeInfo expected, EdgeInfo actual){

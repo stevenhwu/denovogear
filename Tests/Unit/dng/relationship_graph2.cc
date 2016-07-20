@@ -206,57 +206,46 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
 
 
     auto transitions = pedigree.transitions();
-    auto size_t_negative_one = static_cast<size_t>(-1);
+    auto s_max = static_cast<size_t>(-1);
     double mu_somatic_library = arg.mu + arg.mu_somatic + arg.mu_library;
     double somatic_library = arg.mu_somatic + arg.mu_library;
     std::vector<RelationshipGraph::transition_t> expected_transitions = {
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
-            {RelationshipGraph::TransitionType::Founder, size_t_negative_one,
-                    size_t_negative_one, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+            {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
 
-            {RelationshipGraph::TransitionType::Germline, 0, 1,
-                    arg.mu, arg.mu},
-            {RelationshipGraph::TransitionType::Germline, 2, 3,
-                    arg.mu, arg.mu},
-            {RelationshipGraph::TransitionType::Germline, 5, 4,
-                    arg.mu, arg.mu},
-            {RelationshipGraph::TransitionType::Germline, 6, 7,
-                    arg.mu, arg.mu},
+            {RelationshipGraph::TransitionType::Germline, 0, 1, arg.mu, arg.mu},
+            {RelationshipGraph::TransitionType::Germline, 2, 3, arg.mu, arg.mu},
+            {RelationshipGraph::TransitionType::Germline, 5, 4, arg.mu, arg.mu},
+            {RelationshipGraph::TransitionType::Germline, 6, 7, arg.mu, arg.mu},
 
-            {RelationshipGraph::TransitionType::Somatic, 0, size_t_negative_one,
-                    somatic_library, 0 },
-			{RelationshipGraph::TransitionType::Somatic, 1, size_t_negative_one,
-			        somatic_library, 0 },
-            {RelationshipGraph::TransitionType::Somatic, 6, size_t_negative_one,
-                    somatic_library, 0 },
-
-            {RelationshipGraph::TransitionType::Somatic, 2, size_t_negative_one,
-                    somatic_library, 0 },
-            {RelationshipGraph::TransitionType::Somatic, 3, size_t_negative_one,
-                    somatic_library, 0 },
-            {RelationshipGraph::TransitionType::Somatic, 7, size_t_negative_one,
-                    somatic_library, 0 },
+            {RelationshipGraph::TransitionType::Somatic, 0, s_max,
+                    somatic_library, 0},
+			{RelationshipGraph::TransitionType::Somatic, 1, s_max,
+			        somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 6, s_max,
+                    somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 2, s_max,
+                    somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 3, s_max,
+                    somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 7, s_max,
+                    somatic_library, 0},
 
             {RelationshipGraph::TransitionType::Germline, 6, 7,
                     mu_somatic_library, mu_somatic_library},
-            {RelationshipGraph::TransitionType::Somatic, 9, size_t_negative_one,
-                    somatic_library, 0 },
+            {RelationshipGraph::TransitionType::Somatic, 9, s_max,
+                    somatic_library, 0},
 
-            {RelationshipGraph::TransitionType::Somatic, 4, size_t_negative_one,
-                    somatic_library, 0 },
-            {RelationshipGraph::TransitionType::Somatic, 5, size_t_negative_one,
-                    somatic_library, 0 },
-            {RelationshipGraph::TransitionType::Somatic, 8, size_t_negative_one,
-                    somatic_library, 0 },
+            {RelationshipGraph::TransitionType::Somatic, 4, s_max,
+                    somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 5, s_max,
+                    somatic_library, 0},
+            {RelationshipGraph::TransitionType::Somatic, 8, s_max,
+                    somatic_library, 0},
 
             {RelationshipGraph::TransitionType::Germline, 8, 9,
                     mu_somatic_library, mu_somatic_library}
@@ -845,89 +834,133 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, FixturePedigreeMid) {
 
 }
 
-//
-//BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_create_peeling_ops, FixturePedigreeMid) {
-//
-//    Graph pedigree_graph(io_pedigree.member_count());
-//
-//    RelationshipGraph relationship_graph;
-//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-//    double expected_mu = 0.05;
-//    double expected_mu_somatic = 0.07;
-//    double expected_mu_library = 0.11;
-//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-//                                         expected_mu_somatic,
-//                                         expected_mu_library);
-//    relationship_graph.SimplifyPedigree(pedigree_graph);
-//    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
-//    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
-//
-//    RelationshipGraph::family_labels_t family_labels;//(num_families);
-//    std::vector<vertex_t> pivots;//(num_families, dummy_index);
-//    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
-//    relationship_graph.CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
-//
-//
-////    relationship_graph.peeling_ops_;
-////    relationship_graph.family_members_;
-////    relationship_graph.transitions_;
-////    relationship_graph.roots_;
-//
-//    std::vector<std::size_t> expected_roots {0};
-//
-//    std::vector<RelationshipGraph::transition_t> expected_transitions {
-//        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
-//            static_cast<size_t>(-1), 0, 0},
-//        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
-//            static_cast<size_t>(-1), 0, 0},
-//        {RelationshipGraph::TransitionType::Germline, 0, 1, 0.23, 0.23},
-//        {RelationshipGraph::TransitionType::Somatic, 0,
-//            static_cast<size_t>(-1), 0.18, 0},
-//        {RelationshipGraph::TransitionType::Somatic, 1,
-//            static_cast<size_t>(-1), 0.18, 0}
-//
-//    };
-//
-//    std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {peel::op::UP,
-//        peel::op::TOFATHER, peel::op::UP};
-//
-//
-//    std::vector<peel::family_members_t> expected_family_members {
-//        {1,4},
-//        {0,1,2},
-//        {0,3},
-//    };
-//
-//    boost_check_equal_vector(expected_roots, relationship_graph.roots_);
-//
-//    BOOST_CHECK_EQUAL(expected_transitions.size(), relationship_graph.transitions_.size());
-//    for (int i = 0; i < expected_transitions.size(); ++i) {
-//        auto exp = expected_transitions[i];
-//        auto acutal = relationship_graph.transitions_[i];
-//
-//        BOOST_CHECK(exp.type == acutal.type);
-////        BOOST_CHECK_EQUAL(static_cast<int>(exp.type), static_cast<int>(acutal.type));
-//        BOOST_CHECK_EQUAL(exp.parent1, acutal.parent1);
-//        BOOST_CHECK_EQUAL(exp.parent2, acutal.parent2);
-//        BOOST_CHECK_CLOSE(exp.length1, acutal.length1, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
-//        BOOST_CHECK_CLOSE(exp.length2, acutal.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
-//    }
-//
-//    boost_check_equal_vector(expected_peeling_ops, relationship_graph.peeling_ops_);
-//
-//    BOOST_CHECK_EQUAL(expected_family_members.size(), relationship_graph.family_members_.size());
-//    for (int i = 0; i < expected_family_members.size(); ++i) {
-//        auto exp = expected_family_members[i];
-//        auto actual = relationship_graph.family_members_[i];
-//        boost_check_equal_vector(exp, actual);
-//    }
-//
-//
-//
-//}
-//
+
+BOOST_FIXTURE_TEST_CASE(test_create_peeling_ops, FixturePedigreeMid) {
+
+    Graph pedigree_graph(io_pedigree.member_count());
+
+    RelationshipGraph relationship_graph;
+    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+    double expected_mu = 0.05;
+    double expected_mu_somatic = 0.07;
+    double expected_mu_library = 0.11;
+    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+                                         expected_mu_somatic,
+                                         expected_mu_library);
+    relationship_graph.SimplifyPedigree(pedigree_graph);
+    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
+    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
+
+    RelationshipGraph::family_labels_t family_labels;//(num_families);
+    std::vector<vertex_t> pivots;//(num_families, dummy_index);
+    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
+    relationship_graph.CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
+
+
+    std::vector<std::size_t> expected_roots {0};
+    size_t s_max = static_cast<size_t>(-1);
+    std::vector<RelationshipGraph::transition_t> expected_transitions {
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+        {RelationshipGraph::TransitionType::Founder, s_max, s_max, 0, 0},
+
+        {RelationshipGraph::TransitionType::Germline, 0, 1, 0.05, 0.05},
+        {RelationshipGraph::TransitionType::Germline, 2, 3, 0.05, 0.05},
+        {RelationshipGraph::TransitionType::Germline, 5, 4, 0.05, 0.05},
+        {RelationshipGraph::TransitionType::Germline, 6, 7, 0.05, 0.05},
+
+        {RelationshipGraph::TransitionType::Somatic, 0, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 1, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 6, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 2, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 3, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 7, s_max, 0.18, 0},
+
+        {RelationshipGraph::TransitionType::Germline, 6, 7, 0.23, 0.23},
+        {RelationshipGraph::TransitionType::Somatic, 9, s_max, 0.18, 0},
+
+        {RelationshipGraph::TransitionType::Somatic, 4, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 5, s_max, 0.18, 0},
+        {RelationshipGraph::TransitionType::Somatic, 8, s_max, 0.18, 0},
+
+        {RelationshipGraph::TransitionType::Germline, 8, 9, 0.23, 0.23}
+
+    };
+
+    std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {
+            peel::op::UP,
+            peel::op::UP,
+            peel::op::TOCHILD,
+            peel::op::UP,
+            peel::op::UP,
+            peel::op::TOCHILD,
+            peel::op::UP,
+            peel::op::TOMOTHER,
+            peel::op::UP,
+            peel::op::UP,
+            peel::op::TOFATHER,
+            peel::op::UP,
+            peel::op::UP,
+            peel::op::TOFATHER,
+            peel::op::UP
+    };
+
+
+    std::vector<peel::family_members_t> expected_family_members {
+        {2,13},
+        {3,14},
+        {2,3,7},
+
+        {5,19},
+        {4,18},
+        {5,4,8},
+
+        {8,20},
+        {8,9,21},
+
+        {9,17},
+        {7,15},
+        {6,7,9,16},
+
+        {6,12},
+        {1,11},
+        {0,1,6},
+        {0,10}
+    };
+
+    boost_check_equal_vector(expected_roots, relationship_graph.roots_);
+
+    BOOST_CHECK_EQUAL(expected_transitions.size(), relationship_graph.transitions_.size());
+    for (int i = 0; i < expected_transitions.size(); ++i) {
+        auto exp = expected_transitions[i];
+        auto acutal = relationship_graph.transitions_[i];
+
+        BOOST_CHECK(exp.type == acutal.type);
+//        BOOST_CHECK_EQUAL(static_cast<int>(exp.type), static_cast<int>(acutal.type));
+        BOOST_CHECK_EQUAL(exp.parent1, acutal.parent1);
+        BOOST_CHECK_EQUAL(exp.parent2, acutal.parent2);
+        BOOST_CHECK_CLOSE(exp.length1, acutal.length1, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+        BOOST_CHECK_CLOSE(exp.length2, acutal.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+    }
+
+    boost_check_equal_vector(expected_peeling_ops, relationship_graph.peeling_ops_);
+
+    BOOST_CHECK_EQUAL(expected_family_members.size(), relationship_graph.family_members_.size());
+    for (int i = 0; i < expected_family_members.size(); ++i) {
+        auto exp = expected_family_members[i];
+        auto actual = relationship_graph.family_members_[i];
+        boost_check_equal_vector(exp, actual);
+    }
+
+
+
+}
+
 
 } // namespace dng
 
