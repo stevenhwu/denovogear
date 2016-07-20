@@ -175,355 +175,355 @@ BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigree) {
 
 }
 
-
-BOOST_FIXTURE_TEST_CASE(test_parse_io_pedigree, ReadTrioFromFile){
-
-    RelationshipGraph relationship_graph;
-
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
-    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
-    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_library_);
-
-    Graph pedigree_graph(relationship_graph.first_somatic_);
-
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    BOOST_CHECK_EQUAL(7, num_vertices(pedigree_graph));
-    BOOST_CHECK_EQUAL(6, num_edges(pedigree_graph));
-
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    std::vector<EdgeInfo> expected_vector {
-            std::make_tuple(1, 2, graph::EdgeType::Spousal, 0),
-            std::make_tuple(1, 3, graph::EdgeType::Meiotic, 1.0),
-            std::make_tuple(1, 4, graph::EdgeType::Mitotic, 1.0),
-            std::make_tuple(2, 3, graph::EdgeType::Meiotic, 1.0),
-            std::make_tuple(2, 5, graph::EdgeType::Mitotic, 1.0),
-            std::make_tuple(3, 6, graph::EdgeType::Mitotic, 1.0)
-    };
-    BOOST_CHECK_EQUAL(expected_vector.size(), edge_vector.size());
-    for (int i = 0; i < expected_vector.size(); ++i) {
-        boost_check_equal_edge(expected_vector[i], edge_vector[i]);
-    }
-
-
-}
-
-
-BOOST_FIXTURE_TEST_CASE(test_add_lib_from_rgs, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    auto labels = get(boost::vertex_label, pedigree_graph);
-
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
-    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
-    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
-    BOOST_CHECK_EQUAL(7, relationship_graph.first_library_);
-    BOOST_CHECK_EQUAL(10, relationship_graph.num_nodes_);
-    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
-    BOOST_CHECK_EQUAL(9, num_edges(pedigree_graph));
-
-    std::vector<EdgeInfo> expected_edges{
-        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
-        std::make_tuple(1,3, graph::EdgeType::Meiotic, 1.0),
-        std::make_tuple(1,4, graph::EdgeType::Mitotic, 1.0),
-        std::make_tuple(2,3, graph::EdgeType::Meiotic, 1.0),
-        std::make_tuple(2,5, graph::EdgeType::Mitotic, 1.0),
-        std::make_tuple(3,6, graph::EdgeType::Mitotic, 1.0),
-        std::make_tuple(4,8, graph::EdgeType::Library, 1.0),
-        std::make_tuple(5,9, graph::EdgeType::Library, 1.0),
-        std::make_tuple(6,7, graph::EdgeType::Library, 1.0)
-    };
-
-    std::vector<std::string> expected_vertex{
-        "GL-unknown",
-        "GL-1",
-        "GL-2",
-        "GL-3",
-        "SM-NA12891",
-        "SM-NA12892",
-        "SM-NA12878",
-        "LB-NA12878:Solexa-135852",
-        "LB-NA12891:Solexa-135851",
-        "LB-NA12892:Solexa-135853"
-    };
-
-    for (int v = 0; v < relationship_graph.num_nodes_; ++v) {
-        BOOST_CHECK_EQUAL(expected_vertex[v], labels[v]);
-    }
-
-    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
-    for (int i = 0; i < expected_edges.size(); ++i) {
-        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
-    }
-}
-
-
-BOOST_FIXTURE_TEST_CASE(test_update_edge_lengths, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-    double expected_mu = 0.05;
-    double expected_mu_somatic = 0.07;
-    double expected_mu_library = 0.11;
-    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-                                         expected_mu_somatic,
-                                         expected_mu_library);
-
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    auto labels = get(boost::vertex_label, pedigree_graph);
-
-    std::vector<EdgeInfo> expected_edges{
-        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
-        std::make_tuple(1,3, graph::EdgeType::Meiotic, 0.05),
-        std::make_tuple(1,4, graph::EdgeType::Mitotic, 0.07),
-        std::make_tuple(2,3, graph::EdgeType::Meiotic, 0.05),
-        std::make_tuple(2,5, graph::EdgeType::Mitotic, 0.07),
-        std::make_tuple(3,6, graph::EdgeType::Mitotic, 0.07),
-        std::make_tuple(4,8, graph::EdgeType::Library, 0.11),
-        std::make_tuple(5,9, graph::EdgeType::Library, 0.11),
-        std::make_tuple(6,7, graph::EdgeType::Library, 0.11)
-    };
-
-    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
-    for (int i = 0; i < expected_edges.size(); ++i) {
-        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
-    }
-
-}
-
-
-BOOST_FIXTURE_TEST_CASE(test_simplify_pedigree, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-    double expected_mu = 0.05;
-    double expected_mu_somatic = 0.07;
-    double expected_mu_library = 0.11;
-    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-                                         expected_mu_somatic,
-                                         expected_mu_library);
-    relationship_graph.SimplifyPedigree(pedigree_graph);
-
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    auto labels = get(boost::vertex_label, pedigree_graph);
-
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
-    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
-    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
-    BOOST_CHECK_EQUAL(7, relationship_graph.first_library_);
-    BOOST_CHECK_EQUAL(10, relationship_graph.num_nodes_);
-    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
-    BOOST_CHECK_EQUAL(5, num_edges(pedigree_graph));
-
-    std::vector<EdgeInfo> expected_edges{
-        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
-        std::make_tuple(1,7, graph::EdgeType::Meiotic, 0.23),
-        std::make_tuple(1,8, graph::EdgeType::Mitotic, 0.18),
-        std::make_tuple(2,7, graph::EdgeType::Meiotic, 0.23),
-        std::make_tuple(2,9, graph::EdgeType::Mitotic, 0.18)
-
-    };
-
-    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
-    for (int i = 0; i < expected_edges.size(); ++i) {
-        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
-    }
-
-}
-
-
-BOOST_FIXTURE_TEST_CASE(test_update_labels_node_ids, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-    double expected_mu = 0.05;
-    double expected_mu_somatic = 0.07;
-    double expected_mu_library = 0.11;
-    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-                                         expected_mu_somatic,
-                                         expected_mu_library);
-    relationship_graph.SimplifyPedigree(pedigree_graph);
-    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
-    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
-
-    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
-    auto labels = get(boost::vertex_label, pedigree_graph);
-
-    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_nonfounder_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_somatic_);
-    BOOST_CHECK_EQUAL(2, relationship_graph.first_library_);
-    BOOST_CHECK_EQUAL(5, relationship_graph.num_nodes_);
-    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
-    BOOST_CHECK_EQUAL(5, num_edges(pedigree_graph));
-
-    //TODO(SW): which one, same "result" but different ideas
-    auto size_t_max = static_cast<std::size_t>(-1);
-//    auto size_t_max = std::numeric_limits<std::size_t>::max();
-    std::vector<std::size_t> expected_node_ids = {
-            size_t_max,
-            0, 1,
-            size_t_max,size_t_max,size_t_max,size_t_max,
-            2, 3, 4};
-    std::vector<std::string> expected_labels {
-        "GL-1",
-        "GL-2",
-        "LB-NA12878:Solexa-135852",
-        "LB-NA12891:Solexa-135851",
-        "LB-NA12892:Solexa-135853"
-    };
-
-    boost_check_equal_vector(expected_labels, relationship_graph.labels_);
-    boost_check_equal_vector(expected_node_ids, node_ids);
-}
-
-
-BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-    double expected_mu = 0.05;
-    double expected_mu_somatic = 0.07;
-    double expected_mu_library = 0.11;
-    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-                                         expected_mu_somatic,
-                                         expected_mu_library);
-    relationship_graph.SimplifyPedigree(pedigree_graph);
-    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
-    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
-
-    RelationshipGraph::family_labels_t family_labels;//(num_families);
-    std::vector<vertex_t> pivots;//(num_families, dummy_index);
-    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
-
-
-    std::vector<std::vector<EdgeInfo>> expected_family_labels {
-        {std::make_tuple(2, 9, graph::EdgeType::Mitotic, 0.18)},
-
-        {std::make_tuple(1, 2, graph::EdgeType::Spousal, 0.0),
-            std::make_tuple(2, 7, graph::EdgeType::Meiotic, 0.23),
-            std::make_tuple(1, 7, graph::EdgeType::Meiotic, 0.23)},
-
-        {std::make_tuple(1, 8, graph::EdgeType::Mitotic, 0.18)},
-    };
-    std::vector<vertex_t> expected_pivots {2, 1, 0};
-
-    boost_check_equal_vector(expected_pivots, pivots);
-
-    BOOST_CHECK_EQUAL(expected_family_labels.size(), family_labels.size());
-    for (int i = 0; i < expected_family_labels.size(); ++i) {
-        std::cout << "Families : " << i << "\tPivots: " << pivots[i] << "\t";
-        boost::detail::edge_desc_impl<boost::undirected_tag, unsigned long> x;
-        for (int j = 0; j < expected_family_labels[i].size(); ++j) {
-            auto f = family_labels[i][j];
-            EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
-                    boost::get(boost::edge_type, pedigree_graph, f),
-                    boost::get(boost::edge_length, pedigree_graph, f) );
-
-            boost_check_equal_edge(expected_family_labels[i][j], actual);
-
-        }
-    }
-}
-
-
-BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_create_peeling_ops, ReadTrioFromFile) {
-
-    Graph pedigree_graph(io_pedigree.member_count());
-
-    RelationshipGraph relationship_graph;
-    relationship_graph.SetupFirstNodeIndex(io_pedigree);
-    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
-    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
-    double expected_mu = 0.05;
-    double expected_mu_somatic = 0.07;
-    double expected_mu_library = 0.11;
-    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
-                                         expected_mu_somatic,
-                                         expected_mu_library);
-    relationship_graph.SimplifyPedigree(pedigree_graph);
-    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
-    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
-
-    RelationshipGraph::family_labels_t family_labels;//(num_families);
-    std::vector<vertex_t> pivots;//(num_families, dummy_index);
-    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
-    relationship_graph.CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
-
-    std::vector<std::size_t> expected_roots {0};
-
-    std::vector<RelationshipGraph::transition_t> expected_transitions {
-        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
-            static_cast<size_t>(-1), 0, 0},
-        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
-            static_cast<size_t>(-1), 0, 0},
-        {RelationshipGraph::TransitionType::Germline, 0, 1, 0.23, 0.23},
-        {RelationshipGraph::TransitionType::Somatic, 0,
-            static_cast<size_t>(-1), 0.18, 0},
-        {RelationshipGraph::TransitionType::Somatic, 1,
-            static_cast<size_t>(-1), 0.18, 0}
-    };
-
-    std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {
-            peel::op::UP,
-            peel::op::TOFATHER,
-            peel::op::UP
-    };
-
-    std::vector<peel::family_members_t> expected_family_members {
-        {1,4},
-        {0,1,2},
-        {0,3}
-    };
-
-    boost_check_equal_vector(expected_roots, relationship_graph.roots_);
-
-    BOOST_CHECK_EQUAL(expected_transitions.size(), relationship_graph.transitions_.size());
-    for (int i = 0; i < expected_transitions.size(); ++i) {
-        auto exp = expected_transitions[i];
-        auto acutal = relationship_graph.transitions_[i];
-
-        BOOST_CHECK(exp.type == acutal.type);
-//        BOOST_CHECK_EQUAL(static_cast<int>(exp.type), static_cast<int>(acutal.type));
-        BOOST_CHECK_EQUAL(exp.parent1, acutal.parent1);
-        BOOST_CHECK_EQUAL(exp.parent2, acutal.parent2);
-        BOOST_CHECK_CLOSE(exp.length1, acutal.length1, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
-        BOOST_CHECK_CLOSE(exp.length2, acutal.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
-    }
-
-    boost_check_equal_vector(expected_peeling_ops, relationship_graph.peeling_ops_);
-
-    BOOST_CHECK_EQUAL(expected_family_members.size(), relationship_graph.family_members_.size());
-    for (int i = 0; i < expected_family_members.size(); ++i) {
-        auto exp = expected_family_members[i];
-        auto actual = relationship_graph.family_members_[i];
-        boost_check_equal_vector(exp, actual);
-    }
-}
+//
+//BOOST_FIXTURE_TEST_CASE(test_parse_io_pedigree, ReadTrioFromFile){
+//
+//    RelationshipGraph relationship_graph;
+//
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
+//    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
+//    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
+//    BOOST_CHECK_EQUAL(0, relationship_graph.first_library_);
+//
+//    Graph pedigree_graph(relationship_graph.first_somatic_);
+//
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    BOOST_CHECK_EQUAL(7, num_vertices(pedigree_graph));
+//    BOOST_CHECK_EQUAL(6, num_edges(pedigree_graph));
+//
+//    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
+//    std::vector<EdgeInfo> expected_vector {
+//            std::make_tuple(1, 2, graph::EdgeType::Spousal, 0),
+//            std::make_tuple(1, 3, graph::EdgeType::Meiotic, 1.0),
+//            std::make_tuple(1, 4, graph::EdgeType::Mitotic, 1.0),
+//            std::make_tuple(2, 3, graph::EdgeType::Meiotic, 1.0),
+//            std::make_tuple(2, 5, graph::EdgeType::Mitotic, 1.0),
+//            std::make_tuple(3, 6, graph::EdgeType::Mitotic, 1.0)
+//    };
+//    BOOST_CHECK_EQUAL(expected_vector.size(), edge_vector.size());
+//    for (int i = 0; i < expected_vector.size(); ++i) {
+//        boost_check_equal_edge(expected_vector[i], edge_vector[i]);
+//    }
+//
+//
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE(test_add_lib_from_rgs, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//
+//    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
+//    auto labels = get(boost::vertex_label, pedigree_graph);
+//
+//    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
+//    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
+//    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
+//    BOOST_CHECK_EQUAL(7, relationship_graph.first_library_);
+//    BOOST_CHECK_EQUAL(10, relationship_graph.num_nodes_);
+//    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
+//    BOOST_CHECK_EQUAL(9, num_edges(pedigree_graph));
+//
+//    std::vector<EdgeInfo> expected_edges{
+//        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
+//        std::make_tuple(1,3, graph::EdgeType::Meiotic, 1.0),
+//        std::make_tuple(1,4, graph::EdgeType::Mitotic, 1.0),
+//        std::make_tuple(2,3, graph::EdgeType::Meiotic, 1.0),
+//        std::make_tuple(2,5, graph::EdgeType::Mitotic, 1.0),
+//        std::make_tuple(3,6, graph::EdgeType::Mitotic, 1.0),
+//        std::make_tuple(4,8, graph::EdgeType::Library, 1.0),
+//        std::make_tuple(5,9, graph::EdgeType::Library, 1.0),
+//        std::make_tuple(6,7, graph::EdgeType::Library, 1.0)
+//    };
+//
+//    std::vector<std::string> expected_vertex{
+//        "GL-unknown",
+//        "GL-1",
+//        "GL-2",
+//        "GL-3",
+//        "SM-NA12891",
+//        "SM-NA12892",
+//        "SM-NA12878",
+//        "LB-NA12878:Solexa-135852",
+//        "LB-NA12891:Solexa-135851",
+//        "LB-NA12892:Solexa-135853"
+//    };
+//
+//    for (int v = 0; v < relationship_graph.num_nodes_; ++v) {
+//        BOOST_CHECK_EQUAL(expected_vertex[v], labels[v]);
+//    }
+//
+//    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
+//    for (int i = 0; i < expected_edges.size(); ++i) {
+//        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
+//    }
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE(test_update_edge_lengths, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//    double expected_mu = 0.05;
+//    double expected_mu_somatic = 0.07;
+//    double expected_mu_library = 0.11;
+//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+//                                         expected_mu_somatic,
+//                                         expected_mu_library);
+//
+//    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
+//    auto labels = get(boost::vertex_label, pedigree_graph);
+//
+//    std::vector<EdgeInfo> expected_edges{
+//        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
+//        std::make_tuple(1,3, graph::EdgeType::Meiotic, 0.05),
+//        std::make_tuple(1,4, graph::EdgeType::Mitotic, 0.07),
+//        std::make_tuple(2,3, graph::EdgeType::Meiotic, 0.05),
+//        std::make_tuple(2,5, graph::EdgeType::Mitotic, 0.07),
+//        std::make_tuple(3,6, graph::EdgeType::Mitotic, 0.07),
+//        std::make_tuple(4,8, graph::EdgeType::Library, 0.11),
+//        std::make_tuple(5,9, graph::EdgeType::Library, 0.11),
+//        std::make_tuple(6,7, graph::EdgeType::Library, 0.11)
+//    };
+//
+//    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
+//    for (int i = 0; i < expected_edges.size(); ++i) {
+//        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
+//    }
+//
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE(test_simplify_pedigree, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//    double expected_mu = 0.05;
+//    double expected_mu_somatic = 0.07;
+//    double expected_mu_library = 0.11;
+//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+//                                         expected_mu_somatic,
+//                                         expected_mu_library);
+//    relationship_graph.SimplifyPedigree(pedigree_graph);
+//
+//    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
+//    auto labels = get(boost::vertex_label, pedigree_graph);
+//
+//    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
+//    BOOST_CHECK_EQUAL(3, relationship_graph.first_nonfounder_);
+//    BOOST_CHECK_EQUAL(4, relationship_graph.first_somatic_);
+//    BOOST_CHECK_EQUAL(7, relationship_graph.first_library_);
+//    BOOST_CHECK_EQUAL(10, relationship_graph.num_nodes_);
+//    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
+//    BOOST_CHECK_EQUAL(5, num_edges(pedigree_graph));
+//
+//    std::vector<EdgeInfo> expected_edges{
+//        std::make_tuple(1,2, graph::EdgeType::Spousal, 0.0),
+//        std::make_tuple(1,7, graph::EdgeType::Meiotic, 0.23),
+//        std::make_tuple(1,8, graph::EdgeType::Mitotic, 0.18),
+//        std::make_tuple(2,7, graph::EdgeType::Meiotic, 0.23),
+//        std::make_tuple(2,9, graph::EdgeType::Mitotic, 0.18)
+//
+//    };
+//
+//    BOOST_CHECK_EQUAL(expected_edges.size(), edge_vector.size());
+//    for (int i = 0; i < expected_edges.size(); ++i) {
+//        boost_check_equal_edge(expected_edges[i], edge_vector[i]);
+//    }
+//
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE(test_update_labels_node_ids, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//    double expected_mu = 0.05;
+//    double expected_mu_somatic = 0.07;
+//    double expected_mu_library = 0.11;
+//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+//                                         expected_mu_somatic,
+//                                         expected_mu_library);
+//    relationship_graph.SimplifyPedigree(pedigree_graph);
+//    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
+//    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
+//
+//    std::vector<EdgeInfo> edge_vector = extract_edge_info(pedigree_graph);
+//    auto labels = get(boost::vertex_label, pedigree_graph);
+//
+//    BOOST_CHECK_EQUAL(0, relationship_graph.first_founder_);
+//    BOOST_CHECK_EQUAL(2, relationship_graph.first_nonfounder_);
+//    BOOST_CHECK_EQUAL(2, relationship_graph.first_somatic_);
+//    BOOST_CHECK_EQUAL(2, relationship_graph.first_library_);
+//    BOOST_CHECK_EQUAL(5, relationship_graph.num_nodes_);
+//    BOOST_CHECK_EQUAL(10, num_vertices(pedigree_graph));
+//    BOOST_CHECK_EQUAL(5, num_edges(pedigree_graph));
+//
+//    //TODO(SW): which one, same "result" but different ideas
+//    auto size_t_max = static_cast<std::size_t>(-1);
+////    auto size_t_max = std::numeric_limits<std::size_t>::max();
+//    std::vector<std::size_t> expected_node_ids = {
+//            size_t_max,
+//            0, 1,
+//            size_t_max,size_t_max,size_t_max,size_t_max,
+//            2, 3, 4};
+//    std::vector<std::string> expected_labels {
+//        "GL-1",
+//        "GL-2",
+//        "LB-NA12878:Solexa-135852",
+//        "LB-NA12891:Solexa-135851",
+//        "LB-NA12892:Solexa-135853"
+//    };
+//
+//    boost_check_equal_vector(expected_labels, relationship_graph.labels_);
+//    boost_check_equal_vector(expected_node_ids, node_ids);
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE(test_create_families_info, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//    double expected_mu = 0.05;
+//    double expected_mu_somatic = 0.07;
+//    double expected_mu_library = 0.11;
+//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+//                                         expected_mu_somatic,
+//                                         expected_mu_library);
+//    relationship_graph.SimplifyPedigree(pedigree_graph);
+//    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
+//    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
+//
+//    RelationshipGraph::family_labels_t family_labels;//(num_families);
+//    std::vector<vertex_t> pivots;//(num_families, dummy_index);
+//    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
+//
+//
+//    std::vector<std::vector<EdgeInfo>> expected_family_labels {
+//        {std::make_tuple(2, 9, graph::EdgeType::Mitotic, 0.18)},
+//
+//        {std::make_tuple(1, 2, graph::EdgeType::Spousal, 0.0),
+//            std::make_tuple(2, 7, graph::EdgeType::Meiotic, 0.23),
+//            std::make_tuple(1, 7, graph::EdgeType::Meiotic, 0.23)},
+//
+//        {std::make_tuple(1, 8, graph::EdgeType::Mitotic, 0.18)},
+//    };
+//    std::vector<vertex_t> expected_pivots {2, 1, 0};
+//
+//    boost_check_equal_vector(expected_pivots, pivots);
+//
+//    BOOST_CHECK_EQUAL(expected_family_labels.size(), family_labels.size());
+//    for (int i = 0; i < expected_family_labels.size(); ++i) {
+//        std::cout << "Families : " << i << "\tPivots: " << pivots[i] << "\t";
+//        boost::detail::edge_desc_impl<boost::undirected_tag, unsigned long> x;
+//        for (int j = 0; j < expected_family_labels[i].size(); ++j) {
+//            auto f = family_labels[i][j];
+//            EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
+//                    boost::get(boost::edge_type, pedigree_graph, f),
+//                    boost::get(boost::edge_length, pedigree_graph, f) );
+//
+//            boost_check_equal_edge(expected_family_labels[i][j], actual);
+//
+//        }
+//    }
+//}
+//
+//
+//BOOST_FIXTURE_TEST_CASE_NO_DECOR(test_create_peeling_ops, ReadTrioFromFile) {
+//
+//    Graph pedigree_graph(io_pedigree.member_count());
+//
+//    RelationshipGraph relationship_graph;
+//    relationship_graph.SetupFirstNodeIndex(io_pedigree);
+//    relationship_graph.ParseIoPedigree(pedigree_graph, io_pedigree);
+//    relationship_graph.AddLibrariesFromReadGroups(pedigree_graph, rgs);
+//    double expected_mu = 0.05;
+//    double expected_mu_somatic = 0.07;
+//    double expected_mu_library = 0.11;
+//    relationship_graph.UpdateEdgeLengths(pedigree_graph, expected_mu,
+//                                         expected_mu_somatic,
+//                                         expected_mu_library);
+//    relationship_graph.SimplifyPedigree(pedigree_graph);
+//    std::vector<size_t> node_ids(relationship_graph.num_nodes_, -1);
+//    relationship_graph.UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
+//
+//    RelationshipGraph::family_labels_t family_labels;//(num_families);
+//    std::vector<vertex_t> pivots;//(num_families, dummy_index);
+//    relationship_graph.CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
+//    relationship_graph.CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
+//
+//    std::vector<std::size_t> expected_roots {0};
+//
+//    std::vector<RelationshipGraph::transition_t> expected_transitions {
+//        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
+//            static_cast<size_t>(-1), 0, 0},
+//        {RelationshipGraph::TransitionType::Founder, static_cast<size_t>(-1),
+//            static_cast<size_t>(-1), 0, 0},
+//        {RelationshipGraph::TransitionType::Germline, 0, 1, 0.23, 0.23},
+//        {RelationshipGraph::TransitionType::Somatic, 0,
+//            static_cast<size_t>(-1), 0.18, 0},
+//        {RelationshipGraph::TransitionType::Somatic, 1,
+//            static_cast<size_t>(-1), 0.18, 0}
+//    };
+//
+//    std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {
+//            peel::op::UP,
+//            peel::op::TOFATHER,
+//            peel::op::UP
+//    };
+//
+//    std::vector<peel::family_members_t> expected_family_members {
+//        {1,4},
+//        {0,1,2},
+//        {0,3}
+//    };
+//
+//    boost_check_equal_vector(expected_roots, relationship_graph.roots_);
+//
+//    BOOST_CHECK_EQUAL(expected_transitions.size(), relationship_graph.transitions_.size());
+//    for (int i = 0; i < expected_transitions.size(); ++i) {
+//        auto exp = expected_transitions[i];
+//        auto acutal = relationship_graph.transitions_[i];
+//
+//        BOOST_CHECK(exp.type == acutal.type);
+////        BOOST_CHECK_EQUAL(static_cast<int>(exp.type), static_cast<int>(acutal.type));
+//        BOOST_CHECK_EQUAL(exp.parent1, acutal.parent1);
+//        BOOST_CHECK_EQUAL(exp.parent2, acutal.parent2);
+//        BOOST_CHECK_CLOSE(exp.length1, acutal.length1, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+//        BOOST_CHECK_CLOSE(exp.length2, acutal.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+//    }
+//
+//    boost_check_equal_vector(expected_peeling_ops, relationship_graph.peeling_ops_);
+//
+//    BOOST_CHECK_EQUAL(expected_family_members.size(), relationship_graph.family_members_.size());
+//    for (int i = 0; i < expected_family_members.size(); ++i) {
+//        auto exp = expected_family_members[i];
+//        auto actual = relationship_graph.family_members_[i];
+//        boost_check_equal_vector(exp, actual);
+//    }
+//}
 
 } // namespace dng
 

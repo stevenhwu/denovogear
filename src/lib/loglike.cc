@@ -36,7 +36,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <dng/task/loglike.h>
-#include "../include/dng/relationship_graph.h"
+#include <dng/relationship_graph.h>
 #include <dng/fileio.h>
 #include <dng/pileup.h>
 #include <dng/read_group.h>
