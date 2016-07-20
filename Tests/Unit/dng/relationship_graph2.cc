@@ -26,16 +26,9 @@
 
 #include "../boost_test_helper.h"
 #include "fixture_read_trio_from_file.h"
-
-namespace utf = boost::unit_test;
-
-#define DNG_GL_PREFIX "GL-" //HACK: Refactor this later
+#include "relationship_graph_helper.h"
 
 struct FixturePedigreeMid {
-
-
-    dng::RelationshipGraph pedigree;
-//    dng::PedigreeV2 pedigree_v2;
 
     std::string fixture;
 
@@ -85,10 +78,8 @@ struct FixturePedigreeMid {
         po::notify(vm);
 
         // Parse pedigree from file
-
         std::ifstream ped_file(arg.ped);
         io_pedigree.Parse(istreambuf_range(ped_file));
-
 
         std::vector<hts::File> indata;
         std::vector<hts::bcf::File> bcfdata;
@@ -113,71 +104,25 @@ struct FixturePedigreeMid {
 
 };
 
-
-[[deprecated]] typedef std::pair<int, int> PairIndex;
-//TODO(SW): tuple vs struct?
-typedef std::tuple<int, int, graph::EdgeType, float> EdgeInfo;
-
-struct EdgeInfo2{
-    int source_vertex;
-    int target_vertex;
-    graph::EdgeType type;
-    float edge_length;
-};
-
-std::vector<EdgeInfo> extract_edge_info(Graph &pedigree_graph) {
-
-    auto edge_types = get(boost::edge_type, pedigree_graph);
-    auto edge_length = get(boost::edge_length, pedigree_graph);
-    auto node_index = get(boost::vertex_index, pedigree_graph);
-    std::vector<EdgeInfo> edge_info_vector;
-    boost::graph_traits<Graph>::edge_iterator ei, ei_end;
-    for (tie(ei, ei_end) = edges(pedigree_graph); ei != ei_end; ++ei) {
-        EdgeInfo pi = std::make_tuple(node_index[source(*ei, pedigree_graph)],
-                                      node_index[target(*ei, pedigree_graph)],
-                                      edge_types[*ei], edge_length[*ei]);
-//        std::cout <<  static_cast<std::underlying_type<graph::EdgeType>::type>(edge_types[*ei]) << std::cout;
-//        std::cout <<  static_cast<std::underlying_type<graph::EdgeType>::type> (graph::EdgeType::Library) << std::endl;
-//        std::cout <<  static_cast<int> (graph::EdgeType::Library) << std::endl;
-//        std::cout <<  static_cast<int> (edge_types[*ei]) << "\t" << edge_length[*ei] << std::endl;
-        edge_info_vector.push_back(pi);
-    }
-    sort(edge_info_vector.begin(), edge_info_vector.end());
-    return edge_info_vector;
-}
-
-//void boost_check_equal_pair_index(PairIndex expected_index, PairIndex result_index){
-//    BOOST_CHECK_EQUAL(expected_index.first, result_index.first);
-//    BOOST_CHECK_EQUAL(expected_index.second, result_index.second);
-//}
-
-
-void boost_check_equal_edge(EdgeInfo expected, EdgeInfo actual){
-
-    BOOST_CHECK_EQUAL(std::get<0>(expected), std::get<0>(actual));
-    BOOST_CHECK_EQUAL(std::get<1>(expected), std::get<1>(actual));
-    BOOST_CHECK(std::get<2>(expected) == std::get<2>(actual));
-    BOOST_CHECK_EQUAL(std::get<3>(expected), std::get<3>(actual));
-    BOOST_TEST_MESSAGE("Edge:" << std::get<0>(expected) << "-" << std::get<1>(expected) <<
-            " Actual: " << std::get<0>(actual) << "-" << std::get<1>(actual) ) ;
-}
 /*
-
-0     1
-|     |
----|---
-|  |  |
-3  2  4
-
+1-2    3-4
+ |      |
+ 7------8   5-6
+   |  |      |
+   10 11-----9
+          |
+          12
 */
+
 namespace dng {
 BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
 
-    pedigree.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+    dng::RelationshipGraph relationship_graph;
+    relationship_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
 
-    BOOST_CHECK_EQUAL(22, pedigree.num_nodes() );
+    BOOST_CHECK_EQUAL(22, relationship_graph.num_nodes() );
 
-    auto workspace = pedigree.CreateWorkspace();
+    auto workspace = relationship_graph.CreateWorkspace();
     BOOST_CHECK_EQUAL(0, workspace.founder_nodes.first);
     BOOST_CHECK_EQUAL(6, workspace.founder_nodes.second);
     BOOST_CHECK_EQUAL(0, workspace.germline_nodes.first);
@@ -187,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
     BOOST_CHECK_EQUAL(10, workspace.library_nodes.first);
     BOOST_CHECK_EQUAL(22, workspace.library_nodes.second);
 
-    auto labels = pedigree.labels();
+    auto labels = relationship_graph.labels();
 
     const std::vector<std::string> expected_labels = {
             "GL-1", "GL-2",
@@ -205,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
     boost_check_equal_vector(expected_labels, labels);
 
 
-    auto transitions = pedigree.transitions();
+    auto transitions = relationship_graph.transitions();
     auto s_max = static_cast<size_t>(-1);
     double mu_somatic_library = arg.mu + arg.mu_somatic + arg.mu_library;
     double somatic_library = arg.mu_somatic + arg.mu_library;
@@ -253,7 +198,6 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
 
     BOOST_CHECK_EQUAL(expected_transitions.size(), transitions.size());
     for (int k = 0; k < expected_transitions.size(); ++k) {
-        std::cout << k << std::endl;
         auto expected = expected_transitions[k];
         auto actual = transitions[k];
         BOOST_CHECK(expected.type == actual.type);
@@ -264,25 +208,16 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigreeMid ) {
 
     }
 
-
 }
-
-//1-2    3-4
-// |      |
-// 7------8   5-6
-//   |  |      |
-//   10 11-----9
-//          |
-//          12
-
 
 
 BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigreeMid) {
 
-    pedigree.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
-    BOOST_CHECK_EQUAL(22, pedigree.num_nodes());
+    dng::RelationshipGraph relationship_graph;
+    relationship_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+    BOOST_CHECK_EQUAL(22, relationship_graph.num_nodes());
 
-    std::vector<peel::family_members_t> family = pedigree.family_members_;
+    std::vector<peel::family_members_t> family = relationship_graph.family_members_;
     std::vector<peel::family_members_t> expected_family = {
             {2, 13},
             {3, 14},
@@ -305,7 +240,7 @@ BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigreeMid) {
         boost_check_equal_vector(expected_family[f], family[f]);
     }
 
-	std::vector<decltype(peel::op::NUM)> ops = pedigree.peeling_ops_;
+	std::vector<decltype(peel::op::NUM)> ops = relationship_graph.peeling_ops_;
     std::vector<decltype(peel::op::NUM)> expected_ops = {
             peel::op::UP,
             peel::op::UP,
@@ -326,7 +261,7 @@ BOOST_FIXTURE_TEST_CASE(test_pedigree_inspect, FixturePedigreeMid) {
 	boost_check_equal_vector(expected_ops, ops);
 
 	std::vector<decltype(peel::op::NUM)> functions_ops =
-			pedigree.peeling_functions_ops_;
+			relationship_graph.peeling_functions_ops_;
     std::vector<decltype(peel::op::NUM)> expected_functions_ops = {
             peel::op::UPFAST,
             peel::op::UPFAST,
@@ -716,20 +651,16 @@ BOOST_FIXTURE_TEST_CASE(test_update_labels_node_ids, FixturePedigreeMid) {
             s_max, 9, s_max, s_max, s_max,
             s_max, s_max, s_max, s_max, s_max,
             s_max, s_max, s_max, s_max, s_max,
-
             10, 11, 12, 13, 14, 15,
             16, 17, 18, 19, 20, 21
-            };
+    };
 
     std::vector<std::string> expected_labels {
-
         "GL-1", "GL-2",
         "GL-4", "GL-5",
         "GL-9", "GL-10",
         "GL-3", "GL-6", "GL-11",
-//        "GL-7",
         "GL-8",
-//        "GL-12",
 
         "LB-NA12001:Solexa-001", "LB-NA12002:Solexa-002",
         "LB-NA12003:Solexa-003", "LB-NA12004:Solexa-004",
@@ -737,8 +668,6 @@ BOOST_FIXTURE_TEST_CASE(test_update_labels_node_ids, FixturePedigreeMid) {
         "LB-NA12007:Solexa-007", "LB-NA12008:Solexa-008",
         "LB-NA12009:Solexa-009", "LB-NA12010:Solexa-010",
         "LB-NA12011:Solexa-011", "LB-NA12012:Solexa-012"
-
-
     };
 
     boost_check_equal_vector(expected_labels, relationship_graph.labels_);
@@ -803,12 +732,11 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, FixturePedigreeMid) {
                 std::make_tuple(1, 7, graph::EdgeType::Meiotic, 0.05)
         },
         {std::make_tuple(1, 25, graph::EdgeType::Mitotic, 0.18)}
-
     };
+
     std::vector<vertex_t> expected_pivots {3, 4, 8, 6, 5, 9, 9, 11, 11, 8, 7, 7, 2, 1, 0};
 
     boost_check_equal_vector(expected_pivots, pivots);
-//    auto families = get(boost::edge_family, pedigree_graph);
 
     BOOST_CHECK_EQUAL(expected_family_labels.size(), family_labels.size());
     for (int i = 0; i < expected_family_labels.size(); ++i) {
@@ -817,18 +745,11 @@ BOOST_FIXTURE_TEST_CASE(test_create_families_info, FixturePedigreeMid) {
         for (int j = 0; j < expected_family_labels[i].size(); ++j) {
             auto f = family_labels[i][j];
 
-//                auto edge_types = get(boost::edge_type, pedigree_graph);
-//                auto edge_length = get(boost::edge_length, pedigree_graph);
-//                auto node_index = get(boost::vertex_index, pedigree_graph);
-//                EdgeInfo pi = std::make_tuple(node_index[source(f, pedigree_graph)],
-//                            node_index[target(j, pedigree_graph)],
-//                            edge_types[j], edge_length[j]);
             EdgeInfo actual = std::make_tuple(f.m_source, f.m_target,
                     boost::get(boost::edge_type, pedigree_graph, f),
                     boost::get(boost::edge_length, pedigree_graph, f) );
 
             boost_check_equal_edge(expected_family_labels[i][j], actual);
-
         }
     }
 
@@ -889,7 +810,6 @@ BOOST_FIXTURE_TEST_CASE(test_create_peeling_ops, FixturePedigreeMid) {
         {RelationshipGraph::TransitionType::Somatic, 8, s_max, 0.18, 0},
 
         {RelationshipGraph::TransitionType::Germline, 8, 9, 0.23, 0.23}
-
     };
 
     std::vector<decltype(peel::op::NUM)> expected_peeling_ops = {
@@ -956,8 +876,6 @@ BOOST_FIXTURE_TEST_CASE(test_create_peeling_ops, FixturePedigreeMid) {
         auto actual = relationship_graph.family_members_[i];
         boost_check_equal_vector(exp, actual);
     }
-
-
 
 }
 
