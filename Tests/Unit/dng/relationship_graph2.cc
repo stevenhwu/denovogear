@@ -58,11 +58,11 @@ struct FixturePedigreeMid {
         argv[1] = (char*) "-p";
 
         std::string ped_filename (TESTDATA_DIR);
-        ped_filename.append("/relationship_graph.ped");
+        ped_filename.append("/relationship_graph/relationship_graph.ped");
         argv[2] = (char*) ped_filename.data();
 
         std::string vcf_filename = TESTDATA_DIR;
-        vcf_filename.append("/relationship_graph.vcf");
+        vcf_filename.append("/relationship_graph/relationship_graph.vcf");
         argv[3] = (char*) vcf_filename.data();
 
         add_app_args(ext_desc,
