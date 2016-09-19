@@ -47,6 +47,7 @@ public:
     typedef boost::property_map<Graph, boost::vertex_label_t>::type PropVertexLabel;
     typedef boost::property_map<Graph, boost::vertex_group_t>::type PropVertexGroup;
     typedef boost::property_map<Graph, boost::vertex_index_t>::type PropVertexIndex;
+    typedef boost::property_map<Graph, boost::vertex_gender_t>::type PropVertexGender;
 
     typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
 
@@ -96,6 +97,7 @@ public:
         std::size_t parent2;
         double length1;
         double length2;
+        dng::io::Pedigree::Gender gender;
     };
 
     bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
