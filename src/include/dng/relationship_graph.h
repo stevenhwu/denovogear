@@ -63,7 +63,7 @@ public:
         Y_LINKED = 4,
         W_LINKED = 5,
         Z_LINKED = 6,
-
+        MITOCHONDRIA = 1
 //        autosomal (the default)
 //        xlinked (females have 2 copies, males have 1; males transmit to daughters, not to sons)
 //        ylinked (males have 1 copy, only transmits it to sons)
@@ -71,6 +71,7 @@ public:
 //        zlinked (males have 2 copies, females have 1; females transmit to sons, not to daughters)
 //        maternal (transmitted by mother to child)
 //        paternal (transmitter by father to child)
+//        mitochondria  (transmitted by mother to child)
     };
 
     //TODO: struct FamilyInfo/Family structure.
@@ -114,16 +115,21 @@ public:
         if(work.dirty_lower) {
             work.CleanupFast();
         }
+
         // Peel pedigree one family at a time
         for(std::size_t i = 0; i < peeling_functions_.size(); ++i) {
             (*peeling_functions_[i])(work, family_members_[i], mat);
         }
+
         // Sum over roots
         double ret = 0.0;
         for(auto r : roots_) {
             ret += log((work.lower[r] * work.upper[r]).sum());
+            std::cout << r << ": " << (log((work.lower[r] * work.upper[r]).sum())) << std::endl;
+
         }
         work.forward_result = ret;
+        std::cout << "FR: " << ret << std::endl;
         return ret;
     }
 
@@ -199,12 +205,11 @@ protected:
 
     void ConstructPeelingMachine();
 
-    //PR_NOTE(SW): New functions here
     void SetupFirstNodeIndex(const io::Pedigree &pedigree);
 
-    //PR_NOTE(SW): Extract all information we needed form io::pedigree, io:pedigree should never be used after this function
     void ParseIoPedigree(dng::Graph &pedigree_graph,
             const dng::io::Pedigree &pedigree);
+
 
     void AddLibrariesFromReadGroups(dng::Graph &pedigree_graph,
             const dng::ReadGroups &rgs);
@@ -225,6 +230,10 @@ protected:
     void CreatePeelingOps(dng::Graph &pedigree_graph,
             const std::vector<size_t> &node_ids, family_labels_t &family_labels,
             std::vector<vertex_t> &pivots);
+
+    void PruneForYLinked(dng::Graph &pedigree_graph);
+    void PruneForXLinked(dng::Graph &pedigree_graph);
+
 
 private:
     void ConnectSomaticToLibraries(dng::Graph &pedigree_graph,

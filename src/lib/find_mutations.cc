@@ -59,6 +59,7 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &pedigree,
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
             full_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom);
+
             nomut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 0);
             posmut_transition_matrices_[child] = full_transition_matrices_[child] -
                                                  nomut_transition_matrices_[child];
@@ -107,6 +108,7 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &pedigree,
         max_entropies_[ref_index] = (-entropy / total + log(total)) / M_LN2;
     }
 #endif
+    std::cout << "End FindMutation Constructor" << std::endl;
 
 }
 
@@ -136,9 +138,12 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
 
 
     bool is_mup_less_threshold = CalculateMutationProb(mutation_stats);
-    if (is_mup_less_threshold) {
+    std::cout << "+=====================" << std::endl;
+
+    if (!is_mup_less_threshold) {
         return false;
     }
+    std::exit(12);
     pedigree_.PeelBackwards(work_full_, full_transition_matrices_);
 
     mutation_stats.SetGenotypeLikelihoods(work_full_, depths.size());
