@@ -34,8 +34,9 @@
 #include <dng/read_group.h>
 #include <dng/peeling.h>
 #include <dng/detail/unit_test.h>
+#include <dng/inheritance_model.h>
 
-#define DEBUG_RGRAPH 1
+//#define DEBUG_RGRAPH 1
 
 namespace dng {
 
@@ -52,27 +53,6 @@ public:
     typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
 
     typedef std::vector<std::vector<boost::graph_traits<dng::Graph>::edge_descriptor>> family_labels_t;
-
-//    PR_NOTE(SW): Get ready for the next PR, adding multiple inheritance patterns
-    enum class InheritancePattern : int {
-        AUTOSOMAL = 0,
-        DEFAULT = 0,
-        MATERNAL = 1,
-        PATERNAL = 2,
-        X_LINKED = 3,
-        Y_LINKED = 4,
-        W_LINKED = 5,
-        Z_LINKED = 6,
-        MITOCHONDRIA = 1
-//        autosomal (the default)
-//        xlinked (females have 2 copies, males have 1; males transmit to daughters, not to sons)
-//        ylinked (males have 1 copy, only transmits it to sons)
-//        wlinked (females have 1 copy, only transmited to daughters)
-//        zlinked (males have 2 copies, females have 1; females transmit to sons, not to daughters)
-//        maternal (transmitted by mother to child)
-//        paternal (transmitter by father to child)
-//        mitochondria  (transmitted by mother to child)
-    };
 
     //TODO: struct FamilyInfo/Family structure.
     //Op1: A struct to record info in each family. family_t and ops
@@ -101,14 +81,13 @@ public:
         dng::io::Pedigree::Gender gender;
     };
 
-    bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
-                   double mu, double mu_somatic, double mu_library);
+    //PR_NOTE(SW): Both constructor exist now to reduce the chance of merge conflict or breaking something
+    bool Construct(const io::Pedigree& pedigree, dng::ReadGroups& rgs,
+            InheritancePattern inheritance_pattern,
+            double mu, double mu_somatic, double mu_library);
 
-    //TODO(SW): Eventually replace with this, or pass inheritance with a different method
-    bool Construct(const io::Pedigree &pedigree, dng::ReadGroups &rgs,
-            const InheritancePattern &pattern, double mu, double mu_somatic,
-            double mu_library);
-
+    bool Construct(const io::Pedigree& pedigree, dng::ReadGroups& rgs,
+            double mu, double mu_somatic, double mu_library);
 
     double PeelForwards(peel::workspace_t &work,
                         const TransitionVector &mat) const {
@@ -125,11 +104,8 @@ public:
         double ret = 0.0;
         for(auto r : roots_) {
             ret += log((work.lower[r] * work.upper[r]).sum());
-            std::cout << r << ": " << (log((work.lower[r] * work.upper[r]).sum())) << std::endl;
-
         }
         work.forward_result = ret;
-        std::cout << "FR: " << ret << std::endl;
         return ret;
     }
 

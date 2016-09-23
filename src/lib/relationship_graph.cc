@@ -55,9 +55,6 @@ void dng::RelationshipGraph::PruneForYLinked(dng::Graph &pedigree_graph){
     auto labels = get(boost::vertex_label, pedigree_graph);
     auto gender  = get(boost::vertex_gender, pedigree_graph);
     for (auto v = first_founder_; v < num_nodes_; ++v) {
-//        std::cout << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
-//        vertex_t v = (vertex_t) (w - 1);
-//        size_t children = 0, ancestors = 0, spouses = 0;
 
         if(gender[v] == dng::io::Pedigree::Gender::Female){
             clear_vertex(v, pedigree_graph);
@@ -67,9 +64,7 @@ void dng::RelationshipGraph::PruneForYLinked(dng::Graph &pedigree_graph){
             std::cout << "Keep: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
         }
     }
-
     PrintDebugEdges("After prune Y=================", pedigree_graph);
-
 
 }
 
@@ -77,17 +72,14 @@ void dng::RelationshipGraph::PruneForXLinked(dng::Graph &pedigree_graph){
 
     PrintDebugEdges("Before prune X=================", pedigree_graph);
 
-
     auto edge_types = get(boost::edge_type, pedigree_graph);
-
     auto labels = get(boost::vertex_label, pedigree_graph);
     auto gender  = get(boost::vertex_gender, pedigree_graph);
 
     boost::graph_traits<Graph>::out_edge_iterator ei, ei_end;
     for (auto v = first_founder_; v < first_somatic_; ++v) {
 //        std::cout << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
-//        vertex_t v = (vertex_t) (w - 1);
-//        size_t children = 0, ancestors = 0, spouses = 0;
+
         if(gender[v] == dng::io::Pedigree::Gender::Male){
             bool only_has_son = true;
 
@@ -101,7 +93,6 @@ void dng::RelationshipGraph::PruneForXLinked(dng::Graph &pedigree_graph){
                         break;
                     }
                 }
-
             }
             if(only_has_son){
                 clear_vertex(v, pedigree_graph);
@@ -119,21 +110,30 @@ void dng::RelationshipGraph::PruneForXLinked(dng::Graph &pedigree_graph){
             }
         }
     }
-    auto end2 = num_vertices(pedigree_graph);
-//    std::cout << end2 << std::endl;
     PrintDebugEdges("After prune X=================", pedigree_graph);
 //    std::exit(104);
 
 }
 
-bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
-        dng::ReadGroups &rgs, double mu, double mu_somatic, double mu_library) {
+bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
+        dng::ReadGroups& rgs, double mu, double mu_somatic, double mu_library) {
+    return Construct(pedigree, rgs, InheritancePattern::AUTOSOMAL, mu,
+                     mu_somatic, mu_library);
+}
+
+bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
+        dng::ReadGroups& rgs, InheritancePattern inheritance_pattern,
+        double mu, double mu_somatic, double mu_library) {
 
     using namespace std;
 
-    InheritancePattern inheritance_pattern = InheritancePattern::DEFAULT ;//
-//    inheritance_pattern = InheritancePattern::Y_LINKED;
-    inheritance_pattern = InheritancePattern::X_LINKED;
+//    InheritancePattern inheritance_pattern = InheritancePattern::DEFAULT ;//
+    //    inheritance_pattern = InheritancePattern::Y_LINKED;
+    //    inheritance_pattern = InheritancePattern::X_LINKED;
+    //
+    //PR_NOTE(SW): overkill, but it forced to be Autosomal for now, other model are not fully implemented
+    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
+
     SetupFirstNodeIndex(pedigree);
 
     // Construct a graph of the pedigree and somatic information
@@ -151,14 +151,13 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
     UpdateEdgeLengths(pedigree_graph, mu, mu_somatic, mu_library);
     SimplifyPedigree(pedigree_graph);
 
-    //PR_NOTE: Prune after the original graph are constructed.
+    //PR_NOTE(SW): Prune after the original graph are constructed.
     //so many functions can be the same for now.
     //Less efficient, but less changes for now.
-
+    //PruneForInheritancePattern(inheritancePattern); //TODO(SW): Refactor to this function
     if(inheritance_pattern == InheritancePattern::Y_LINKED){
-            PruneForYLinked(pedigree_graph);
-        }
-
+        PruneForYLinked(pedigree_graph);
+    }
     else if(inheritance_pattern == InheritancePattern::X_LINKED){
         PruneForXLinked(pedigree_graph);
     }
@@ -166,35 +165,30 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree &pedigree,
     std::vector<size_t> node_ids(num_nodes_, -1);//num_nodes used twice for different contex
     UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
 
-
     family_labels_t family_labels;//(num_families);
     std::vector<vertex_t> pivots;//(num_families, dummy_index);
     CreateFamiliesInfo(pedigree_graph, family_labels, pivots);
 
-/*TODO: Relate to issue: Support different inheritance patterns #54
-TODO: cont. parse inheritance_pattern and create different peelingOps.
-TODO: cont. Everything else should stay the same (can be simplified, but might not be necessary)
-*/
-
-    if (inheritance_pattern == InheritancePattern::DEFAULT) {
-        //TODO: Most things in CreatePeelingOps() can be shared between InheritancePattern
+    if (inheritance_pattern == InheritancePattern::AUTOSOMAL) {
         CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
-        ConstructPeelingMachine();
+
     }
     else if (inheritance_pattern != InheritancePattern::DEFAULT) {
-        //TODO: Most things in CreatePeelingOps() can be shared between InheritancePattern
+        //TODO(SW): Haven't update for different pattern yet
         CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
-        ConstructPeelingMachine();
     }
     else {
         std::cerr << "You should never get here, other inheritance pattern not implemented yet!! EXTI!" << std::endl;
         std::exit(9);
     }
+    ConstructPeelingMachine();
+
+#ifdef DEBUG_RGRAPH
     PrintMachine(cout);
-
     PrintTable(cout);
+#endif
 
-    std::exit(32);
+//    std::exit(32);
 
 #ifdef DNG_DEVEL
     PrintMachine(cerr);
@@ -206,19 +200,6 @@ TODO: cont. Everything else should stay the same (can be simplified, but might n
 }
 
 
-void dng::RelationshipGraph::SetupFirstNodeIndex(const io::Pedigree &pedigree){
-    first_founder_ = 0; //TODO(SW): Can this be something other than 0??
-    first_somatic_ = pedigree.member_count();
-
-    for (first_nonfounder_ = first_founder_; first_nonfounder_ < first_somatic_;
-            ++first_nonfounder_) {
-        if (pedigree.table()[first_nonfounder_].dad != 0
-                && pedigree.table()[first_nonfounder_].mom != 0) {
-            break;
-        }
-    }
-
-}
 void dng::RelationshipGraph::ConstructPeelingMachine() {
     using namespace dng::peel;
     peeling_functions_.clear();
@@ -448,6 +429,19 @@ std::vector<std::string> dng::RelationshipGraph::BCFHeaderLines() const {
 
 
 
+void dng::RelationshipGraph::SetupFirstNodeIndex(const io::Pedigree &pedigree){
+    first_founder_ = 0; //TODO(SW): Can this be something other than 0??
+    first_somatic_ = pedigree.member_count();
+
+    for (first_nonfounder_ = first_founder_; first_nonfounder_ < first_somatic_;
+            ++first_nonfounder_) {
+        if (pedigree.table()[first_nonfounder_].dad != 0
+                && pedigree.table()[first_nonfounder_].mom != 0) {
+            break;
+        }
+    }
+
+}
 void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph,
         const dng::io::Pedigree &pedigree) {
 
@@ -796,7 +790,6 @@ void dng::RelationshipGraph::CreateFamiliesInfo(dng::Graph &pedigree_graph,
 
     }
 
-
     // Identify the pivot for each family.
     // The pivot will be the last art. point that has an edge in
     // the group.  The pivot of the last group doesn't matter.
@@ -849,11 +842,9 @@ void dng::RelationshipGraph::CreatePeelingOps(
     }
 
 
-
 //    index = get(vertex_index, pedigree_graph);
     // Detect Family Structure and pivot positions
     for (std::size_t k = 0; k < family_labels.size(); ++k) {
-
         auto &family_edges = family_labels[k];
 
 #ifdef DEBUG_RGRAPH
@@ -1001,8 +992,6 @@ void dng::RelationshipGraph::ResetFamilyInfo(){
 
     // Resize the information in the pedigree
     transitions_.resize(num_nodes_);
-
-
 
 }
 

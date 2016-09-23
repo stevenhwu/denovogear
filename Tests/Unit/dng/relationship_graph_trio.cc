@@ -140,7 +140,7 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixturePedigree ) {
         BOOST_CHECK_CLOSE(expected.length2, actual.length2, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 
     }
-    std::exit(23);
+
 }
 
 
