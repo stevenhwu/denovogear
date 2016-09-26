@@ -19,6 +19,8 @@
 
 #include <dng/peeling.h>
 
+
+#include <iostream>
 // Family Order: Parent, Child
 void dng::peel::down(workspace_t &work, const family_members_t &family,
                      const TransitionVector &mat) {
@@ -27,6 +29,7 @@ void dng::peel::down(workspace_t &work, const family_members_t &family,
     auto child = family[1];
     work.upper[child] = (mat[child].transpose() * (work.upper[parent] *
                          work.lower[parent]).matrix()).array();
+
 }
 
 // Family Order: Parent, Child

@@ -36,7 +36,7 @@
 #include <dng/detail/unit_test.h>
 #include <dng/inheritance_model.h>
 
-//#define DEBUG_RGRAPH 1
+#define DEBUG_RGRAPH 1
 
 namespace dng {
 

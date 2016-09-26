@@ -21,6 +21,7 @@
 
 
 #include <dng/find_mutations.h>
+#include <iostream>
 
 using namespace dng;
 
@@ -39,11 +40,16 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &graph,
 
     // Use a parent-independent mutation model, which produces a
     // beta-binomial
-    genotype_prior_[0] = population_prior(params_.theta, params_.nuc_freq, {params_.ref_weight, 0, 0, 0});
-    genotype_prior_[1] = population_prior(params_.theta, params_.nuc_freq, {0, params_.ref_weight, 0, 0});
-    genotype_prior_[2] = population_prior(params_.theta, params_.nuc_freq, {0, 0, params_.ref_weight, 0});
-    genotype_prior_[3] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, params_.ref_weight});
-    genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq, {0, 0, 0, 0});
+    genotype_prior_[0] = population_prior(params_.theta, params_.nuc_freq,
+                                          {params_.ref_weight, 0, 0, 0});
+    genotype_prior_[1] = population_prior(params_.theta, params_.nuc_freq,
+                                          {0, params_.ref_weight, 0, 0});
+    genotype_prior_[2] = population_prior(params_.theta, params_.nuc_freq,
+                                          {0, 0, params_.ref_weight, 0});
+    genotype_prior_[3] = population_prior(params_.theta, params_.nuc_freq,
+                                          {0, 0, 0, params_.ref_weight});
+    genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq,
+                                          {0, 0, 0, 0});
 
     // Calculate mutation expectation matrices
     full_transition_matrices_.assign(work_full_.num_nodes, {});
@@ -54,6 +60,7 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &graph,
 
     for(size_t child = 0; child < work_full_.num_nodes; ++child) {
         auto trans = relationship_graph_.transitions()[child];
+        std::cout << child << "\t" << (int) trans.type << std::endl;
         if(trans.type == RelationshipGraph::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
@@ -131,7 +138,6 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
             genotype_likelihood_(depths[u], ref_index);
         scale += stemp;
     }
-
     // Set the prior probability of the founders given the reference
     work_full_.SetFounders(genotype_prior_[ref_index]);
     work_nomut_ = work_full_;

@@ -90,7 +90,11 @@ void dng::RelationshipGraph::PruneForXLinked(dng::Graph &pedigree_graph){
                     std::cout << v << "\t" << child << "\tG:" << (int) gender[child] << std::endl;
                     if(gender[child] == dng::io::Pedigree::Gender::Female){
                         only_has_son = false;
-                        break;
+//                        break;
+                    }
+                    else if(gender[child] == dng::io::Pedigree::Gender::Male){
+                        remove_edge(*ei, pedigree_graph);
+                        std::cout << "Remove_Edge:" << *ei << std::endl;
                     }
                 }
             }
@@ -129,10 +133,10 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
 
 //    InheritancePattern inheritance_pattern = InheritancePattern::DEFAULT ;//
     //    inheritance_pattern = InheritancePattern::Y_LINKED;
-    //    inheritance_pattern = InheritancePattern::X_LINKED;
+        inheritance_pattern = InheritancePattern::X_LINKED;
     //
     //PR_NOTE(SW): overkill, but it forced to be Autosomal for now, other model are not fully implemented
-    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
+//    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
 
     SetupFirstNodeIndex(pedigree);
 
@@ -185,7 +189,7 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
 
 #ifdef DEBUG_RGRAPH
     PrintMachine(cout);
-    PrintTable(cout);
+//    PrintTable(cout);
 #endif
 
 //    std::exit(32);
@@ -714,9 +718,9 @@ void dng::RelationshipGraph::UpdateLabelsNodeIds(dng::Graph &pedigree_graph,
     auto gender  = get(boost::vertex_gender, pedigree_graph);
     std::cout << num_nodes_ << std::endl;
     std::cout << "After remove some nodes: new V labels_sizse: " << vid << "\t" << labels_.size() << std::endl;
-    for (auto item : labels_) {
-        std::cout << item << std::endl;
-    }
+//    for (auto item : labels_) {
+//        std::cout << item << std::endl;
+//    }
     std::cout << "node_ids:" << std::endl;
     for (int j = 0; j < node_ids.size(); ++j) {
         std::cout << j << " -> " << node_ids[j] << "\tgender:"
@@ -897,8 +901,11 @@ void dng::RelationshipGraph::CreatePeelingOps(
             family_members_.push_back({parent, child});
 
 #ifdef DEBUG_RGRAPH
-    std::cout << "=numParentEdge==0: parent " << parent << "\tChild " << child << std::endl;
-    std::cout << "===pivots[k]: " << pivots[k] << "\t\tnode_id:" << node_ids[pivots[k]] << std::endl;
+            std::cout << "=numParentEdge==0: parent "
+                    << source(*pos, pedigree_graph) << "->" << parent
+                    << "\tChild " << child_index << "->" << child
+                    << "\n===pivots[k]: " << pivots[k] << "->node_id:"
+                    << node_ids[pivots[k]] << std::endl;
 #endif
             if (node_ids[pivots[k]] == child) {
                 peeling_ops_.push_back(peel::op::DOWN);
@@ -924,7 +931,8 @@ void dng::RelationshipGraph::CreatePeelingOps(
             auto &family_members = family_members_.back();
 
 #ifdef DEBUG_RGRAPH
-    std::cout << "==numParentEdge==1: dad: " << dad << "\tmom: " << mom << std::endl;
+    std::cout << "==numParentEdge==1: dad: " << source(family_edges.front(), pedigree_graph) << "->" <<
+            dad << "\tmom: " << target(family_edges.front(), pedigree_graph) << "->" << mom << std::endl;
 #endif
             while (pos != family_edges.end()) {
                 auto child_index = target(*pos, pedigree_graph);
@@ -934,7 +942,7 @@ void dng::RelationshipGraph::CreatePeelingOps(
                 family_members.push_back(child); // Child
 
 #ifdef DEBUG_RGRAPH
-    std::cout << "==Add child to family: " << child << std::endl;
+    std::cout << "====Add child to family: " << child_index << "<-" << child << std::endl;
 #endif
                 // child edges come in pairs
                 ++pos;
@@ -954,8 +962,10 @@ void dng::RelationshipGraph::CreatePeelingOps(
                 size_t p = distance(family_members.begin(), pivot_pos);
 
 #ifdef DEBUG_RGRAPH
-    std::cout << "===pivot_pos: " << *pivot_pos << "," << node_ids[pivots[k]] <<
-            "\tdistance_pivot_to_family_member_begin(): " << p << std::endl;
+    std::cout << "===pivot_pos: " << pivots[k]
+            << "->node_id:" << node_ids[pivots[k]]
+            << "\tdistance_pivot_to_family_member_begin(): " << p
+            << std::endl;
 #endif
                 if (p == 0) {
                     peeling_ops_.push_back(peel::op::TOFATHER);
