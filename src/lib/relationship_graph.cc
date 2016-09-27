@@ -57,8 +57,9 @@ void dng::RelationshipGraph::PruneForYLinked(dng::Graph &pedigree_graph){
     for (auto v = first_founder_; v < num_nodes_; ++v) {
 
         if(gender[v] == dng::io::Pedigree::Gender::Female){
-            clear_vertex(v, pedigree_graph);
             std::cout << "REMOVE: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
+            clear_vertex(v, pedigree_graph);
+
         }
         else{
             std::cout << "Keep: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
@@ -76,43 +77,77 @@ void dng::RelationshipGraph::PruneForXLinked(dng::Graph &pedigree_graph){
     auto labels = get(boost::vertex_label, pedigree_graph);
     auto gender  = get(boost::vertex_gender, pedigree_graph);
 
-    boost::graph_traits<Graph>::out_edge_iterator ei, ei_end;
+    boost::graph_traits<Graph>::out_edge_iterator ei, ei_end, ei_spousal;
     for (auto v = first_founder_; v < first_somatic_; ++v) {
-//        std::cout << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
 
         if(gender[v] == dng::io::Pedigree::Gender::Male){
-            bool only_has_son = true;
 
-            for (tie(ei, ei_end) = out_edges(v, pedigree_graph); ei != ei_end; ++ei) {
-                std::cout << v << "\t" << *ei << "\tE_T:" << (int) edge_types[*ei] << std::endl;
+#ifdef DEBUG_RGRAPH
+            std::cout << "MaleV: " << v << "\t" << in_degree(v, pedigree_graph)
+                     << std::endl;
+            for (tie(ei, ei_end) = out_edges(v, pedigree_graph); ei != ei_end;++ei) {
+                std::cout << v << "\t" << *ei << "\tE_T:"<< (int) edge_types[*ei] << std::endl;
                 if (edge_types[*ei] == dng::graph::EdgeType::Meiotic) {
                     auto child = target(*ei, pedigree_graph);
-                    std::cout << v << "\t" << child << "\tG:" << (int) gender[child] << std::endl;
-                    if(gender[child] == dng::io::Pedigree::Gender::Female){
-                        only_has_son = false;
-//                        break;
-                    }
-                    else if(gender[child] == dng::io::Pedigree::Gender::Male){
-                        remove_edge(*ei, pedigree_graph);
-                        std::cout << "Remove_Edge:" << *ei << std::endl;
+                    std::cout << v << "\t" << child << "\tG:"<< (int) gender[child] << std::endl;
+                    if(gender[child] == dng::io::Pedigree::Gender::Male){
+                        std::cout << "Remove_Son_Edge:" << *ei << std::endl;
                     }
                 }
             }
-            if(only_has_son){
-                clear_vertex(v, pedigree_graph);
-                std::cout << "REMOVE: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
-
+#endif
+            bool only_connect_to_male = true;
+            bool only_connect_to_son = true;
+//            std::cout << "MaleV: " << v << "\t" << in_degree(v,pedigree_graph)
+//                    << std::endl;
+            for (tie(ei, ei_end) = out_edges(v, pedigree_graph); ei != ei_end; ++ei) {
+//                std::cout << v << "\t" << *ei << "\tE_T:" << (int) edge_types[*ei] << std::endl;
+                if (edge_types[*ei] == dng::graph::EdgeType::Meiotic) {
+                    auto child = target(*ei, pedigree_graph);
+//                    std::cout << v << "\t" << child << "\tG:" << (int) gender[child] << std::endl;
+                    if(gender[child] == dng::io::Pedigree::Gender::Female){
+                        only_connect_to_male = false;
+                        if(child > v){
+                            only_connect_to_son = false;
+                        }
+                    }
+                    else if(gender[child] == dng::io::Pedigree::Gender::Male){
+//                        std::cout << "Remove_Son_Edge:" << *ei << std::endl;
+                        remove_edge(*ei, pedigree_graph);
+                    }
+                }
+                else if (edge_types[*ei] == dng::graph::EdgeType::Spousal) {
+                    ei_spousal = ei;
+                }
             }
-//            clear_vertex(v, pedigree_graph);
-//            std::cout << "REMOVE: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
+
+            if(only_connect_to_male){
+                clear_vertex(v, pedigree_graph);
+            }
+            else if(only_connect_to_son){
+                remove_edge(*ei_spousal, pedigree_graph);
+            }
+
+#ifdef DEBUG_RGRAPH
+            if (only_connect_to_male) {
+                std::cout << "REMOVE: " << v << "\t" << labels[v] << "\t"
+                        << (int) gender[v] << std::endl;
+            } else if (only_connect_to_son) {
+                std::cout << "Remove_spousal_Edge:" << *ei_spousal << std::endl;
+            }
+#endif
+
+
 
         }
+#ifdef DEBUG_RGRAPH
         else{
             std::cout << "Keep: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
             for (tie(ei, ei_end) = out_edges(v, pedigree_graph); ei != ei_end; ++ei) {
                 std::cout << v << "\t" << *ei << "\tE_Type:" << (int) edge_types[*ei] << std::endl;
             }
         }
+#endif
     }
     PrintDebugEdges("After prune X=================", pedigree_graph);
 //    std::exit(104);
@@ -131,9 +166,8 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
 
     using namespace std;
 
-//    InheritancePattern inheritance_pattern = InheritancePattern::DEFAULT ;//
-    //    inheritance_pattern = InheritancePattern::Y_LINKED;
-        inheritance_pattern = InheritancePattern::X_LINKED;
+        inheritance_pattern = InheritancePattern::Y_LINKED;
+//        inheritance_pattern = InheritancePattern::X_LINKED;
     //
     //PR_NOTE(SW): overkill, but it forced to be Autosomal for now, other model are not fully implemented
 //    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
@@ -1031,9 +1065,9 @@ void dng::RelationshipGraph::PrintDebugEdges(const std::string &prefix,
         std::cout << "\t\t==" << std::endl;
     }
 
-    std::cout << "Founder, Non_F, Somatic, Lib: " << first_founder_ << "\t"
+    std::cout << "Founder, Non_F, Somatic, Lib, num_nodes: " << first_founder_ << "\t"
             << first_nonfounder_ << "\t" << first_somatic_ << "\t"
-            << first_library_ << std::endl;
+            << first_library_ << "\t" << num_nodes_ << std::endl;
     std::cout << "==END==\n" << std::endl;
 
 #endif
