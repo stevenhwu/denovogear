@@ -57,6 +57,8 @@
 namespace dng {
 
 class FindMutations {
+
+
 public:
     struct params_t {
         double theta;
@@ -94,7 +96,9 @@ public:
     bool operator()(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
 
-    bool CalculateMutationProb(MutationStats &mutation_stats);
+    bool InheritanceY(const std::vector<depth_t> &depths, int ref_index,
+                    stats_t *stats);
+
 
 protected:
     const dng::RelationshipGraph relationship_graph_;
@@ -118,6 +122,13 @@ protected:
     dng::genotype::DirichletMultinomialMixture genotype_likelihood_;
 
     dng::GenotypeArray genotype_prior_[5]; // Holds P(G | theta)
+
+    std::vector<int> keep_library_index_;
+
+    bool CalculateMutationProb(MutationStats &mutation_stats);
+
+    void CalculateDenovoMutation(MutationStats &mutation_stats);
+
 
     std::array<double, 5> max_entropies_;
     std::vector<double> event_;

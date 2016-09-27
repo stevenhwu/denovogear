@@ -201,6 +201,8 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
     }
 
     std::vector<size_t> node_ids(num_nodes_, -1);//num_nodes used twice for different contex
+    //Here is the total number of vertex in the graph,
+    //at the end of this function is the number of nodes used in the peeling
     UpdateLabelsNodeIds(pedigree_graph, rgs, node_ids);
 
     family_labels_t family_labels;//(num_families);
@@ -214,6 +216,7 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
     else if (inheritance_pattern != InheritancePattern::DEFAULT) {
         //TODO(SW): Haven't update for different pattern yet
         CreatePeelingOps(pedigree_graph, node_ids, family_labels, pivots);
+//        ExtractRequiredLibraries(pedigree_graph, node_ids);
     }
     else {
         std::cerr << "You should never get here, other inheritance pattern not implemented yet!! EXTI!" << std::endl;
@@ -735,6 +738,9 @@ void dng::RelationshipGraph::UpdateLabelsNodeIds(dng::Graph &pedigree_graph,
 
     EraseRemovedLibraries(rgs, node_ids);//How important is this? rgs is never used after this point
 
+//    if (inheritance_pattern != InheritancePattern::DEFAULT) {
+        ExtractRequiredLibraries(pedigree_graph, node_ids);
+//    }
     auto update_position = [&node_ids, vid](size_t pos) -> size_t {
         for (; pos < node_ids.size() && node_ids[pos] == -1; ++pos)
             /*noop*/;
@@ -1036,6 +1042,32 @@ void dng::RelationshipGraph::ResetFamilyInfo(){
 
     // Resize the information in the pedigree
     transitions_.resize(num_nodes_);
+
+}
+
+void dng::RelationshipGraph::ExtractRequiredLibraries(
+        dng::Graph &pedigree_graph, const std::vector<size_t> &node_ids) {
+
+
+//    std::cout << first_library_ << "\t" << num_nodes_ << std::endl;
+//    std::cout << first_library_ << "\t" << num_nodes_ << std::endl;
+//    Founder, Non_F, Somatic, Lib, num_nodes: 0  7   13  25  37
+//    Founder, Non_F, Somatic, Lib, num_nodes: 0  3   5   5   10
+    int counter = 0;
+    for (int i = first_library_; i < node_ids.size(); ++i) {
+        if(node_ids[i]!= -1){
+            keep_library_index_.push_back(counter);
+        }
+        counter++;;
+    }
+#ifdef DEBUG_RGRAPH
+
+//    std::cout << i << "\t" << node_ids[i] << std::endl;
+    int count = 0;
+    for (auto var : keep_library_index_) {
+        std::cout << first_library_+count++ << "\tLib_Index:" << var << std::endl;
+    }
+#endif
 
 }
 

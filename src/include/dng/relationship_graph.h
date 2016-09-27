@@ -151,6 +151,7 @@ public:
     size_t num_nodes() const { return num_nodes_; }
     std::pair<size_t, size_t> library_nodes() const { return {first_library_, num_nodes_}; }
 
+    std::vector<int> keep_library_index() const {return keep_library_index_;}
 
 protected:
 
@@ -210,6 +211,10 @@ protected:
     void PruneForYLinked(dng::Graph &pedigree_graph);
     void PruneForXLinked(dng::Graph &pedigree_graph);
 
+    void ExtractRequiredLibraries(dng::Graph &pedigree_graph,
+            const std::vector<size_t> &node_ids);
+
+
 
 private:
     void ConnectSomaticToLibraries(dng::Graph &pedigree_graph,
@@ -222,6 +227,8 @@ private:
 
     void PrintDebugEdges(const std::string &prefix,
             const dng::Graph &pedigree_graph);
+
+    std::vector<int> keep_library_index_;
 
     const vertex_t DUMMY_INDEX = 0;
 
