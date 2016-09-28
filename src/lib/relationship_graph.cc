@@ -170,7 +170,7 @@ bool dng::RelationshipGraph::Construct(const io::Pedigree& pedigree,
 //        inheritance_pattern = InheritancePattern::X_LINKED;
     //
     //PR_NOTE(SW): overkill, but it forced to be Autosomal for now, other model are not fully implemented
-//    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
+    inheritance_pattern = InheritancePattern::AUTOSOMAL;//
 
     SetupFirstNodeIndex(pedigree);
 

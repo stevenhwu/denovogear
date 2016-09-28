@@ -103,6 +103,11 @@ public:
         // Sum over roots
         double ret = 0.0;
         for(auto r : roots_) {
+            std::cout << work.lower[r] <<"\n\n" <<
+                    work.upper[r] <<"\n\n" <<
+                    (work.lower[r] * work.upper[r]) <<"\n\n" <<
+                    (work.lower[r] * work.upper[r]).sum() <<
+                    std::endl;
             ret += log((work.lower[r] * work.upper[r]).sum());
         }
         work.forward_result = ret;
@@ -240,7 +245,7 @@ private:
     DNG_UNIT_TEST(test_update_labels_node_ids);
     DNG_UNIT_TEST(test_create_families_info);
     DNG_UNIT_TEST(test_create_peeling_ops);
-
+    DNG_UNIT_TEST(test_peeling_forward_each_op);
 };
 }; // namespace dng
 

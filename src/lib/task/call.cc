@@ -350,6 +350,8 @@ int task::Call::operator()(Call::argument_type &arg) {
     }
 
     // Construct peeling algorithm from parameters and pedigree information
+
+
     dng::RelationshipGraph relationship_graph;
     if (!relationship_graph.Construct(ped, rgs,
                                       inheritance_model.GetInheritancePattern(),
@@ -357,6 +359,8 @@ int task::Call::operator()(Call::argument_type &arg) {
         throw std::runtime_error("Unable to construct peeler for pedigree; "
                                  "possible non-zero-loop relationship_graph.");
     }
+    //TODO: HACK!!
+    rgs.KeepTheseOnly(relationship_graph.keep_library_index());
     if(arg.gamma.size() < 2) {
         throw std::runtime_error("Unable to construct genotype-likelihood model; "
                                  "Gamma needs to be specified at least twice to change model from default.");
@@ -721,7 +725,26 @@ int task::Call::operator()(Call::argument_type &arg) {
                     read_depths[pos].counts[base] = depth;
                 }
             }
-
+            //TODO: HACK:
+//            auto keep_library_index = relationship_graph.keep_library_index();
+//             std::vector<depth_t> read_depths2;
+//            read_depths2.reserve(keep_library_index.size());
+//            for (auto i : keep_library_index) {
+//                read_depths2.push_back(read_depths[i]);
+//            }
+//            std::cout << keep_library_index.size() << "\t" <<
+//                                read_depths2.size() << std::endl;
+//            for (int i = 0; i < read_depths2.size(); ++i) {
+//                std::cout << read_depths2[i].counts[0] << " "
+//                        << read_depths2[i].counts[1] << " "
+//                        << read_depths2[i].counts[2] << " "
+//                        << read_depths2[i].counts[3] << std::endl;
+//            }
+//
+//            auto t = read_depths;
+//            read_depths = read_depths2;
+//            read_depths2 = t;
+//            //HACK_END:
             size_t ref_index = seq::char_index(ref_base);
             if(!calculate(read_depths, ref_index, &stats)) {
                 return;

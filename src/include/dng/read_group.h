@@ -71,11 +71,11 @@ struct rg_t {
 };
 
 typedef boost::multi_index_container<rg_t, indexed_by<
-ordered_unique<tag<rg::id>, member<rg_t, std::string, &rg_t::id>>,
-               ordered_non_unique<tag<rg::lb>, member<rg_t, std::string, &rg_t::library>>,
-               ordered_non_unique<tag<rg::sm>, member<rg_t, std::string, &rg_t::sample>>,
-               random_access<tag<rg::nx>>
-               >> DataBase;
+        ordered_unique<tag<rg::id>, member<rg_t, std::string, &rg_t::id>>,
+        ordered_non_unique<tag<rg::lb>, member<rg_t, std::string, &rg_t::library>>,
+        ordered_non_unique<tag<rg::sm>, member<rg_t, std::string, &rg_t::sample>>,
+        random_access<tag<rg::nx>>
+    >> DataBase;
 }
 
 class ReadGroups {
@@ -124,6 +124,30 @@ public:
             data_.get<rg::lb>().erase(lib);
         }
         ReloadData();
+    }
+
+    void KeepTheseOnly(std::vector<int> keep){
+        DataBase data2;
+        int count = 0;
+        for(auto && a : data_) {
+//            std::vector<int>::iterator it;
+
+//              it = find (myvector.begin(), myvector.end(), 30);
+//              if (it != myvector.end())
+//        for (auto i : keep) {
+            if( std::find(keep.begin(), keep.end(), count) != keep.end() ){
+
+//            auto a = data_[i];
+            data2.insert(a);
+            }
+            count++;
+        }
+        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
+        auto t = data_;
+        data_ = data2;
+        data2 = t;
+        ReloadData();
+        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
     }
 
 protected:
@@ -191,6 +215,7 @@ void ReadGroups::ParseLibraries(const std::vector<io::Ad::library_t>& libs) {
     }
     ReloadData();
 }
+
 
 } // namespace dng
 

@@ -49,6 +49,7 @@ void dng::peel::up(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
     work.lower[parent] *= (mat[child] * work.lower[child].matrix()).array();
+    std::cout << "UP:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
 }
 
 // Family Order: Parent, Child
@@ -58,6 +59,7 @@ void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
     work.lower[parent] = (mat[child] * work.lower[child].matrix()).array();
+    std::cout << "UPFast:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
@@ -77,6 +79,7 @@ void dng::peel::to_father(workspace_t &work, const family_members_t &family,
     work.paired_buffer.resize(width, width);
     work.lower[dad] *= (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
                         work.lower[mom]).matrix()).array();
+
     work.paired_buffer.resize(width*width, 1);
 }
 
@@ -97,6 +100,14 @@ void dng::peel::to_father_fast(workspace_t &work,
     work.paired_buffer.resize(width, width);
     work.lower[dad] = (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
                        work.lower[mom]).matrix()).array();
+
+    std::cout << "toFatherFast:\n" <<
+            work.upper[mom]  << "\n\n" << work.lower[mom]  << "\n\n" <<
+            (work.upper[mom] * work.lower[mom]) << "\n\n" <<
+            work.paired_buffer.matrix().transpose() << "\n\n" <<
+            (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
+                                   work.lower[mom]).matrix()).array()
+            << "\n" << std::endl;
     work.paired_buffer.resize(width*width, 1);
 }
 
