@@ -128,6 +128,29 @@ BOOST_FIXTURE_TEST_CASE(test_peeling_forward_each_op, TrioWorkspace ) {
     BOOST_CHECK_CLOSE(expected_ret, ret, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 
 
+
+    num_mutation = 2;
+    expected_lower_mom << 2.92202983431692e-17, 2.9220299489703e-17, 9.49256366449536e-22, 2.92193582590732e-17, 2.92203006362368e-17, 9.49256366450609e-22, 2.92193594056071e-17, 1.71039811434089e-32, 9.49256366441022e-22, 2.92184181749773e-17;
+    expected_lower_dad << 1.87172063020916e-36, 1.87172061042194e-36, 1.51175764174171e-36, 1.29582332367199e-36, 1.87172059063473e-36, 1.51175762195449e-36, 1.29582330388478e-36, 1.15179465327426e-36, 9.35860335204542e-37, 7.19926017134825e-37;
+    expected_lower_root << 5.46887569084554e-53, 5.46887625591219e-53, 4.02473034425802e-59, 3.78619360180291e-53, 5.46887682097884e-53, 4.02473029160487e-59, 3.78619397521919e-53, 1.58861465907825e-69, 2.49152733552297e-59, 2.10351151276028e-53;
+    expected_root_product << 8.19348021326919e-57, 3.27640950109093e-60, 1.20585120736142e-62, 3.4024688371325e-60, 5.46177520265145e-57, 8.03900794390654e-63, 2.26831278180242e-60, 1.58671041626866e-69, 7.4648758767172e-63, 3.15148504600963e-57;
+    expected_ret = -128.4250364;
+
+    mat[2] = meiosis_diploid_matrix(f81_matrix_3, f81_matrix_3, num_mutation);
+    mat[3] = mitosis_diploid_matrix(f81_matrix_2, num_mutation);
+    mat[4] = mitosis_diploid_matrix(f81_matrix_2, num_mutation);
+    workspace.CleanupFast();
+    (*r_graph.peeling_functions_[0])(workspace, r_graph.family_members_[0], mat);
+    boost_check_matrix(expected_lower_mom, workspace.lower[1]);
+    (*r_graph.peeling_functions_[1])(workspace, r_graph.family_members_[1], mat);
+    boost_check_matrix(expected_lower_dad, workspace.lower[0]);
+    (*r_graph.peeling_functions_[2])(workspace, r_graph.family_members_[2],mat);
+    boost_check_matrix(expected_lower_root, workspace.lower[0]);
+    root_product = workspace.lower[0] * workspace.upper[0];
+    boost_check_matrix(expected_root_product, root_product);
+    ret = log(root_product.sum());
+    BOOST_CHECK_CLOSE(expected_ret, ret, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+
 }
 } // namespace dng
 

@@ -22,7 +22,7 @@ freq<-c(0.3, 0.2, 0.2, 0.3)
 F81_mu3<- f81_full(3e-8,freq)
 F81_mu2<- f81_full(2e-8,freq)
 
-numMutation<- 1; #0, 1, -1
+numMutation<- 0; #0, 1, -1, 2
 mut_germ<- meiosis_diploid_matrix(F81_mu3, F81_mu3, numMutation)
 mut_somatic<- mitosis_diploid_matrix(F81_mu2, numMutation)
 

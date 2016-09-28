@@ -256,7 +256,6 @@ BOOST_AUTO_TEST_CASE(test_mitosis_diploid_matrix) {
     boost_check_matrix(expected_matrix_three, actual_three);
 }
 
-//TODO(SHW): Implement these tests
 BOOST_AUTO_TEST_CASE(test_meiosis_haploid_matrix) {
 
     TransitionMatrix expected_matrix_negative = TransitionMatrix::Zero(10, 4);
