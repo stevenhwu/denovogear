@@ -31,7 +31,7 @@
 #include <dng/detail/unit_test.h>
 
 //TODO(SW): Need to change all test cases before remove entropy calculation
-#define CALCULATE_ENTROPY 0
+#define CALCULATE_ENTROPY 1
 
 class MutationStats {
 

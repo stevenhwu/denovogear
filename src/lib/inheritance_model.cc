@@ -27,7 +27,7 @@ dng::InheritanceModel::~InheritanceModel() {
 dng::InheritanceModel::InheritanceModel() {
 }
 
-void dng::InheritanceModel::parse_model(std::string &model_string) {
+dng::InheritancePattern dng::InheritanceModel::ParseModel(std::string &model_string) {
 
     char init = tolower(model_string.at(0));
     switch (init) {
@@ -60,6 +60,7 @@ void dng::InheritanceModel::parse_model(std::string &model_string) {
                             + "[autosomal, default, xlinked, ylinked, wlinked, zlinked, maternal, paternal, mitochondria]");
             break;
     }
+    return pattern;
 }
 
 dng::InheritancePattern dng::InheritanceModel::GetInheritancePattern(){

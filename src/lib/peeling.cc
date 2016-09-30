@@ -19,8 +19,10 @@
 
 #include <dng/peeling.h>
 
-
+#define DEBUG_PEELING 1
+#if DEBUG_PEELING == 1
 #include <iostream>
+#endif
 // Family Order: Parent, Child
 void dng::peel::down(workspace_t &work, const family_members_t &family,
                      const TransitionVector &mat) {
@@ -49,7 +51,10 @@ void dng::peel::up(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
     work.lower[parent] *= (mat[child] * work.lower[child].matrix()).array();
-    std::cout << "UP:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
+#if DEBUG_PEELING == 1
+    std::cout << "UP:\n" << (mat[child] * work.lower[child].matrix()).array()
+            << "\n" << std::endl;
+#endif
 }
 
 // Family Order: Parent, Child
@@ -58,8 +63,14 @@ void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
     assert(family.size() == 2);
     auto parent = family[0];
     auto child = family[1];
+#if DEBUG_PEELING == 1
+    std::cout << "UPFast:\n" << mat[child] <<"\n"<<
+            work.lower[child] << "\n" << std::endl;
+#endif
     work.lower[parent] = (mat[child] * work.lower[child].matrix()).array();
+#if DEBUG_PEELING == 1
     std::cout << "UPFast:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
+#endif
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...
@@ -100,14 +111,15 @@ void dng::peel::to_father_fast(workspace_t &work,
     work.paired_buffer.resize(width, width);
     work.lower[dad] = (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
                        work.lower[mom]).matrix()).array();
-
+#if DEBUG_PEELING == 1
     std::cout << "toFatherFast:\n" <<
-            work.upper[mom]  << "\n\n" << work.lower[mom]  << "\n\n" <<
-            (work.upper[mom] * work.lower[mom]) << "\n\n" <<
-            work.paired_buffer.matrix().transpose() << "\n\n" <<
-            (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
-                                   work.lower[mom]).matrix()).array()
-            << "\n" << std::endl;
+//            work.upper[mom]  << "\n\n" << work.lower[mom]  << "\n\n" <<
+//            (work.upper[mom] * work.lower[mom]) << "\n\n" <<
+//            work.paired_buffer.matrix().transpose() << "\n\n" <<
+//            (work.paired_buffer.matrix().transpose() * (work.upper[mom] *
+//                                   work.lower[mom]).matrix()).array() <<
+            "\n" << std::endl;
+#endif
     work.paired_buffer.resize(width*width, 1);
 }
 

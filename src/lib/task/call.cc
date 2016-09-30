@@ -48,7 +48,10 @@
 #include <dng/mutation.h>
 #include <dng/stats.h>
 #include <dng/io/utility.h>
+#include <dng/find_mutations_abstract.h>
+#include <dng/find_mutations_ylinked.h>
 #include <dng/find_mutations.h>
+
 
 #include "htslib/synced_bcf_reader.h"
 
@@ -271,7 +274,8 @@ int task::Call::operator()(Call::argument_type &arg) {
     bcf_srs_t *rec_reader;
 
     InheritanceModel inheritance_model;
-    inheritance_model.parse_model(arg.model);
+    InheritancePattern inheritance_pattern = inheritance_model.ParseModel(
+            arg.model);
 
     if(cat == sequence_data) {
         // Wrap input in hts::bam::File
@@ -370,8 +374,20 @@ int task::Call::operator()(Call::argument_type &arg) {
         vcfout.AddHeaderMetadata(line.c_str());
     }
 
-    FindMutations calculate ( min_prob, relationship_graph,
-        { arg.theta, freqs, arg.ref_weight, arg.gamma[0], arg.gamma[1] } );
+    FindMutationsAbstract *calculate;
+    switch (inheritance_pattern) {
+        case InheritancePattern::Y_LINKED:
+            calculate = new FindMutationsYLinked(min_prob, relationship_graph,
+                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
+                            arg.gamma[1]});
+            break;
+        default:
+            calculate = new FindMutations(min_prob, relationship_graph,
+                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
+                            arg.gamma[1]});
+            break;
+    }
+
 
     // Pileup data
     std::vector<depth_t> read_depths(rgs.libraries().size());
@@ -434,9 +450,10 @@ int task::Call::operator()(Call::argument_type &arg) {
                 }
             }
             size_t ref_index = seq::char_index(ref_base);
-            if(!calculate(read_depths, ref_index, &stats)) {
+            if(!(*calculate)(read_depths, ref_index, &stats)) {
                 return;
             }
+
 
             // Determine what nucleotides show up and the order they will appear in the REF and ALT field
             // TODO: write tests that make sure REF="N" is properly handled
@@ -746,7 +763,8 @@ int task::Call::operator()(Call::argument_type &arg) {
 //            read_depths2 = t;
 //            //HACK_END:
             size_t ref_index = seq::char_index(ref_base);
-            if(!calculate(read_depths, ref_index, &stats)) {
+            if(!(*calculate)(read_depths, ref_index, &stats)) {
+//            if(!calculate->operator ()(read_depths, ref_index, &stats)) {
                 return;
             }
 
@@ -883,6 +901,6 @@ int task::Call::operator()(Call::argument_type &arg) {
     } else {
         throw runtime_error("unsupported file category.");
     }
-
+    delete calculate;
     return EXIT_SUCCESS;
 }

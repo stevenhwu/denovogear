@@ -103,13 +103,17 @@ public:
         // Sum over roots
         double ret = 0.0;
         for(auto r : roots_) {
-            std::cout << work.lower[r] <<"\n\n" <<
-                    work.upper[r] <<"\n\n" <<
-                    (work.lower[r] * work.upper[r]) <<"\n\n" <<
-                    (work.lower[r] * work.upper[r]).sum() <<
-                    std::endl;
+
+//            std::cout << "root: " << r << "\nlower:\n" <<
+//                    work.lower[r] <<"\nupper:\n" <<
+//                    work.upper[r] <<"\nproduct:\n" <<
+//                    (work.lower[r] * work.upper[r]) <<"\nsum:\n" <<
+//                    (work.lower[r] * work.upper[r]).sum() <<
+//                    std::endl;
             ret += log((work.lower[r] * work.upper[r]).sum());
         }
+//        std::cout << "Result:\n" << ret << "\n\n" << std::endl;
+
         work.forward_result = ret;
         return ret;
     }
