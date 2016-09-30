@@ -365,6 +365,8 @@ int task::Call::operator()(Call::argument_type &arg) {
     }
     //TODO: HACK!!
     rgs.KeepTheseOnly(relationship_graph.keep_library_index());
+
+
     if(arg.gamma.size() < 2) {
         throw std::runtime_error("Unable to construct genotype-likelihood model; "
                                  "Gamma needs to be specified at least twice to change model from default.");
@@ -373,7 +375,9 @@ int task::Call::operator()(Call::argument_type &arg) {
     for(auto && line : relationship_graph.BCFHeaderLines()) {
         vcfout.AddHeaderMetadata(line.c_str());
     }
-
+    FindMutations x(min_prob, relationship_graph,
+                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
+                            arg.gamma[1]});
     FindMutationsAbstract *calculate;
     switch (inheritance_pattern) {
         case InheritancePattern::Y_LINKED:
@@ -835,6 +839,7 @@ int task::Call::operator()(Call::argument_type &arg) {
             vector<int32_t> best_genotypes(2 * num_nodes);
             vector<int32_t> genotype_qualities(num_nodes);
             int gt_count = n_alleles * (n_alleles + 1) / 2;
+
             vector<float> gp_scores(num_nodes * gt_count);
 
             for(size_t i = 0, k = 0; i < num_nodes; ++i) {

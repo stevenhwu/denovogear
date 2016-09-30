@@ -21,7 +21,7 @@
 
 
 #include <dng/find_mutations_abstract.h>
-#include <iostream>
+
 
 using namespace dng;
 //TODO(SW): Eventually this will be just FindMutationsAbstract.
@@ -40,8 +40,20 @@ FindMutationsAbstract::FindMutationsAbstract(double min_prob, const Relationship
 
     using namespace dng;
     std::cout << "FMA:FMA" << std::endl;
-    // Use a parent-independent mutation model, which produces a
-    // beta-binomial
+
+
+//std::exit(12);
+    // Calculate mutation expectation matrices
+    full_transition_matrices_.assign(work_full_.num_nodes, {});
+    nomut_transition_matrices_.assign(work_full_.num_nodes, {});
+    posmut_transition_matrices_.assign(work_full_.num_nodes, {});
+    onemut_transition_matrices_.assign(work_full_.num_nodes, {});
+    mean_matrices_.assign(work_full_.num_nodes, {});
+
+    keep_library_index_ = graph.keep_library_index();
+}
+
+void FindMutationsAbstract::SetupPopulationPriorDiploid() {
     genotype_prior_[0] = population_prior(params_.theta, params_.nuc_freq,
                                           {params_.ref_weight, 0, 0, 0});
     genotype_prior_[1] = population_prior(params_.theta, params_.nuc_freq,
@@ -52,15 +64,19 @@ FindMutationsAbstract::FindMutationsAbstract(double min_prob, const Relationship
                                           {0, 0, 0, params_.ref_weight});
     genotype_prior_[4] = population_prior(params_.theta, params_.nuc_freq,
                                           {0, 0, 0, 0});
+}
 
-    // Calculate mutation expectation matrices
-    full_transition_matrices_.assign(work_full_.num_nodes, {});
-    nomut_transition_matrices_.assign(work_full_.num_nodes, {});
-    posmut_transition_matrices_.assign(work_full_.num_nodes, {});
-    onemut_transition_matrices_.assign(work_full_.num_nodes, {});
-    mean_matrices_.assign(work_full_.num_nodes, {});
-
-    keep_library_index_ = graph.keep_library_index();
+void FindMutationsAbstract::SetupPopulationPriorHaploid() {
+    genotype_prior_[0] = PopulationPriorHaploid(params_.theta, params_.nuc_freq,
+                                                {params_.ref_weight, 0, 0, 0});
+    genotype_prior_[1] = PopulationPriorHaploid(params_.theta, params_.nuc_freq,
+                                                {0, params_.ref_weight, 0, 0});
+    genotype_prior_[2] = PopulationPriorHaploid(params_.theta, params_.nuc_freq,
+                                                {0, 0, params_.ref_weight, 0});
+    genotype_prior_[3] = PopulationPriorHaploid(params_.theta, params_.nuc_freq,
+                                                {0, 0, 0, params_.ref_weight});
+    genotype_prior_[4] = PopulationPriorHaploid(params_.theta, params_.nuc_freq,
+                                                {0, 0, 0, 0});
 }
 
 void FindMutationsAbstract::Resize10To4(GenotypeArray &array){

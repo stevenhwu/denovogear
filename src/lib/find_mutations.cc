@@ -21,7 +21,7 @@
 
 
 #include <dng/find_mutations.h>
-#include <iostream>
+
 
 using namespace dng;
 
@@ -35,7 +35,7 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &graph,
         : FindMutationsAbstract(min_prob, graph, params) {
 
     std::cout << "FM::FM" << std::endl;
-
+    SetupPopulationPriorDiploid();
     SetupTransitionMatrix();
 }
 

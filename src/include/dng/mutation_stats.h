@@ -24,7 +24,6 @@
 #include <vector>
 
 #include <dng/hts/bcf.h>
-#include <dng/matrix.h>
 #include <dng/peeling.h>
 #include <dng/relationship_graph.h>
 #include <dng/mutation.h>

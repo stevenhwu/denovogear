@@ -33,8 +33,8 @@
 #include <dng/newick.h>
 #include <dng/read_group.h>
 #include <dng/peeling.h>
-#include <dng/detail/unit_test.h>
 #include <dng/inheritance_model.h>
+#include <dng/detail/unit_test.h>
 
 #define DEBUG_RGRAPH 1
 

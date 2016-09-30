@@ -23,42 +23,21 @@
 #ifndef DNG_FIND_MUTATIONS_ABSTRACT_H_
 #define DNG_FIND_MUTATIONS_ABSTRACT_H_
 
-
-#include <cstdlib>
+#include <array>
+#include <cstdint>
+#include <iostream>
+#include <string>
 #include <vector>
 
-//#include <iostream>
-//#include <iomanip>
-//#include <ctime>
-//#include <chrono>
-#include <sstream>
-#include <string>
-
-//#include <boost/range/algorithm/replace.hpp>
-//#include <boost/range/algorithm/max_element.hpp>
-
-//#include <boost/algorithm/string.hpp>
-#include <dng/matrix.h>
-#include <dng/task/call.h>
 #include <dng/relationship_graph.h>
-#include <dng/fileio.h>
-#include <dng/pileup.h>
-#include <dng/read_group.h>
 #include <dng/likelihood.h>
-#include <dng/seq.h>
-#include <dng/utility.h>
-#include <dng/hts/bcf.h>
-#include <dng/hts/extra.h>
-#include <dng/vcfpileup.h>
-#include <dng/mutation.h>
-#include <dng/stats.h>
-#include <dng/io/utility.h>
 #include <dng/mutation_stats.h>
+
+
 namespace dng {
 
 constexpr int SIZE4 = 4;
-constexpr int MAP_4_TO_10[4] = {0, 4, 7, 9};
-
+//constexpr int MAP_4_TO_10[4] = {0, 4, 7, 9};
 
 //TODO(SW): Eventually this will be just FindMutations.
 //TODO(SW): The original FindMutations will become FindMutationsAutosomal
@@ -106,6 +85,9 @@ public:
 
 protected:
     virtual void SetupTransitionMatrix() = 0;
+
+    void SetupPopulationPriorDiploid();
+    void SetupPopulationPriorHaploid();
 
     void Resize10To4(TransitionMatrix &matrix);
     void Resize10To4(GenotypeArray &array);

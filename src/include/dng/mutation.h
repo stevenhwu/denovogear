@@ -24,7 +24,7 @@
 #include <cmath>
 #include <cassert>
 #include <array>
-
+#include <iostream>
 #include <dng/matrix.h>
 
 namespace dng {
@@ -238,6 +238,9 @@ inline dng::GenotypeArray population_prior(double theta,
         const std::array<double, 4> &nuc_freq,
         const std::array<double, 4> &prior) {
     std::array<double, 4> alpha = population_alphas(theta, nuc_freq, prior);
+    for (auto var : alpha) {
+        std::cout << var << std::endl;
+    }
 
     double alpha_sum = alpha[0] + alpha[1] + alpha[2] + alpha[3];
     dng::GenotypeArray ret{10};
@@ -254,6 +257,23 @@ inline dng::GenotypeArray population_prior(double theta,
               alpha[3]*(1.0 + alpha[3]) / alpha_sum / (1.0 + alpha_sum); // GG
     return ret;
 }
+
+
+inline dng::GenotypeArray PopulationPriorHaploid(double theta,
+        const std::array<double, 4> &nuc_freq,
+        const std::array<double, 4> &prior) {
+    std::array<double, 4> alpha = population_alphas(theta, nuc_freq, prior);
+
+    double alpha_sum = alpha[0] + alpha[1] + alpha[2] + alpha[3];
+    dng::GenotypeArray ret{4};
+    ret <<  alpha[0] / alpha_sum,
+            alpha[1] / alpha_sum,
+            alpha[2] / alpha_sum,
+            alpha[3] / alpha_sum;
+
+    return ret;
+}
+
 
 } // namespace dng
 

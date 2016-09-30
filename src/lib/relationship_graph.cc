@@ -18,9 +18,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <dng/relationship_graph.h>
-#include <dng/utility.h>
 
-#include <boost/graph/adjacency_list.hpp>
+
 #include <boost/graph/biconnected_components.hpp>
 #include <boost/graph/connected_components.hpp>
 #include <boost/range/algorithm/find.hpp>

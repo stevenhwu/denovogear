@@ -23,74 +23,18 @@
 #ifndef DNG_FIND_MUTATIONS_H_
 #define DNG_FIND_MUTATIONS_H_
 
-
-#include <cstdlib>
-#include <vector>
-
-//#include <iostream>
-//#include <iomanip>
-//#include <ctime>
-//#include <chrono>
-#include <sstream>
-#include <string>
-
-//#include <boost/range/algorithm/replace.hpp>
-//#include <boost/range/algorithm/max_element.hpp>
-
-//#include <boost/algorithm/string.hpp>
-#include <dng/matrix.h>
-#include <dng/task/call.h>
-#include <dng/relationship_graph.h>
-#include <dng/fileio.h>
-#include <dng/pileup.h>
-#include <dng/read_group.h>
-#include <dng/likelihood.h>
-#include <dng/seq.h>
-#include <dng/utility.h>
-#include <dng/hts/bcf.h>
-#include <dng/hts/extra.h>
-#include <dng/vcfpileup.h>
-#include <dng/mutation.h>
-#include <dng/stats.h>
-#include <dng/io/utility.h>
-#include <dng/mutation_stats.h>
-
 #include <dng/find_mutations_abstract.h>
+#include <dng/detail/unit_test.h>
 
 
 namespace dng {
 
+//TODO(SW): Eventually FindMutationsAbstract will be just FindMutations.
+//TODO(SW): The original FindMutations will become FindMutationsAutosomal
 class FindMutations : public FindMutationsAbstract {
 
 
 public:
-//    struct params_t {
-//        double theta;
-//        std::array<double, 4> nuc_freq;
-//        double ref_weight;
-//
-//        dng::genotype::DirichletMultinomialMixture::params_t params_a;
-//        dng::genotype::DirichletMultinomialMixture::params_t params_b;
-//    };
-//
-//    struct stats_t {
-//        float mup;
-//        float lld;
-//        [[deprecated]]float llh;
-//        float mux;
-//
-//        bool has_single_mut;
-//        float mu1p;
-//        std::string dnt;
-//        std::string dnl;
-//        int32_t dnq;
-//        int32_t dnc;
-//
-//        IndividualVector posterior_probabilities;
-//        IndividualVector genotype_likelihoods;
-//        std::vector<float> node_mup;
-//        std::vector<float> node_mu1p;
-//    };
 
     FindMutations(double min_prob, const RelationshipGraph &graph,
             params_t params);
@@ -99,7 +43,6 @@ public:
 
     bool operator()(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
-
 
 
 protected:
