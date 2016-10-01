@@ -36,7 +36,7 @@ lower_root<-  (mut_somatic %*% genotype[[1]])
 root_product<- lower_root*upper[[1]]
 fullmut_ret<- log(sum(root_product))
 
-mup = -(exp(nomut_ret - fullmut_ret) - 1)
+mup = -(expm1(nomut_ret - fullmut_ret) )
 
 # cat("expected_lower_dad << ", paste(lower[[1]], collapse=", "), ";\n", sep="")
 

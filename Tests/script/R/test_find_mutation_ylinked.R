@@ -7,19 +7,23 @@ theta<- 0.001
 freq<- c(0.3, 0.2, 0.2, 0.3)
 ref_weight<- 1
 
-sum_freq<- sum(freq)
-normalised_theta<- theta/sum_freq
+freq_sum<- sum(freq)
+normalised_theta<- theta/freq_sum
 
 genotype_prior<- vector(length=5,mode="list")
+
 for(i in 1:5){
-
-
-    genotype_prior[[i]]<- freq * normalised_theta
+    alpha<- freq * normalised_theta
     if(i<5){
-        genotype_prior[[i]][i] <- genotype_prior[[i]][i] + ref_weight
+        alpha[i] <- alpha[i] + ref_weight
     }
-    
+    alpha_sum<- sum(alpha)
+    genotype_prior[[i]] <- alpha/alpha_sum
+}    
 
 
 
+for(i in 1:5){
+    cat("{", paste(genotype_prior[[i]], collapse=", "), "},", sep="", fill=T)
 }
+
