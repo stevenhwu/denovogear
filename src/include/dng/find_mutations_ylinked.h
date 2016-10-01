@@ -24,7 +24,7 @@
 #define DNG_FIND_MUTATIONS_YLINKED_H_
 
 #include <dng/find_mutations_abstract.h>
-
+#include <dng/detail/unit_test.h>
 
 namespace dng {
 
@@ -40,13 +40,16 @@ public:
     bool operator()(const std::vector<depth_t> &depths, int ref_index,
                     stats_t *stats);
 
-//    bool InheritanceY(const std::vector<depth_t> &depths, int ref_index,
-//                    stats_t *stats);
-
 
 protected:
     void SetupTransitionMatrix();
 
+
+    DNG_UNIT_TEST(test_constructor);
+    DNG_UNIT_TEST(test_prior);
+    DNG_UNIT_TEST(test_genotype);
+    DNG_UNIT_TEST(test_full_transition);
+    DNG_UNIT_TEST(test_operator);
 };
 } // namespace dng
 

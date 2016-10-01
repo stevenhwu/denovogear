@@ -20,7 +20,6 @@
 
 #define BOOST_TEST_MODULE dng::find_mutation
 
-#include <ctime>
 
 #include <iostream>
 #include <fstream>

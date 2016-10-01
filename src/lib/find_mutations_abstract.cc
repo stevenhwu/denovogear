@@ -104,27 +104,14 @@ void FindMutationsAbstract::Resize10To4(TransitionMatrix &matrix){
 
 
 bool FindMutationsAbstract::CalculateMutationProb(MutationStats &mutation_stats) {
-//    std::cout << "NoMutMatrix:0\n"
-//            << nomut_transition_matrices_[0] << "\n1\n"
-//            << nomut_transition_matrices_[1] << "\n2\n"
-//            << nomut_transition_matrices_[2] << "\n3\n"
-//            << nomut_transition_matrices_[3] << "\n4\n"
-//            << nomut_transition_matrices_[4] << "\n5\n"
-//            << nomut_transition_matrices_[5] << "\n==\n" << std::endl;
-//    std::cout << "FullMutMatrix:0\n"
-//            << full_transition_matrices_[0] << "\n1\n"
-//            << full_transition_matrices_[1] << "\n2\n"
-//            << full_transition_matrices_[2] << "\n3\n"
-//            << full_transition_matrices_[3] << "\n4\n"
-//            << full_transition_matrices_[4] << "\n==\n" << std::endl;
 
-	// Calculate log P(Data, nomut ; model)
+    // Calculate log P(Data, nomut ; model)
 	relationship_graph_.PeelForwards(work_nomut_, nomut_transition_matrices_);
 
 	// Calculate log P(Data ; model)
 	relationship_graph_.PeelForwards(work_full_, full_transition_matrices_);
-
 	// P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
+
 	bool is_mup_less_threshold = mutation_stats.CalculateMutationProb(
 			work_nomut_, work_full_);
 

@@ -363,9 +363,6 @@ int task::Call::operator()(Call::argument_type &arg) {
         throw std::runtime_error("Unable to construct peeler for pedigree; "
                                  "possible non-zero-loop relationship_graph.");
     }
-    //TODO: HACK!!
-    rgs.KeepTheseOnly(relationship_graph.keep_library_index());
-
 
     if(arg.gamma.size() < 2) {
         throw std::runtime_error("Unable to construct genotype-likelihood model; "
@@ -381,9 +378,19 @@ int task::Call::operator()(Call::argument_type &arg) {
     FindMutationsAbstract *calculate;
     switch (inheritance_pattern) {
         case InheritancePattern::Y_LINKED:
+            std::cerr << "Warning! Y Linked model are not fully implemented yet."
+                    << std::endl;
+            //TODO(SW): HACK!! Remove libraries to keep the count simple (0->Lib)
+            rgs.KeepTheseOnly(relationship_graph.keep_library_index());
+
             calculate = new FindMutationsYLinked(min_prob, relationship_graph,
                     {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
                             arg.gamma[1]});
+            if(cat == sequence_data) {
+                auto message = "Y Linked are not implemented for sequence data yet. "
+                                "Many things will break at this stage!!\nExit!";
+                throw std::runtime_error(message);
+            }
             break;
         default:
             calculate = new FindMutations(min_prob, relationship_graph,
@@ -746,26 +753,7 @@ int task::Call::operator()(Call::argument_type &arg) {
                     read_depths[pos].counts[base] = depth;
                 }
             }
-            //TODO: HACK:
-//            auto keep_library_index = relationship_graph.keep_library_index();
-//             std::vector<depth_t> read_depths2;
-//            read_depths2.reserve(keep_library_index.size());
-//            for (auto i : keep_library_index) {
-//                read_depths2.push_back(read_depths[i]);
-//            }
-//            std::cout << keep_library_index.size() << "\t" <<
-//                                read_depths2.size() << std::endl;
-//            for (int i = 0; i < read_depths2.size(); ++i) {
-//                std::cout << read_depths2[i].counts[0] << " "
-//                        << read_depths2[i].counts[1] << " "
-//                        << read_depths2[i].counts[2] << " "
-//                        << read_depths2[i].counts[3] << std::endl;
-//            }
-//
-//            auto t = read_depths;
-//            read_depths = read_depths2;
-//            read_depths2 = t;
-//            //HACK_END:
+
             size_t ref_index = seq::char_index(ref_base);
             if(!(*calculate)(read_depths, ref_index, &stats)) {
 //            if(!calculate->operator ()(read_depths, ref_index, &stats)) {
@@ -839,6 +827,14 @@ int task::Call::operator()(Call::argument_type &arg) {
             vector<int32_t> best_genotypes(2 * num_nodes);
             vector<int32_t> genotype_qualities(num_nodes);
             int gt_count = n_alleles * (n_alleles + 1) / 2;
+
+            //TODO(SW): FIXME: Hack for haploid/Y_linked, always output 4. Broke for X_LINKED
+            if(inheritance_pattern == InheritancePattern::Y_LINKED){
+                gt_count = 4;
+                for(int i = 0, k = 0; i < gt_count; ++i) {
+                    genotype_index[i] = i;
+                }
+            }
 
             vector<float> gp_scores(num_nodes * gt_count);
 

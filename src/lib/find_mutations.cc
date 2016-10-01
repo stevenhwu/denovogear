@@ -92,7 +92,7 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     if (is_mup_less_threshold) {
         return false;
     }
-    std::exit(133);
+//    std::exit(133);
     relationship_graph_.PeelBackwards(work_full_, full_transition_matrices_);
 
     mutation_stats.SetGenotypeLikelihoods(work_full_, depths.size());

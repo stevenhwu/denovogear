@@ -37,7 +37,7 @@
 namespace dng {
 
 constexpr int SIZE4 = 4;
-//constexpr int MAP_4_TO_10[4] = {0, 4, 7, 9};
+
 
 //TODO(SW): Eventually this will be just FindMutations.
 //TODO(SW): The original FindMutations will become FindMutationsAutosomal

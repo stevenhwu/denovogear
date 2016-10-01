@@ -113,6 +113,8 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
 
     bool is_mup_less_threshold = CalculateMutationProb(mutation_stats);
 
+    //HACK: for unittest
+    stats-> mup = mutation_stats.mup_;
     if (is_mup_less_threshold) {
         return false;
     }
@@ -133,79 +135,79 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
     stats-> posterior_probabilities = mutation_stats.posterior_probabilities_;
     //End Remove this section
 
-    double mux = 0.0;
-    event_.assign(work_full_.num_nodes, 0.0);
-    for(std::size_t i = work_full_.founder_nodes.second; i < work_full_.num_nodes; ++i) {
-        mux += (work_full_.super[i] * (mean_matrices_[i] *
-                                  work_full_.lower[i].matrix()).array()).sum();
-        event_[i] = (work_full_.super[i] * (posmut_transition_matrices_[i] *
-                                       work_full_.lower[i].matrix()).array()).sum();
-        event_[i] = event_[i] / pmut;
-    }
-    stats->mux = mux;
-
-    stats->node_mup.resize(work_full_.num_nodes, hts::bcf::float_missing);
-    for(size_t i = work_full_.founder_nodes.second; i < work_full_.num_nodes; ++i) {
-        stats->node_mup[i] = static_cast<float>(event_[i]);
-    }
+//    double mux = 0.0;
+//    event_.assign(work_full_.num_nodes, 0.0);
+//    for(std::size_t i = work_full_.founder_nodes.second; i < work_full_.num_nodes; ++i) {
+//        mux += (work_full_.super[i] * (mean_matrices_[i] *
+//                                  work_full_.lower[i].matrix()).array()).sum();
+//        event_[i] = (work_full_.super[i] * (posmut_transition_matrices_[i] *
+//                                       work_full_.lower[i].matrix()).array()).sum();
+//        event_[i] = event_[i] / pmut;
+//    }
+//    stats->mux = mux;
 //
-//    /**** Forward-Backwards with no-mutation ****/
+//    stats->node_mup.resize(work_full_.num_nodes, hts::bcf::float_missing);
+//    for(size_t i = work_full_.founder_nodes.second; i < work_full_.num_nodes; ++i) {
+//        stats->node_mup[i] = static_cast<float>(event_[i]);
+//    }
+////
+////    /**** Forward-Backwards with no-mutation ****/
+////
+////    // TODO: Better to use a separate workspace???
+//    relationship_graph_.PeelForwards(work_nomut_, nomut_transition_matrices_);
+//    relationship_graph_.PeelBackwards(work_nomut_, nomut_transition_matrices_);
+//    event_.assign(work_nomut_.num_nodes, 0.0);
+//    double total = 0.0, entropy = 0.0, max_coeff = -1.0;
+//    size_t dn_loc = 0, dn_col = 0, dn_row = 0;
+//    for(std::size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
+//		Eigen::ArrayXXd mat = (work_nomut_.super[i].matrix()
+//				* work_nomut_.lower[i].matrix().transpose()).array()
+//				* onemut_transition_matrices_[i].array();
 //
-//    // TODO: Better to use a separate workspace???
-    relationship_graph_.PeelForwards(work_nomut_, nomut_transition_matrices_);
-    relationship_graph_.PeelBackwards(work_nomut_, nomut_transition_matrices_);
-    event_.assign(work_nomut_.num_nodes, 0.0);
-    double total = 0.0, entropy = 0.0, max_coeff = -1.0;
-    size_t dn_loc = 0, dn_col = 0, dn_row = 0;
-    for(std::size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
-		Eigen::ArrayXXd mat = (work_nomut_.super[i].matrix()
-				* work_nomut_.lower[i].matrix().transpose()).array()
-				* onemut_transition_matrices_[i].array();
-
-        std::size_t row, col;
-        double mat_max = mat.maxCoeff(&row, &col);
-        if(mat_max > max_coeff) {
-            max_coeff = mat_max;
-            dn_row  = row;
-            dn_col = col;
-            dn_loc = i;
-        }
-        event_[i] = mat.sum();
-        entropy += (mat.array() == 0.0).select(mat.array(),
-                                               mat.array() * mat.log()).sum();
-        total += event_[i];
-    }
-    // Calculate P(only 1 mutation)
-    const double pmut1 = total * (1.0 - pmut);
-    stats->mu1p = pmut1;
+//        std::size_t row, col;
+//        double mat_max = mat.maxCoeff(&row, &col);
+//        if(mat_max > max_coeff) {
+//            max_coeff = mat_max;
+//            dn_row  = row;
+//            dn_col = col;
+//            dn_loc = i;
+//        }
+//        event_[i] = mat.sum();
+//        entropy += (mat.array() == 0.0).select(mat.array(),
+//                                               mat.array() * mat.log()).sum();
+//        total += event_[i];
+//    }
+//    // Calculate P(only 1 mutation)
+//    const double pmut1 = total * (1.0 - pmut);
+//    stats->mu1p = pmut1;
+////
+//    // Output statistics for single mutation only if it is likely
+//    if(pmut1 / pmut >= min_prob_) {
+//        stats->has_single_mut = true;
+//        for(std::size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
+//            event_[i] = event_[i] / total;
+//        }
 //
-    // Output statistics for single mutation only if it is likely
-    if(pmut1 / pmut >= min_prob_) {
-        stats->has_single_mut = true;
-        for(std::size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
-            event_[i] = event_[i] / total;
-        }
-
-        // Calculate entropy of mutation location
-        entropy = (-entropy / total + log(total)) / M_LN2;
-        entropy /= max_entropies_[ref_index];
-        stats->dnc = std::round(100.0 * (1.0 - entropy));
-
-        stats->dnq = lphred<int32_t>(1.0 - (max_coeff / total), 255);
-        stats->dnl = relationship_graph_.labels()[dn_loc];
-        if(relationship_graph_.transitions()[dn_loc].type == RelationshipGraph::TransitionType::Germline) {
-            stats->dnt = &meiotic_diploid_mutation_labels[dn_row][dn_col][0];
-        } else {
-            stats->dnt = &mitotic_diploid_mutation_labels[dn_row][dn_col][0];
-        }
-
-        stats->node_mu1p.resize(work_nomut_.num_nodes, hts::bcf::float_missing);
-        for(size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
-            stats->node_mu1p[i] = static_cast<float>(event_[i]);
-        }
-    } else {
-        stats->has_single_mut = false;
-    }
+//        // Calculate entropy of mutation location
+//        entropy = (-entropy / total + log(total)) / M_LN2;
+//        entropy /= max_entropies_[ref_index];
+//        stats->dnc = std::round(100.0 * (1.0 - entropy));
+//
+//        stats->dnq = lphred<int32_t>(1.0 - (max_coeff / total), 255);
+//        stats->dnl = relationship_graph_.labels()[dn_loc];
+//        if(relationship_graph_.transitions()[dn_loc].type == RelationshipGraph::TransitionType::Germline) {
+//            stats->dnt = &meiotic_diploid_mutation_labels[dn_row][dn_col][0];
+//        } else {
+//            stats->dnt = &mitotic_diploid_mutation_labels[dn_row][dn_col][0];
+//        }
+//
+//        stats->node_mu1p.resize(work_nomut_.num_nodes, hts::bcf::float_missing);
+//        for(size_t i = work_nomut_.founder_nodes.second; i < work_nomut_.num_nodes; ++i) {
+//            stats->node_mu1p[i] = static_cast<float>(event_[i]);
+//        }
+//    } else {
+//        stats->has_single_mut = false;
+//    }
     return true;
 }
 

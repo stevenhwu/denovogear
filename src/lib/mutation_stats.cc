@@ -35,7 +35,9 @@ bool MutationStats::CalculateMutationProb(
 	mup_ = static_cast<float>(-std::expm1(logdata_nomut_ - logdata_));
 	std::cerr.precision(20);
 	std::cerr << "\n\n================\n" <<
-	        logdata_nomut_ << "\t" << logdata_ << "\t" <<
+	        logdata_nomut_ << "\t" << logdata_ << "\n" <<
+	        (logdata_nomut_ - logdata_) << "\t" <<
+	        -std::expm1(logdata_nomut_ - logdata_) << "\t" <<
 	        "MutationProb: " << mup_ << "\n=================\n" << std::endl;
 	return mup_ < min_prob_;
 }
