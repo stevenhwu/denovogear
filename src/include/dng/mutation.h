@@ -238,9 +238,6 @@ inline dng::GenotypeArray population_prior(double theta,
         const std::array<double, 4> &nuc_freq,
         const std::array<double, 4> &prior) {
     std::array<double, 4> alpha = population_alphas(theta, nuc_freq, prior);
-    for (auto var : alpha) {
-        std::cout << var << std::endl;
-    }
 
     double alpha_sum = alpha[0] + alpha[1] + alpha[2] + alpha[3];
     dng::GenotypeArray ret{10};

@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <dng/io/ped.h>
 #include <dng/matrix.h>
 #include <dng/graph.h>
 #include <dng/newick.h>
@@ -161,7 +160,7 @@ public:
     size_t num_nodes() const { return num_nodes_; }
     std::pair<size_t, size_t> library_nodes() const { return {first_library_, num_nodes_}; }
 
-    std::vector<int> keep_library_index() const {return keep_library_index_;}
+    const std::vector<int> &keep_library_index() const {return keep_library_index_;}
 
 protected:
 

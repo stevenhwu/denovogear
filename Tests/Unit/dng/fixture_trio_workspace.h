@@ -20,16 +20,18 @@
 
 
 #pragma once
-#ifndef DENOVOGEAR_FIXTURE_TRIO_WORKSPACE_H
-#define DENOVOGEAR_FIXTURE_TRIO_WORKSPACE_H
+#ifndef DNG_FIXTURE_TRIO_WORKSPACE_H
+#define DNG_FIXTURE_TRIO_WORKSPACE_H
 
 #include <algorithm>
 
 #include <dng/utility.h>
 #include <dng/find_mutations.h>
-#include "fixture_read_trio_from_file.h"
+#include "fixture_read_test_from_file.h"
 
 struct TrioWorkspace : public  ReadTrioFromFile {
+
+    std::string fixture;
 
     double min_prob;
 
@@ -43,7 +45,7 @@ struct TrioWorkspace : public  ReadTrioFromFile {
                                           std::string{"0,0,0,0"},
                                           std::string{"0,0,0,0"} };
 
-    TrioWorkspace(std::string s = "TrioWorkspace") : ReadTrioFromFile(s) {
+    TrioWorkspace(std::string s = "TrioWorkspace") : ReadTrioFromFile(), fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
         r_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic,
@@ -109,4 +111,4 @@ struct TrioWorkspace : public  ReadTrioFromFile {
 };
 
 
-#endif //DENOVOGEAR_FIXTURE_TRIO_WORKSPACE_H
+#endif //DNG_FIXTURE_TRIO_WORKSPACE_H

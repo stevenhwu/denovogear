@@ -19,7 +19,7 @@
 
 #include <dng/peeling.h>
 
-#define DEBUG_PEELING 1
+#define DEBUG_PEELING 0
 #if DEBUG_PEELING == 1
 #include <iostream>
 #endif

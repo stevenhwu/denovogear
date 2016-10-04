@@ -23,7 +23,7 @@
 #include <dng/relationship_graph.h>
 
 #include "../boost_test_helper.h"
-#include "fixture_read_trio_from_file.h"
+#include "fixture_read_test_from_file.h"
 #include "relationship_graph_helper.h"
 
 struct FixturePedigreeMid {

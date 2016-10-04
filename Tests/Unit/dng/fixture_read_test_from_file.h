@@ -18,13 +18,15 @@
  */
 
 #pragma once
-#ifndef DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H
-#define DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H
+#ifndef DNG_FIXTURE_READ_TEST_FROM_FILE_H
+#define DNG_FIXTURE_READ_TEST_FROM_FILE_H
 
 #include <fstream>
 
 #include <dng/task/call.h>
 #include <dng/hts/bcf.h>
+#include <dng/vcfpileup.h>
+#include <dng/seq.h>
 
 using namespace dng;
 
@@ -37,13 +39,18 @@ template<class Elem, class Traits> inline boost::iterator_range<
             std::istreambuf_iterator<Elem, Traits>());
 }
 
-
-struct ReadTrioFromFile {
-
+struct ReadFromFile {
     std::string fixture;
 
     dng::io::Pedigree io_pedigree;
     dng::ReadGroups rgs;
+
+    double min_prob;
+    int ref_index;
+    std::vector<depth_t> read_depths;
+    FindMutations::params_t test_param_1 {0, { {0, 0, 0, 0}}, 0,
+        std::string {"0,0,0,0"}, std::string {"0,0,0,0"}};
+
 
     typedef dng::task::Call task_type;
     struct arg_t : public task_type::argument_type {
@@ -55,8 +62,17 @@ struct ReadTrioFromFile {
         std::string run_path;
     } arg;
 
-    ReadTrioFromFile(std::string s = "ReadTrioFromFile") : fixture(s) {
-        BOOST_TEST_MESSAGE("set up fixture: " << fixture);
+    ReadFromFile(std::string s = "ReadFromFile") : fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: ReadFromFile:" << fixture);
+
+    }
+
+    ~ReadFromFile() {
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
+    }
+
+    void ReadFile(std::string &ped_filename, std::string &vcf_filename){
+
 
         po::options_description ext_desc, int_desc;
         po::positional_options_description pos_desc;
@@ -66,13 +82,7 @@ struct ReadTrioFromFile {
         char *argv[argc];
         argv[0] = (char*) "test";
         argv[1] = (char*) "-p";
-
-        std::string ped_filename (TESTDATA_DIR);
-        ped_filename.append("/sample_5_3/ceu.ped");
         argv[2] = (char*) ped_filename.data();
-
-        std::string vcf_filename = TESTDATA_DIR;
-        vcf_filename.append("/sample_5_3/test1.vcf");
         argv[3] = (char*) vcf_filename.data();
 
         add_app_args(ext_desc, static_cast<typename task_type::argument_type &>(arg));
@@ -105,6 +115,49 @@ struct ReadTrioFromFile {
 
     }
 
+    void InitFromDefault(){
+        std::array<double, 4> freqs;
+        auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
+        std::copy(f.first.begin(), f.first.end(), &freqs[0]);
+        test_param_1 = FindMutations::params_t {arg.theta, freqs,
+                arg.ref_weight, arg.gamma[0], arg.gamma[1]};
+        min_prob = arg.min_prob;
+
+    }
+
+};
+
+
+
+
+struct ReadTrioFromFile : public ReadFromFile{
+
+    std::string fixture;
+
+    ReadTrioFromFile(std::string s = "ReadTrioFromFile")
+            : ReadFromFile(" from "+s), fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: ReadTrioFromFile: " << fixture);
+
+
+        std::string ped_filename (TESTDATA_DIR);
+        ped_filename.append("/sample_5_3/ceu.ped");
+        std::string vcf_filename = TESTDATA_DIR;
+        vcf_filename.append("/sample_5_3/test1.vcf");
+
+        ReadFile(ped_filename, vcf_filename);
+        InitFromDefault();
+
+        read_depths.resize(rgs.libraries().size());
+        ref_index = 2;
+        uint16_t cc[3][4] = {{0, 1, 25, 29},
+                             {0, 0, 57, 0},
+                             {0, 0, 76, 1}};
+        for (int j = 0; j < 3; ++j) {
+            std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
+        }
+
+    }
+
     ~ReadTrioFromFile() {
         BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
@@ -113,4 +166,43 @@ struct ReadTrioFromFile {
 };
 
 
-#endif //DENOVOGEAR_FIXTURE_READ_TRIO_FROM_FILE_H
+struct ReadM12FromFile : public ReadFromFile {
+//
+    std::string fixture;
+
+
+    ReadM12FromFile(std::string s = "ReadM12FromFile") : ReadFromFile(s) {
+        BOOST_TEST_MESSAGE("set up fixture: " << fixture);
+
+        std::string ped_filename (TESTDATA_DIR);
+        ped_filename.append("/relationship_graph/relationship_graph.ped");
+
+        std::string vcf_filename = TESTDATA_DIR;
+        vcf_filename.append("/relationship_graph/relationship_graph.vcf");
+
+        ReadFile(ped_filename, vcf_filename);
+        InitFromDefault();
+
+        read_depths.resize(rgs.libraries().size());
+        ref_index = 2;
+        uint16_t cc[3][4] = {{0, 1, 25, 29},
+                             {0, 0, 57, 0},
+                             {0, 0, 76, 1}};
+        for (int i = 0; i < 12;) {
+            for (int j = 0; j < 3; ++j) {
+                std::copy(cc[j], cc[j] + 4, read_depths[i++].counts);
+            }
+        }
+
+
+    }
+
+    ~ReadM12FromFile() {
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
+    }
+
+
+};
+
+
+#endif //DNG_FIXTURE_READ_TEST_FROM_FILE_H

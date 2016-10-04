@@ -127,6 +127,9 @@ public:
         map<string, size_t> child_names;
         child_names.emplace("", 0);
         for(k = 1; k < string_table.size(); ++k) {
+            string_table[k][1] = string_table[k][0] + "_@_" + string_table[k][1];
+            string_table[k][2] = string_table[k][0] + "_@_" + string_table[k][2];
+            string_table[k][3] = string_table[k][0] + "_@_" + string_table[k][3];
             bool success = child_names.emplace(string_table[k][1], k).second;
             // If child name is duplicate, erase it
             if(!success) {
@@ -199,7 +202,6 @@ public:
         for(auto && name : names_) {
             auto nrow = child_names[name];
             auto child = id(string_table[nrow][1]);
-
 
             if(child == 0) {
                 continue;

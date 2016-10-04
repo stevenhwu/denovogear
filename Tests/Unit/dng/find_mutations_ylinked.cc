@@ -28,110 +28,72 @@
 
 #include "../boost_test_helper.h"
 #include "fixture_trio_workspace.h"
-#include "fixture_read_trio_from_file.h"
+#include "fixture_read_test_from_file.h"
 
+void ReduceReadDepth(std::vector<depth_t> &read_depths,
+        const std::vector<int> &keep_library_index) {
+    std::vector<depth_t> read_depths_keep, temp;
+    for (auto i : keep_library_index) {
+        read_depths_keep.push_back(read_depths[i]);
+    }
+    temp = read_depths;
+    read_depths = read_depths_keep;
+    read_depths_keep = temp;
 
-struct FixtureFindMutation : public  ReadTrioFromFile {
+}
 
-    double min_prob;
+struct FixtureFindMutationTrio : public  ReadTrioFromFile {
+    std::string fixture;
 
     dng::RelationshipGraph r_graph;
-    dng::peel::workspace_t workspace;
 
-    int ref_index = 2;
-    std::vector<depth_t> read_depths{1};
-
-    FindMutations::params_t test_param_1 {0, {{0,0,0,0}}, 0,
-                                          std::string{"0,0,0,0"},
-                                          std::string{"0,0,0,0"} };
-
-    FixtureFindMutation(std::string s = "FixtureFindMutation") : ReadTrioFromFile(s) {
+    FixtureFindMutationTrio(std::string s = "FixtureFindMutationTrio")
+            : ReadTrioFromFile(), fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
         r_graph.Construct(io_pedigree, rgs, InheritancePattern::Y_LINKED, arg.mu,
                           arg.mu_somatic, arg.mu_library);
         rgs.KeepTheseOnly(r_graph.keep_library_index());
+        ReduceReadDepth(read_depths, r_graph.keep_library_index());
+    }
 
-        std::array<double, 4> freqs;
-        auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
-        std::copy(f.first.begin(), f.first.end(), &freqs[0]);
+    ~FixtureFindMutationTrio() {
+        BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
+    }
+};
 
-        test_param_1 = FindMutations::params_t {arg.theta, freqs,
-                arg.ref_weight, arg.gamma[0], arg.gamma[1]};
+struct FixtureFindMutationM12 : public  ReadM12FromFile {
 
-
-        int min_qual = arg.min_basequal;
-        min_prob = arg.min_prob;
-
-        ref_index = 2;
-        uint16_t cc[1][4] = {{0, 0, 57, 0}};
-        for (int j = 0; j < 1; ++j) {
-            std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
-        }
-//        setup_workspace(ref_index, read_depths);
-
-//        uint32_t n_alleles = 3;//rec->n_allele;
-//        uint32_t n_samples = 1;==bcf_hdr_nsamples(hdr);
+//    double min_prob;
 //
-//        // Build the read_depths
-//        read_depths.assign(n_samples, {});
-//        for(size_t sample_ndx = 0; sample_ndx < n_samples; sample_ndx++) {
-//            size_t pos = rgs.library_from_index(sample_ndx);
-//            if(pos == -1) {
-//                continue;
-//            }
-//            for(size_t allele_ndx = 0; allele_ndx < n_alleles; allele_ndx++) {
-//                int32_t depth = ad[n_alleles * sample_ndx + allele_ndx];
-//                size_t base = a2i[allele_ndx];
-//                if(!(base < 4)) {
-//                    continue;
-//                }
-//                read_depths[pos].counts[base] = depth;
-//            }
-//        }
+    dng::RelationshipGraph r_graph;
+////    dng::peel::workspace_t workspace;
+//
+//    int ref_index = 2;
+//    std::vector<depth_t> read_depths{1};
+//
+//    FindMutations::params_t test_param_1 {0, {{0,0,0,0}}, 0,
+//                                          std::string{"0,0,0,0"},
+//                                          std::string{"0,0,0,0"} };
+
+    FixtureFindMutationM12(std::string s = "FixtureFindMutationM12") : ReadM12FromFile(), fixture(s) {
+        BOOST_TEST_MESSAGE("set up fixture: " << fixture);
+
+        r_graph.Construct(io_pedigree, rgs, InheritancePattern::Y_LINKED, arg.mu,
+                          arg.mu_somatic, arg.mu_library);
+        rgs.KeepTheseOnly(r_graph.keep_library_index());
+        ReduceReadDepth(read_depths, r_graph.keep_library_index());
 
     }
-////
-//    double setup_workspace(int ref_index, std::vector<depth_t> &read_depths ){
-//
-//        workspace.Resize(5);
-//        workspace.founder_nodes = std::make_pair(0, 2);
-//        workspace.germline_nodes = std::make_pair(0, 2);
-//        workspace.somatic_nodes = std::make_pair(2, 2);
-//        workspace.library_nodes = std::make_pair(2, 5);
-//
-//        std::array<double, 4> prior {};
-//        prior.fill(0);
-//        prior[ref_index] = test_param_1.ref_weight;
-//        auto genotype_prior_prior = population_prior(test_param_1.theta,
-//                                                     test_param_1.nuc_freq,
-//                                                     prior);
-//        workspace.SetFounders(genotype_prior_prior);
-//
-//        std::vector<std::string> expect_gamma{"0.98, 0.0005, 0.0005, 1.04",
-//                                              "0.02, 0.075,  0.005,  1.18"};
-//        dng::genotype::DirichletMultinomialMixture genotype_likelihood_{
-//                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[0]},
-//                dng::genotype::DirichletMultinomialMixture::params_t {expect_gamma[1]}  };
-//        double scale = 0.0, stemp;
-//        for (std::size_t u = 0; u < read_depths.size(); ++u) {
-//            std::tie(workspace.lower[2 + u], stemp) =
-//                    genotype_likelihood_(read_depths[u], ref_index);
-//            scale += stemp;
-//        }
-//        return scale;
-//    }
-
-    ~FixtureFindMutation() {
+    ~FixtureFindMutationM12() {
         BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
 
 
 };
-
 namespace dng {
 
-BOOST_FIXTURE_TEST_CASE(test_constructor, FixtureFindMutation) {
+BOOST_FIXTURE_TEST_CASE(test_constructor, FixtureFindMutationTrio) {
 
 
     FindMutationsYLinked find_mutation{min_prob, r_graph, test_param_1};
@@ -169,7 +131,7 @@ BOOST_FIXTURE_TEST_CASE(test_constructor, FixtureFindMutation) {
 
 
 
-BOOST_FIXTURE_TEST_CASE(test_prior, FixtureFindMutation) {
+BOOST_FIXTURE_TEST_CASE(test_prior, FixtureFindMutationTrio) {
 
     std::vector<std::array<double, 4>> expected_prior {
         {0.999300699300699, 0.0001998001998002, 0.0001998001998002, 0.0002997002997003},
@@ -189,7 +151,7 @@ BOOST_FIXTURE_TEST_CASE(test_prior, FixtureFindMutation) {
 }
 
 
-BOOST_FIXTURE_TEST_CASE(test_full_transition, FixtureFindMutation) {
+BOOST_FIXTURE_TEST_CASE(test_full_transition, FixtureFindMutationTrio) {
 
     std::array<double, 4> freqs{0.3, 0.2, 0.2, 0.3};
     double mu = 1e-8;
@@ -223,7 +185,7 @@ BOOST_FIXTURE_TEST_CASE(test_full_transition, FixtureFindMutation) {
 }
 
 
-BOOST_FIXTURE_TEST_CASE(test_genotype, FixtureFindMutation) {
+BOOST_FIXTURE_TEST_CASE(test_genotype, FixtureFindMutationTrio) {
 
     std::vector<std::array<double, 4>> expected_genotype {
         {1,1,1,1},
@@ -244,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(test_genotype, FixtureFindMutation) {
 }
 
 
-BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutation) {
+BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutationTrio) {
 
     std::vector<std::array<double, 4>> expected_nomut_lower {
         {2.95030548493328e-18, 2.95030547695948e-18, 0.999999978378379, 2.95030548493328e-18},
@@ -340,4 +302,22 @@ BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutation) {
 //
 //}
 
+
+BOOST_FIXTURE_TEST_CASE(test_operator2, FixtureFindMutationM12) {
+
+
+    FindMutationsYLinked::stats_t mutation_stats;
+//    MutationStats stats(min_prob);
+    FindMutationsYLinked find_mutation{min_prob, r_graph, test_param_1};
+//    find_mutation(read_depths, ref_index, &mutation_stats);
+
+
+//    IndividualVector full_lower = find_mutation.work_full_.lower;
+//    IndividualVector nomut_lower = find_mutation.work_nomut_.lower;
+//    IndividualVector upper = find_mutation.work_full_.upper;
+
+    BOOST_CHECK_EQUAL(-10, mutation_stats.mup);
+
+
+}
 } // namespace dng
