@@ -33,17 +33,17 @@ struct TrioWorkspace : public  ReadTrioFromFile {
 
     std::string fixture;
 
-    double min_prob;
+//    double min_prob;
 
     dng::RelationshipGraph r_graph;
     dng::peel::workspace_t workspace;
 
-    int ref_index = 2;
-    std::vector<depth_t> read_depths{3};
-
-    FindMutations::params_t test_param_1 {0, {{0,0,0,0}}, 0,
-                                          std::string{"0,0,0,0"},
-                                          std::string{"0,0,0,0"} };
+//    int ref_index = 2;
+//    std::vector<depth_t> read_depths{3};
+//
+//    FindMutations::params_t test_param_1 {0, {{0,0,0,0}}, 0,
+//                                          std::string{"0,0,0,0"},
+//                                          std::string{"0,0,0,0"} };
 
     TrioWorkspace(std::string s = "TrioWorkspace") : ReadTrioFromFile(), fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
@@ -51,24 +51,24 @@ struct TrioWorkspace : public  ReadTrioFromFile {
         r_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic,
                                      arg.mu_library);
 
-        std::array<double, 4> freqs;
-        auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
-        std::copy(f.first.begin(), f.first.end(), &freqs[0]);
+//        std::array<double, 4> freqs;
+//        auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
+//        std::copy(f.first.begin(), f.first.end(), &freqs[0]);
+//
+//        test_param_1 = FindMutations::params_t {arg.theta, freqs,
+//                arg.ref_weight, arg.gamma[0], arg.gamma[1]};
 
-        test_param_1 = FindMutations::params_t {arg.theta, freqs,
-                arg.ref_weight, arg.gamma[0], arg.gamma[1]};
 
-
-        int min_qual = arg.min_basequal;
-        min_prob = arg.min_prob;
-
-        ref_index = 2;
-        uint16_t cc[3][4] = {{0, 1, 25, 29},
-                             {0, 0, 57, 0},
-                             {0, 0, 76, 1}};
-        for (int j = 0; j < 3; ++j) {
-            std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
-        }
+//        int min_qual = arg.min_basequal;
+//        min_prob = arg.min_prob;
+//
+//        ref_index = 2;
+//        uint16_t cc[3][4] = {{0, 1, 25, 29},
+//                             {0, 0, 57, 0},
+//                             {0, 0, 76, 1}};
+//        for (int j = 0; j < 3; ++j) {
+//            std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
+//        }
         setup_workspace(ref_index, read_depths);
 
     }

@@ -27,17 +27,18 @@
 #include <dng/hts/bcf.h>
 #include <dng/vcfpileup.h>
 #include <dng/seq.h>
+#include <dng/io/utility.h>
 
 using namespace dng;
 
-// Helper function that mimics boost::istream_range
-template<class Elem, class Traits> inline boost::iterator_range<
-        std::istreambuf_iterator<Elem, Traits>> istreambuf_range(
-        std::basic_istream<Elem, Traits> &in) {
-    return boost::iterator_range<std::istreambuf_iterator<Elem, Traits>>(
-            std::istreambuf_iterator<Elem, Traits>(in),
-            std::istreambuf_iterator<Elem, Traits>());
-}
+//// Helper function that mimics boost::istream_range
+//template<class Elem, class Traits> inline boost::iterator_range<
+//        std::istreambuf_iterator<Elem, Traits>> istreambuf_range(
+//        std::basic_istream<Elem, Traits> &in) {
+//    return boost::iterator_range<std::istreambuf_iterator<Elem, Traits>>(
+//            std::istreambuf_iterator<Elem, Traits>(in),
+//            std::istreambuf_iterator<Elem, Traits>());
+//}
 
 struct ReadFromFile {
     std::string fixture;
@@ -98,7 +99,7 @@ struct ReadFromFile {
         // Parse pedigree from file
 
         std::ifstream ped_file(arg.ped);
-        io_pedigree.Parse(istreambuf_range(ped_file));
+        io_pedigree.Parse(io::istreambuf_range(ped_file));
 
 
         std::vector<hts::File> indata;
@@ -115,7 +116,7 @@ struct ReadFromFile {
 
     }
 
-    void InitFromDefault(){
+    void InitFromDefaultArg(){
         std::array<double, 4> freqs;
         auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
         std::copy(f.first.begin(), f.first.end(), &freqs[0]);
@@ -131,7 +132,6 @@ struct ReadFromFile {
 
 
 struct ReadTrioFromFile : public ReadFromFile{
-
     std::string fixture;
 
     ReadTrioFromFile(std::string s = "ReadTrioFromFile")
@@ -145,31 +145,26 @@ struct ReadTrioFromFile : public ReadFromFile{
         vcf_filename.append("/sample_5_3/test1.vcf");
 
         ReadFile(ped_filename, vcf_filename);
-        InitFromDefault();
+        InitFromDefaultArg();
 
-        read_depths.resize(rgs.libraries().size());
         ref_index = 2;
+        read_depths.resize(rgs.libraries().size());
         uint16_t cc[3][4] = {{0, 1, 25, 29},
                              {0, 0, 57, 0},
                              {0, 0, 76, 1}};
         for (int j = 0; j < 3; ++j) {
             std::copy(cc[j], cc[j] + 4, read_depths[j].counts);
         }
-
     }
 
     ~ReadTrioFromFile() {
         BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
-
-
 };
 
 
 struct ReadM12FromFile : public ReadFromFile {
-//
     std::string fixture;
-
 
     ReadM12FromFile(std::string s = "ReadM12FromFile") : ReadFromFile(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
@@ -181,10 +176,10 @@ struct ReadM12FromFile : public ReadFromFile {
         vcf_filename.append("/relationship_graph/relationship_graph.vcf");
 
         ReadFile(ped_filename, vcf_filename);
-        InitFromDefault();
+        InitFromDefaultArg();
 
-        read_depths.resize(rgs.libraries().size());
         ref_index = 2;
+        read_depths.resize(rgs.libraries().size());
         uint16_t cc[3][4] = {{0, 1, 25, 29},
                              {0, 0, 57, 0},
                              {0, 0, 76, 1}};
@@ -193,15 +188,11 @@ struct ReadM12FromFile : public ReadFromFile {
                 std::copy(cc[j], cc[j] + 4, read_depths[i++].counts);
             }
         }
-
-
     }
 
     ~ReadM12FromFile() {
         BOOST_TEST_MESSAGE("tear down fixture: " << fixture);
     }
-
-
 };
 
 
