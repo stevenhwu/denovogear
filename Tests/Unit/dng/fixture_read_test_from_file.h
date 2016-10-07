@@ -28,6 +28,7 @@
 #include <dng/vcfpileup.h>
 #include <dng/seq.h>
 #include <dng/io/utility.h>
+#include <dng/find_mutations_abstract.h>
 
 using namespace dng;
 
@@ -49,7 +50,7 @@ struct ReadFromFile {
     double min_prob;
     int ref_index;
     std::vector<depth_t> read_depths;
-    FindMutations::params_t test_param_1 {0, { {0, 0, 0, 0}}, 0,
+    FindMutationsAbstract::params_t test_param_1 {0, { {0, 0, 0, 0}}, 0,
         std::string {"0,0,0,0"}, std::string {"0,0,0,0"}};
 
 
@@ -117,12 +118,13 @@ struct ReadFromFile {
     }
 
     void InitFromDefaultArg(){
+        min_prob = arg.min_prob;
+
         std::array<double, 4> freqs;
         auto f = dng::utility::parse_double_list(arg.nuc_freqs, ',', 4);
         std::copy(f.first.begin(), f.first.end(), &freqs[0]);
-        test_param_1 = FindMutations::params_t {arg.theta, freqs,
+        test_param_1 = FindMutationsAbstract::params_t {arg.theta, freqs,
                 arg.ref_weight, arg.gamma[0], arg.gamma[1]};
-        min_prob = arg.min_prob;
 
     }
 

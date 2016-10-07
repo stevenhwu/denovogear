@@ -64,6 +64,7 @@ struct FixtureFindMutationTrio : public  ReadTrioFromFile {
 
 struct FixtureFindMutationM12 : public  ReadM12FromFile {
 
+    std::string fixture;
 //    double min_prob;
 //
     dng::RelationshipGraph r_graph;
@@ -76,7 +77,8 @@ struct FixtureFindMutationM12 : public  ReadM12FromFile {
 //                                          std::string{"0,0,0,0"},
 //                                          std::string{"0,0,0,0"} };
 
-    FixtureFindMutationM12(std::string s = "FixtureFindMutationM12") : ReadM12FromFile(), fixture(s) {
+    FixtureFindMutationM12(std::string s = "FixtureFindMutationM12")
+            : ReadM12FromFile(), fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
 
         r_graph.Construct(io_pedigree, rgs, InheritancePattern::Y_LINKED, arg.mu,
@@ -217,9 +219,10 @@ BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutationTrio) {
         {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18}
     };
 
-    std::vector<std::array<double, 4>> expected_upper {
-        {0.0002997002997003, 0.0001998001998002, 0.999200799200799, 0.0002997002997003},
-    };
+    std::array<double, 4> expected_upper
+        {0.0002997002997003, 0.0001998001998002, 0.999200799200799, 0.0002997002997003};
+
+
 
     FindMutationsYLinked::stats_t mutation_stats;
 //    MutationStats stats(min_prob);
@@ -235,7 +238,8 @@ BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutationTrio) {
         boost_check_close_vector(expected_full_lower[i], full_lower[i]);
         boost_check_close_vector(expected_nomut_lower[i], nomut_lower[i]);
     }
-    boost_check_close_vector(expected_upper[0], upper[0]);
+    boost_check_close_vector(expected_upper, upper[0]);
+    //PR_NOTE(SW): These will be used when we migrate to MutationStats Class
     double expected_nomut_ret = -0.000799541952039;
     double expected_full_ret = -0.000799541947716;
 
@@ -249,7 +253,8 @@ BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutationTrio) {
 //    const double expected_lld = (result_full +scale) / M_LN10;
 //    const double expected_llh = expected_full_ret / M_LN10;
 //
-    BOOST_CHECK_CLOSE(expected_mup, mutation_stats.mup, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
+    BOOST_CHECK_CLOSE(expected_mup, mutation_stats.mup,
+                      BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 //    BOOST_CHECK_CLOSE(expected_lld, mutation_stats.lld, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 //    BOOST_CHECK_CLOSE(expected_llh, mutation_stats.llh, BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 //
@@ -303,21 +308,72 @@ BOOST_FIXTURE_TEST_CASE(test_operator, FixtureFindMutationTrio) {
 //}
 
 
-BOOST_FIXTURE_TEST_CASE(test_operator2, FixtureFindMutationM12) {
+BOOST_FIXTURE_TEST_CASE(test_operator_m12, FixtureFindMutationM12) {
 
+    std::vector<std::array<double, 4>> libraries_genotypes {
+        {1.96818125861e-19, 1.17500421139e-16, 1.81775784871e-07, 8.31929691819e-07},
+        {2.95030554075e-18, 2.95030554075e-18, 1.00000000000e+00, 2.95030554075e-18},
+        {1.96818125861e-19, 1.17500421139e-16, 1.81775784871e-07, 8.31929691819e-07},
+        {1.96818125861e-19, 1.17500421139e-16, 1.81775784871e-07, 8.31929691819e-07},
+        {1.62968756238e-19, 1.62968756238e-19, 1.00000000000e+00, 9.72923474741e-17}
+    };
+
+
+
+    std::vector<std::array<double, 4>> expected_nomut_lower {
+        {2.95030548493328e-18, 2.95030547695948e-18, 0.999999978378379, 2.95030548493328e-18},
+        //5-9
+        {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18},
+        {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18},
+        {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18},
+        {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18},
+        {2.950305540749871563719e-18, 2.950305540749871563719e-18, 1.000000000000000000000e+00, 2.950305540749871563719e-18}
+    };
+    std::vector<std::array<double, 4>> expected_full_lower {
+        {5.40540532629463e-09, 5.40540532629463e-09, 0.999999978378379, 5.40540532629463e-09},
+    };
+//    expected_full_lower.insert
+
+
+
+
+
+    std::array<double, 4> expected_upper
+            {0.0002997002997003, 0.0001998001998002, 0.999200799200799, 0.0002997002997003};
 
     FindMutationsYLinked::stats_t mutation_stats;
 //    MutationStats stats(min_prob);
     FindMutationsYLinked find_mutation{min_prob, r_graph, test_param_1};
-//    find_mutation(read_depths, ref_index, &mutation_stats);
+    find_mutation(read_depths, ref_index, &mutation_stats);
 
+
+    IndividualVector full_lower = find_mutation.work_full_.lower;
+    IndividualVector nomut_lower = find_mutation.work_nomut_.lower;
+    IndividualVector upper = find_mutation.work_full_.upper;
+
+    for (int i = 0; i < full_lower.size(); ++i) {
+//        std::cout << full_lower[i] << "\n\n" << std::endl;
+//        boost_check_close_vector(expected_full_lower[i], full_lower[i]);
+//        boost_check_close_vector(expected_nomut_lower[i], nomut_lower[i]);
+    }
+
+    std::cout << upper.size() << std::endl;
+    for (int i = 0; i < 3; ++i) {
+        boost_check_close_vector(expected_upper, upper[i]);
+    }
+//
+//    FindMutationsYLinked::stats_t mutation_stats;
+////    MutationStats stats(min_prob);
+//    FindMutationsYLinked find_mutation{min_prob, r_graph, test_param_1};
+//    find_mutation(read_depths, ref_index, &mutation_stats);
+//
 
 //    IndividualVector full_lower = find_mutation.work_full_.lower;
 //    IndividualVector nomut_lower = find_mutation.work_nomut_.lower;
 //    IndividualVector upper = find_mutation.work_full_.upper;
-
-    BOOST_CHECK_EQUAL(-10, mutation_stats.mup);
-
+    double expected_mup = 1.11318887462615e-07;
+    BOOST_CHECK_CLOSE(expected_mup, mutation_stats.mup,
+                      BOOST_CLOSE_PERCENTAGE_THRESHOLD);
 
 }
 } // namespace dng

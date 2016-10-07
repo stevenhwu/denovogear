@@ -52,7 +52,8 @@ void dng::peel::up(workspace_t &work, const family_members_t &family,
     auto child = family[1];
     work.lower[parent] *= (mat[child] * work.lower[child].matrix()).array();
 #if DEBUG_PEELING == 1
-    std::cout << "UP:\n" << (mat[child] * work.lower[child].matrix()).array()
+    std::cout << "UP:"<< parent << "<-" << child <<"\n"
+            << (mat[child] * work.lower[child].matrix()).array()
             << "\n" << std::endl;
 #endif
 }
@@ -64,12 +65,12 @@ void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
 #if DEBUG_PEELING == 1
-    std::cout << "UPFast:\n" << mat[child] <<"\n"<<
+    std::cout << "UPFast:"<< parent << "<-" << child <<"\n" << mat[child] <<"\n"<<
             work.lower[child] << "\n" << std::endl;
 #endif
     work.lower[parent] = (mat[child] * work.lower[child].matrix()).array();
 #if DEBUG_PEELING == 1
-    std::cout << "UPFast:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
+    std::cout << "UPFastEND:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
 #endif
 }
 

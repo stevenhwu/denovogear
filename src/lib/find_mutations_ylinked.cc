@@ -222,6 +222,7 @@ void FindMutationsYLinked::SetupTransitionMatrix(){
         if (trans.type == RelationshipGraph::TransitionType::Somatic
                 || trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
+            std::cout << "L: " << trans.length1 << std::endl;
             full_transition_matrices_[child] = mitosis_haploid_matrix(orig);
             nomut_transition_matrices_[child] = mitosis_haploid_matrix(orig, 0);
             posmut_transition_matrices_[child] = full_transition_matrices_[child] -

@@ -29,12 +29,14 @@
 
 struct FixturePedigree : public ReadTrioFromFile{
 
-
+    std::string fixture;
     dng::RelationshipGraph relationship_graph;
 
-    FixturePedigree(std::string s = "FixturePedigree") : ReadTrioFromFile(s) {
+    FixturePedigree(std::string s = "FixturePedigree")
+            : ReadTrioFromFile(), fixture(s) {
         BOOST_TEST_MESSAGE("set up fixture: " << fixture);
-        relationship_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic, arg.mu_library);
+        relationship_graph.Construct(io_pedigree, rgs, arg.mu, arg.mu_somatic,
+                                     arg.mu_library);
     }
 
     ~FixturePedigree() {

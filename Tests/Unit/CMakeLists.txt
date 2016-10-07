@@ -30,7 +30,8 @@ macro(AddUnitTest NAME)
     --build-noclean
     --build-project "${CMAKE_PROJECT_NAME}" 
     --build-target "${target}" 
-    --test-command "${CMAKE_CURRENT_BINARY_DIR}/${head}" --log_level=unit_scope
+    --test-command "${CMAKE_CURRENT_BINARY_DIR}/${head}" 
+        --log_level=test_suite --report_level=short
   )
 endmacro()
 

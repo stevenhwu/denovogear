@@ -50,6 +50,7 @@ protected:
     DNG_UNIT_TEST(test_genotype);
     DNG_UNIT_TEST(test_full_transition);
     DNG_UNIT_TEST(test_operator);
+    DNG_UNIT_TEST(test_operator_m12);
 };
 } // namespace dng
 
