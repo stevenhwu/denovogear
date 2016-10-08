@@ -113,7 +113,7 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
 
     bool is_mup_less_threshold = CalculateMutationProb(mutation_stats);
 
-    //HACK: for unittest
+    //TODO(SW): HACK: for unittest
     stats-> mup = mutation_stats.mup_;
     if (is_mup_less_threshold) {
         return false;

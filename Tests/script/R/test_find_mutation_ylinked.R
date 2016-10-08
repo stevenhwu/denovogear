@@ -1,5 +1,5 @@
 source("mutation_function.R")
-options(digits=10)
+options(digits=15)
 
 
 ## test_prior
@@ -28,7 +28,7 @@ for(i in 1:5){
 
 
 
-##
+## y-linked M12
 rd<-vector(length=3, mode="list")
 genotype<-vector(length=3, mode="list")
 rd[[1]]<-c(0, 1, 25, 29) #878
@@ -58,8 +58,20 @@ lower[[8]]<- genotype4[[1]]  #L4   Node3
 lower[[9]]<- genotype4[[1]]  #L10  Node6
 lower[[10]]<- genotype4[[2]] #L11  Node9
 
+
+catCppGenotype<- function(geno){
+    l<- length(geno[[1]])
+    s<- sapply(geno, function(x){
+        paste(x, sep="", collapse=", ")
+    })
+    cat("std::vector<std::array<double, ", l ,">> expected_genotype {\n\t{", paste(s, collapse="}, \n\t{"), "}\n};\n", sep="" )
+}
+
+
+
 ##
 numMutation<- 0
+numMutation<- -1
 peel_forward_m12 <- function(numMutation){
     F81_mu1<- f81_full(1e-8,freq)
     F81_mu2<- f81_full(2e-8,freq)
@@ -87,6 +99,13 @@ peel_forward_m12 <- function(numMutation){
 
 log_nomut<- peel_forward_m12(0)
 log_fullmut<- peel_forward_m12(-1)
+ret<- -expm1(log_nomut - log_fullmut)
 
--expm1(log_nomut - log_fullmut)
+
+cat("double expected_log_nomut = ", log_nomut, ";\n", sep="")
+cat("double expected_log_fullmut = ", log_fullmut, ";\n", sep="")
+cat("double expected_mup = ", ret, ";\n", sep="")
+
+
+catCppGenotype(lower)
 

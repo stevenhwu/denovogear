@@ -1,5 +1,5 @@
 source("mutation_function.R")
-options(digits=10)
+options(digits=15)
 
 ## Test F81
 mu6 <- 1e-6

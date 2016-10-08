@@ -1,5 +1,5 @@
 source("mutation_function.R")
-options(digits=12)
+options(digits=15)
 
 f10to4<- c(1,5,8,10)
 

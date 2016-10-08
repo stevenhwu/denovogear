@@ -1,5 +1,5 @@
 source("mutation_function.R")
-options(digits=10)
+options(digits=15)
 
 rd<-vector(length=3, mode="list")
 genotype<-vector(length=3, mode="list")
