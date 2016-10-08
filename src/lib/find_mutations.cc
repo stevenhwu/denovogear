@@ -34,7 +34,6 @@ FindMutations::FindMutations(double min_prob, const RelationshipGraph &graph,
         params_t params)
         : FindMutationsAbstract(min_prob, graph, params) {
 
-    std::cout << "FM::FM" << std::endl;
     SetupPopulationPriorDiploid();
     SetupTransitionMatrix();
 }
@@ -47,40 +46,15 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     using dng::utility::phred;
 
     assert(stats != nullptr);
-    std::cout << "FM()" << std::endl;
     //TODO(SW): Eventually, MutationStats this will replace all stats_t
     MutationStats mutation_stats(min_prob_);
 
     // calculate genotype likelihoods and store in the lower library vector
     double scale = 0.0, stemp;
-//    std::cout << "DepthsSize: " << depths.size() << std::endl;
-//    for(std::size_t u = 0; u < keep_library_index_.size(); ++u) {
-//            std::cout << u << "\t" << work_full_.library_nodes.first + u
-//                    << "\t" << keep_library_index_[u] << std::endl;
-//            for (int i = 0; i < 4; ++i) {
-////               std::cout << depths[keep_library_index_[u]].counts[i] << " ";
-//            }
-//
-//            std::cout << "" << std::endl;
-//            std::tie(work_full_.lower[work_full_.library_nodes.first + u], stemp) =
-//                genotype_likelihood_(depths[keep_library_index_[u]], ref_index);
-//            scale += stemp;
-//    }
-//    std::cout << "\n" << std::endl;
     for(std::size_t u = 0; u < depths.size(); ++u) {
-//        std::cout << u << "\tLowerIndex: " << work_full_.library_nodes.first + u << "\t" <<   std::endl;
-//        for (int i = 0; i < 4; ++i) {
-//           std::cout << depths[u].counts[i] << " ";
-//        } std::cout << "" << std::endl;
-
         std::tie(work_full_.lower[work_full_.library_nodes.first + u], stemp) =
             genotype_likelihood_(depths[u], ref_index);
         scale += stemp;
-//        std::cout.precision(10);
-//        std::cout << "Genotype:" << u << " "
-//                << work_full_.library_nodes.first + u << "\n"
-////                << work_full_.lower[work_full_.library_nodes.first + u]
-//                << std::endl;
     }
 
     // Set the prior probability of the founders given the reference
@@ -92,7 +66,7 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
     if (is_mup_less_threshold) {
         return false;
     }
-//    std::exit(133);
+
     relationship_graph_.PeelBackwards(work_full_, full_transition_matrices_);
 
     mutation_stats.SetGenotypeLikelihoods(work_full_, depths.size());
@@ -186,10 +160,10 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
 }
 
 void FindMutations::SetupTransitionMatrix(){
-    std::cout << "FM:SetupTransitionMatrix  " << std::endl;
+
     for(size_t child = 0; child < work_full_.num_nodes; ++child) {
         auto trans = relationship_graph_.transitions()[child];
-        std::cout << "Child: " << child << "\tTransType: " << (int) trans.type << std::endl;
+
         if(trans.type == RelationshipGraph::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
@@ -246,37 +220,4 @@ void FindMutations::SetupTransitionMatrix(){
 #endif
 
 }
-//
-//bool FindMutations::CalculateMutationProb(MutationStats &mutation_stats) {
-//
-//	// Calculate log P(Data, nomut ; model)
-//    std::cout << "NoMutMatrix:0\n" <<
-//            nomut_transition_matrices_[0] << "\n1\n" <<
-//            nomut_transition_matrices_[1] << "\n2\n" <<
-////            nomut_transition_matrices_[2] << "\n3\n" <<
-////            nomut_transition_matrices_[3] << "\n4\n" <<
-////            nomut_transition_matrices_[4] << "\n5\n" <<
-////            nomut_transition_matrices_[5] << "\n==\n" <<
-//            std::endl;
-//	relationship_graph_.PeelForwards(work_nomut_, nomut_transition_matrices_);
-//	std::cout << "FullMutMatrix:0\n" <<
-//	            full_transition_matrices_[0] << "\n1\n" <<
-//	            full_transition_matrices_[1] << "\n2\n" <<
-////	            full_transition_matrices_[2] << "\n3\n" <<
-////	            full_transition_matrices_[3] << "\n4\n" <<
-////	            full_transition_matrices_[4] << "\n==\n" <<
-//	            std::endl;
-//	// Calculate log P(Data ; model)
-//	relationship_graph_.PeelForwards(work_full_, full_transition_matrices_);
-//
-//	// P(mutation | Data ; model) = 1 - [ P(Data, nomut ; model) / P(Data ; model) ]
-//	bool is_mup_less_threshold = mutation_stats.CalculateMutationProb(
-//			work_nomut_, work_full_);
-//
-//	return is_mup_less_threshold;
-//}
-//
-//
-
-
 

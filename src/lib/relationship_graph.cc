@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Reed A. Cartwright
+cout * Copyright (c) 2014-2015 Reed A. Cartwright
  * Copyright (c) 2016 Steven H. Wu
  * Authors:  Reed A. Cartwright <reed@cartwrig.ht>
  *           Steven H. Wu <stevenwu@asu.edu>
@@ -56,12 +56,10 @@ void dng::RelationshipGraph::PruneForYLinked(dng::Graph &pedigree_graph){
     for (auto v = first_founder_; v < num_nodes_; ++v) {
 
         if(gender[v] == dng::io::Pedigree::Gender::Female){
+#if DEBUG_RGRAPH == 1
             std::cout << "REMOVE: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
+#endif
             clear_vertex(v, pedigree_graph);
-
-        }
-        else{
-            std::cout << "Keep: " << v << "\t" << labels[v] << "\t" << (int) gender[v] << std::endl;
         }
     }
     PrintDebugEdges("After prune Y=================", pedigree_graph);
@@ -554,7 +552,7 @@ void dng::RelationshipGraph::ParseIoPedigree(dng::Graph &pedigree_graph,
 #endif
 
         for (int i = current_index; i < num_vertices(pedigree_graph); ++i) {
-            std::cout << i << "\t" << num_vertices(pedigree_graph) << std::endl;
+//            std::cout << i << "\t" << num_vertices(pedigree_graph) << std::endl;
             gender[i] = gender[child];
         }
 

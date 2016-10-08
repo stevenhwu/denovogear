@@ -33,19 +33,12 @@ bool MutationStats::CalculateMutationProb(
 	logdata_nomut_ = work_nomut.forward_result;
 	logdata_ = work_full.forward_result;
 	mup_ = static_cast<float>(-std::expm1(logdata_nomut_ - logdata_));
-	std::cerr.precision(20);
-	std::cerr << "\n\n================\n" <<
-	        logdata_nomut_ << "\t" << logdata_ << "\n" <<
-	        (logdata_nomut_ - logdata_) << "\t" <<
-	        -std::expm1(logdata_nomut_ - logdata_) << "\t" <<
-	        "MutationProb: " << mup_ << "\n=================\n" << std::endl;
 	return mup_ < min_prob_;
 }
 
 void MutationStats::SetScaledLogLikelihood(double scale) {
 	lld_ = static_cast<float>((logdata_ + scale) / M_LN10);
 //    llh_ = static_cast<float>( logdata_ / M_LN10);
-
 }
 
 void MutationStats::SetGenotypeLikelihoods(

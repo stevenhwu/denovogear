@@ -142,12 +142,12 @@ public:
             }
             count++;
         }
-        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
+//        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
         auto t = data_;
         data_ = data2;
         data2 = t;
         ReloadData();
-        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
+//        std::cout << "DataSize: " << data_.size() << "\t" << "Data2Size: " << data2.size()<< std::endl;
     }
 
 protected:

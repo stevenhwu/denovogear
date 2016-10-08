@@ -33,22 +33,14 @@ FindMutationsYLinked::~FindMutationsYLinked() {
 FindMutationsYLinked::FindMutationsYLinked(double min_prob,
         const RelationshipGraph &graph, params_t params)
         : FindMutationsAbstract(min_prob, graph, params)
-//    relationship_graph_(graph), min_prob_(min_prob),
-//    params_(params), genotype_likelihood_{params.params_a, params.params_b},
-//    work_full_(graph.CreateWorkspace()), work_nomut_(graph.CreateWorkspace())
     {
-    std::cout << "FMY:FMY" << std::endl;
 
     SetupPopulationPriorHaploid();
     SetupTransitionMatrix();
 
-
-
-
 #if CALCULATE_ENTROPY == 1
     std::cerr << "Entropy will not be calculated for Y-linked model!!" << std::endl;
 #endif
-
 
 }
 
@@ -59,7 +51,6 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
     using dng::utility::lphred;
     using dng::utility::phred;
 
-    std::cout << "FMY()" << std::endl;
     assert(stats != nullptr);
 
     //TODO(SW): Eventually, MutationStats this will replace all stats_t
@@ -67,46 +58,11 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
 
     // calculate genotype likelihoods and store in the lower library vector
     double scale = 0.0, stemp;
-    std::cout << "DepthsSize: " << depths.size() << std::endl;
-//    for(std::size_t u = 0; u < keep_library_index_.size(); ++u) {
-//            std::cout << u << "\t" << work_full_.library_nodes.first + u
-//                    << "\t" << keep_library_index_[u] << std::endl;
-//            for (int i = 0; i < 4; ++i) {
-////               std::cout << depths[keep_library_index_[u]].counts[i] << " ";
-//            }
-//
-//            std::cout << "" << std::endl;
-//            std::tie(work_full_.lower[work_full_.library_nodes.first + u], stemp) =
-//                genotype_likelihood_(depths[keep_library_index_[u]], ref_index);
-//            scale += stemp;
-//    }
-//    std::cout << "\n" << std::endl;
     for(std::size_t u = 0; u < depths.size(); ++u) {
-        std::cout << u << "\tLowerIndex: " << work_full_.library_nodes.first + u << "\t" <<   std::endl;
-        for (int i = 0; i < 4; ++i) {
-           std::cout << depths[u].counts[i] << " ";
-        } std::cout << "" << std::endl;
-
         std::tie(work_full_.lower[work_full_.library_nodes.first + u], stemp) =
                 genotype_likelihood_.OperateHaploid(depths[u], ref_index);
-
-//        std::tie(work_full_.lower[work_full_.library_nodes.first + u], stemp) =
-//                genotype_likelihood_(depths[u], ref_index);
-//        Resize10To4(work_full_.lower[work_full_.library_nodes.first + u]);
-
-//        auto x = genotype_likelihood_.OperateHaploid(depths[u], ref_index).first;
-//        std::cout.precision(10);
-//        std::cout << "Genotype:" << u << " "
-//                << work_full_.library_nodes.first + u << "\n"
-//                << x << "\n\n"
-//                << work_full_.lower[work_full_.library_nodes.first + u]
-//                << std::endl;
-
         scale += stemp;
-
-
     }
-//
     // Set the prior probability of the founders given the reference
     work_full_.SetFounders(genotype_prior_[ref_index]);
     work_nomut_ = work_full_;
@@ -135,6 +91,8 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
     stats-> posterior_probabilities = mutation_stats.posterior_probabilities_;
     //End Remove this section
 
+
+    //PR_NOTE(SW): Rest of the ylinked model will be add back after unittest is completed
 //    double mux = 0.0;
 //    event_.assign(work_full_.num_nodes, 0.0);
 //    for(std::size_t i = work_full_.founder_nodes.second; i < work_full_.num_nodes; ++i) {
@@ -214,15 +172,13 @@ bool FindMutationsYLinked::operator()(const std::vector<depth_t> &depths,
 
 
 void FindMutationsYLinked::SetupTransitionMatrix(){
-    std::cout << "FMY:SetupTransitionMatrix" << std::endl;
+
     for(size_t child = 0; child < work_full_.num_nodes; ++child) {
         auto trans = relationship_graph_.transitions()[child];
-        std::cout << "Child: " << child << "\tTransType: " << (int) trans.type << std::endl;
 
         if (trans.type == RelationshipGraph::TransitionType::Somatic
                 || trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
-            std::cout << "L: " << trans.length1 << std::endl;
             full_transition_matrices_[child] = mitosis_haploid_matrix(orig);
             nomut_transition_matrices_[child] = mitosis_haploid_matrix(orig, 0);
             posmut_transition_matrices_[child] = full_transition_matrices_[child] -
@@ -230,50 +186,7 @@ void FindMutationsYLinked::SetupTransitionMatrix(){
             onemut_transition_matrices_[child] = mitosis_haploid_matrix(orig, 1);
             mean_matrices_[child] = mitosis_haploid_mean_matrix(orig);
         }
-//        else { //if(trans.type == RelationshipGraph::TransitionType::Germline) {
-//            full_transition_matrices_[child] = {};
-//            nomut_transition_matrices_[child] = {};
-//            posmut_transition_matrices_[child] = {};
-//            onemut_transition_matrices_[child] = {};
-//            mean_matrices_[child] = {};
-//        }
     }
 
-
-    //
-
-    //Original below
-//    for(size_t child = 0; child < work_full_.num_nodes; ++child) {
-//        auto trans = relationship_graph_.transitions()[child];
-//        std::cout << "Child: " << child << "\tTransType: " << (int) trans.type << std::endl;
-//        if(trans.type == RelationshipGraph::TransitionType::Germline) {
-//            auto dad = f81::matrix(trans.length1, params_.nuc_freq);
-//            auto mom = f81::matrix(trans.length2, params_.nuc_freq);
-//
-//            full_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom);
-//
-//            nomut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 0);
-//            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-//                                                 nomut_transition_matrices_[child];
-//            onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
-//
-//            mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
-//        } else if(trans.type == RelationshipGraph::TransitionType::Somatic ||
-//                  trans.type == RelationshipGraph::TransitionType::Library) {
-//            auto orig = f81::matrix(trans.length1, params_.nuc_freq);
-//            full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
-//            nomut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 0);
-//            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-//                                                 nomut_transition_matrices_[child];
-//            onemut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 1);
-//            mean_matrices_[child] = mitosis_diploid_mean_matrix(orig);
-//        } else {
-////            full_transition_matrices_[child] = {};
-////            nomut_transition_matrices_[child] = {};
-////            posmut_transition_matrices_[child] = {};
-////            onemut_transition_matrices_[child] = {};
-////            mean_matrices_[child] = {};
-//        }
-//    }
 
 }

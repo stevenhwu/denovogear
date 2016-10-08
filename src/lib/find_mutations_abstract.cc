@@ -38,11 +38,6 @@ FindMutationsAbstract::FindMutationsAbstract(double min_prob, const Relationship
     params_(params), genotype_likelihood_{params.params_a, params.params_b},
     work_full_(graph.CreateWorkspace()), work_nomut_(graph.CreateWorkspace()) {
 
-    using namespace dng;
-    std::cout << "FMA:FMA" << std::endl;
-
-
-//std::exit(12);
     // Calculate mutation expectation matrices
     full_transition_matrices_.assign(work_full_.num_nodes, {});
     nomut_transition_matrices_.assign(work_full_.num_nodes, {});
@@ -90,7 +85,6 @@ void FindMutationsAbstract::Resize10To4(GenotypeArray &array){
 
 }
 void FindMutationsAbstract::Resize10To4(TransitionMatrix &matrix){
-    std::cout << matrix << std::endl;
     for (int x = 0; x < SIZE4; ++x) {
         int gx = MAP_4_TO_10[x];
         for (int y = 0; y < SIZE4; ++y) {
@@ -99,7 +93,6 @@ void FindMutationsAbstract::Resize10To4(TransitionMatrix &matrix){
         }
     }
     matrix = matrix.block<4, 4>(0, 0).eval();
-    std::cout << matrix << "\n\n" << std::endl;
 }
 
 
