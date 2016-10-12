@@ -19,7 +19,7 @@
 
 #include <dng/peeling.h>
 
-#define DEBUG_PEELING 0
+#define DEBUG_PEELING 1
 #if DEBUG_PEELING == 1
 #include <iostream>
 #endif
@@ -51,10 +51,20 @@ void dng::peel::up(workspace_t &work, const family_members_t &family,
     auto parent = family[0];
     auto child = family[1];
     work.lower[parent] *= (mat[child] * work.lower[child].matrix()).array();
+
 #if DEBUG_PEELING == 1
-    std::cout << "UP:"<< parent << "<-" << child <<"\n"
-            << (mat[child] * work.lower[child].matrix()).array()
-            << "\n" << std::endl;
+    if (parent == 7 && child == 17) {
+        std::cout << "\n=========================================\nUP:"
+                << parent << "<-" << child << "\n"
+                << mat[child].size() << "\t" << work.lower[child].size()
+                << "\t" << work.lower[parent].size() << "\n"
+                << mat[child] << ";\n"
+                << work.lower[child] << ";\n"
+                << (mat[child] * work.lower[child].matrix()).array() << ";\n"
+                << work.lower[parent]  << ";\n"
+                << std::endl;
+//            std::exit(10);
+    }
 #endif
 }
 
@@ -64,14 +74,45 @@ void dng::peel::up_fast(workspace_t &work, const family_members_t &family,
     assert(family.size() == 2);
     auto parent = family[0];
     auto child = family[1];
+
 #if DEBUG_PEELING == 1
-    std::cout << "UPFast:"<< parent << "<-" << child <<"\n" << mat[child] <<"\n"<<
-            work.lower[child] << "\n" << std::endl;
+//    if(parent == 7 && child == 14){
+        std::cout << "\n=========================================\nUPFast:"
+                << parent << "<-" << child << "\n"
+                << mat[child].size() << "\t" << work.lower[child].size()
+                << "\t" << work.lower[parent].size() << "\n"
+                << mat[child] << ";\n"
+                << work.lower[child] << ";\n"
+//                << (mat[child] * work.lower[child].matrix()).array() << ";\n"
+                << work.lower[parent]  << ";\n"
+                << std::endl;
+//            std::exit(10);
+//        auto xx = Eigen::VectorXd::LinSpaced(100, 1, 100);
+////        std::cout << xx << std::endl;
+//        TransitionMatrix x = xx.matrix();
+//                x.resize(10, 10);
+//                        x.transpose();
+////        std::cout << x << std::endl;
+//        TransitionMatrix y = Eigen::MatrixXd::Ones(6,1);
+//        y << 0,1,0,1;
+//
+//auto z = x;
+//z.transpose();
+//        std::cout << "\n=========================================\nDUMMY:"
+//
+//                << x.size() << "\t" << y.size()
+//                 << "\n "
+//                << x << ";\n"
+////                << y << ";\n"
+//                << y.matrix() << ";\n"
+//                << (x* y.matrix()).array() << ";\n"
+//                << (z * y.matrix()).array() << ";\n"
+//
+//                << std::endl;
+//    }
 #endif
     work.lower[parent] = (mat[child] * work.lower[child].matrix()).array();
-#if DEBUG_PEELING == 1
-    std::cout << "UPFastEND:\n" << (mat[child] * work.lower[child].matrix()).array() << "\n" << std::endl;
-#endif
+
 }
 
 // Family Order: Father, Mother, Child1, Child2, ...

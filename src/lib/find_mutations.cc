@@ -187,28 +187,28 @@ bool FindMutations::operator()(const std::vector<depth_t> &depths,
 
 void FindMutations::SetupTransitionMatrix(){
     std::cout << "FM:SetupTransitionMatrix  " << std::endl;
+
     for(size_t child = 0; child < work_full_.num_nodes; ++child) {
         auto trans = relationship_graph_.transitions()[child];
-        std::cout << "Child: " << child << "\tTransType: " << (int) trans.type << std::endl;
+        std::cout << "Child: " << child << "\tTransType: " << (int) trans.type
+                << " " << trans.length1 << "\t" << trans.length2 << std::endl;
+
         if(trans.type == RelationshipGraph::TransitionType::Germline) {
             auto dad = f81::matrix(trans.length1, params_.nuc_freq);
             auto mom = f81::matrix(trans.length2, params_.nuc_freq);
 
             full_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom);
-
             nomut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 0);
-            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-                                                 nomut_transition_matrices_[child];
+//            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
+//                                                 nomut_transition_matrices_[child];
             onemut_transition_matrices_[child] = meiosis_diploid_matrix(dad, mom, 1);
-
             mean_matrices_[child] = meiosis_diploid_mean_matrix(dad, mom);
+
         } else if(trans.type == RelationshipGraph::TransitionType::Somatic ||
                   trans.type == RelationshipGraph::TransitionType::Library) {
             auto orig = f81::matrix(trans.length1, params_.nuc_freq);
             full_transition_matrices_[child] = mitosis_diploid_matrix(orig);
             nomut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 0);
-            posmut_transition_matrices_[child] = full_transition_matrices_[child] -
-                                                 nomut_transition_matrices_[child];
             onemut_transition_matrices_[child] = mitosis_diploid_matrix(orig, 1);
             mean_matrices_[child] = mitosis_diploid_mean_matrix(orig);
         } else {
@@ -218,6 +218,8 @@ void FindMutations::SetupTransitionMatrix(){
             onemut_transition_matrices_[child] = {};
             mean_matrices_[child] = {};
         }
+        posmut_transition_matrices_[child] = full_transition_matrices_[child]
+                - nomut_transition_matrices_[child];
     }
 
 #if CALCULATE_ENTROPY == 1

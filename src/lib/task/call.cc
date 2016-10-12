@@ -48,7 +48,8 @@
 #include <dng/mutation.h>
 #include <dng/stats.h>
 #include <dng/io/utility.h>
-#include <dng/find_mutations_abstract.h>
+
+#include <dng/find_mutations_xlinked.h>
 #include <dng/find_mutations_ylinked.h>
 #include <dng/find_mutations.h>
 
@@ -372,11 +373,16 @@ int task::Call::operator()(Call::argument_type &arg) {
     for(auto && line : relationship_graph.BCFHeaderLines()) {
         vcfout.AddHeaderMetadata(line.c_str());
     }
-    FindMutations x(min_prob, relationship_graph,
-                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
-                            arg.gamma[1]});
+//    FindMutations x(min_prob, relationship_graph,
+//                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
+//                            arg.gamma[1]});
     FindMutationsAbstract *calculate;
     switch (inheritance_pattern) {
+        case InheritancePattern::AUTOSOMAL:
+            calculate = new FindMutations(min_prob, relationship_graph,
+                    {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
+                            arg.gamma[1]});
+            break;
         case InheritancePattern::Y_LINKED:
             std::cerr << "Warning! Y Linked model are not fully implemented yet."
                     << std::endl;
@@ -392,10 +398,24 @@ int task::Call::operator()(Call::argument_type &arg) {
                 throw std::runtime_error(message);
             }
             break;
-        default:
-            calculate = new FindMutations(min_prob, relationship_graph,
+        case InheritancePattern::X_LINKED:
+            std::cerr << "Warning! X Linked model are not fully implemented yet."
+                    << std::endl;
+            //TODO(SW): HACK!! Remove libraries to keep the count simple (0->Lib)
+            rgs.KeepTheseOnly(relationship_graph.keep_library_index());
+
+            calculate = new FindMutationsXLinked(min_prob, relationship_graph,
                     {arg.theta, freqs, arg.ref_weight, arg.gamma[0],
                             arg.gamma[1]});
+            if(cat == sequence_data) {
+                auto message = "X Linked are not implemented for sequence data yet. "
+                                "Many things will break at this stage!!\nExit!";
+                throw std::runtime_error(message);
+            }
+            break;
+
+        default:
+
             break;
     }
 

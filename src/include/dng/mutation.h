@@ -130,6 +130,36 @@ inline TransitionMatrix meiosis_diploid_matrix(const MutationMatrix &mdad,
     return ret; // 100 x 10
 }
 
+inline TransitionMatrix meiosis_diploid_matrix_xlinked(const MutationMatrix &mdad,
+        const MutationMatrix &mmom, int mutype = -1) {
+    // Construct Mutation Process
+    TransitionMatrix ret = TransitionMatrix::Zero(40, 10);
+    TransitionMatrix temp;
+
+    if(mutype <= 0) {
+        auto dad = mitosis_haploid_matrix(mdad, mutype);
+        auto mom = meiosis_haploid_matrix(mmom, mutype);
+        temp = kroneckerProduct(dad, mom);
+    } else {
+        temp = dng::TransitionMatrix::Zero(40, 16);
+        for(int i = 0; i <= mutype; ++i) {
+            auto dad = mitosis_haploid_matrix(mdad, i);
+            auto mom = meiosis_haploid_matrix(mmom, mutype - i);
+            temp += kroneckerProduct(dad, mom);
+        }
+    }
+
+    // Fold the rows
+    for(int i = 0; i < 40; ++i) {
+        for(int j = 0; j < 16; ++j) {
+            int k = folded_diploid_genotypes[j];
+            ret(i, k) += temp(i, j);
+        }
+    }
+
+    return ret; // 40 x 10
+}
+
 inline TransitionMatrix mitosis_haploid_mean_matrix(const MutationMatrix &m) {
     TransitionMatrix ret{4, 4};
     for(int i = 0; i < 4; ++i) {

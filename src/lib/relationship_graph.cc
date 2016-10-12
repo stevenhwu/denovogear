@@ -936,7 +936,7 @@ void dng::RelationshipGraph::CreatePeelingOps(
             TransitionType tt = (edge_types(*pos) == EdgeType::Library) ?
                                 TransitionType::Library : TransitionType::Somatic;
             transitions_[child] = {tt, parent, static_cast<size_t>(-1),
-                    lengths[*pos], 0, gender[child_index]};//TODO(SW): Double check the index is correct
+                    lengths[*pos], 0, gender[child_index]};
             family_members_.push_back({parent, child});
 
 #if DEBUG_RGRAPH == 1
@@ -977,7 +977,7 @@ void dng::RelationshipGraph::CreatePeelingOps(
                 auto child_index = target(*pos, pedigree_graph);
                 vertex_t child = node_ids[target(*pos, pedigree_graph)];
                 transitions_[child] = {TransitionType::Germline, dad, mom,
-                    lengths[*pos], lengths[*(pos + 1)], gender[child_index]}; //TODO(SW): Double check the index is correct
+                    lengths[*pos], lengths[*(pos + 1)], gender[child_index]};
                 family_members.push_back(child); // Child
 
 #if DEBUG_RGRAPH == 1
