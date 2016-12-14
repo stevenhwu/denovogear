@@ -13,6 +13,7 @@ add_library(libdng STATIC
   stats.cc
   utility.cc
   task/call.cc
+  task/dumplike.cc
   task/loglike.cc
   task/pileup.cc
 )

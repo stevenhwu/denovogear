@@ -48,8 +48,8 @@ calLikeli <- function(branch, genotype){
   #   return(-Inf)
   # }
 
-  mut1<- mitosis_diploid_matrix(f81_full(rate[1],freq), -1)
-  mut2<- mitosis_diploid_matrix(f81_full(rate[2],freq), -1)
+  mut1<- mitosis_diploid_matrix(f81_full(rate[1], freq), -1)
+  mut2<- mitosis_diploid_matrix(f81_full(rate[2], freq), -1)
 
   r<- (mut1 %*% genotype[[1]]) * (mut2 %*% genotype[[2]])
   resultFull<- sum(log(apply(r,2,sum)))
@@ -121,10 +121,10 @@ optim(c(0.019,0.099), calLikeli, genotype=genotype[1:2], control=list(fnscale=-1
 
 
 
- a=apply(genotype[[1]],2,which.max)
+a=apply(genotype[[1]],2,which.max)
 b=apply(genotype[[2]],2,which.max)
- plot(a-b)
- plot(abs(a-b))
+plot(a-b)
+plot(abs(a-b))
 
 
 mut1<- matrix(c(0.9,0.2,0.1,0.8),nrow=2, byrow=T)

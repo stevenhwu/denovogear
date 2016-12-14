@@ -27,7 +27,7 @@ if(USE_STATIC_FLAG)
 endif()
 
 # This is a list of binaries that will be compiled to run with dng
-set(MODERN_DNG call loglike phaser dnm pileup) 
+set(MODERN_DNG call loglike phaser dnm pileup dumplike) 
 
 foreach(task IN LISTS MODERN_DNG)
   add_executable(dng-${task} dng-${task}.cc)
@@ -52,4 +52,3 @@ target_include_directories(dng-dnm BEFORE PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/d
 target_sources(dng-dnm PRIVATE
   dnm/snpLike.cc dnm/indelLike.cc dnm/pairLike.cc dnm/makeLookup.cc
   dnm/pedParser.cc dnm/bcf2Qcall.cc dnm/bcf2Paired.cc)
-
